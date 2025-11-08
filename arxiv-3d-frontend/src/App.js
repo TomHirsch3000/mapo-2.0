@@ -1,9 +1,10 @@
 // App.js — All node movement depends on sepGain, anchored to selected node OR mouse.
-// One canonical anchor per gesture (frozen from zoom.start), identical math for both modes.
-// • Separation accumulation & display ∝ sepGain
-// • Y-zoom blend ∝ sepGain (sepGain==0 => Y frozen during zoom)
-// • Auto-decay disabled when sepGain==0; otherwise scaled by sepGain
-// • Glue to absolute anchor removes start/end wobble
+// X AND Y both blended by sepGain:
+// • xBlendAt(t, year)  = ((1-a)+a*k)*x(year) + t.x
+// • yBlendAt(t, lane)  = ((1-a)+a*k)*yLane(lane) + t.y
+// with a = yZoomAlphaFromSep(sepGain).
+// Separation accumulation & display ∝ sepGain; auto-decay scaled by sepGain.
+// Anchor is chosen once per gesture (selected node or mouse), removing wobble.
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
@@ -20,10 +21,8 @@ const CFG = {
   wheelSlowCoef: 0.10,
 
   // separation strength (continuous)
-  // 0 => no separation; also disables vertical zoom component & freezes Y during zoom
-  sepGain: 0.0005,
-  // relative Y weight vs X inside separation vectors
-  sepgainYoverX: 1.00,
+  sepGain: 0.5,        // 0 => no X/Y zoom component; separation off; Y frozen during zoom
+  sepgainYoverX: 1.00,  // relative Y weight vs X inside separation vectors
 
   // acceleration when tiles get big enough (smooth ramp)
   accelfromWidth: 150,
@@ -35,7 +34,7 @@ const CFG = {
 
 /** Internals derived from CFG */
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
-const yZoomAlphaFromSep = (g) => clamp01(g); // tie vertical zoom blend to sepGain
+const yZoomAlphaFromSep = (g) => clamp01(g); // tie both axis zoom components to sepGain
 
 // jitter helpers
 const jitterMaxLaneUnits = 0.35;
@@ -88,7 +87,6 @@ export default function App() {
   // cooldowns
   const lastWheelTsRef = useRef(0);
   const INTERACT = { CLICK_MS: 200, HOVER_MS: 140, COOLDOWN_MS: 220 };
-  const now = () => performance.now();
 
   /** Load data */
   useEffect(() => {
@@ -305,30 +303,37 @@ export default function App() {
       mousePlotRef.current = { x: px, y: py };
     });
 
-    // ----- Blended Y (forward and inverse) -----
-    const yZoomAlpha = yZoomAlphaFromSep(CFG.sepGain); // 0..1 based on sepGain
-    function yBlendAt(t, lane) {
-      // yBlend = [(1-a) + a*k] * yLane(lane) + t.y
-      const a = yZoomAlpha;
-      const base = yLane(lane);
-      return ((1 - a) + a * t.k) * base + t.y;
+    // ----- Blended X & Y (forward and inverse) -----
+    const a = yZoomAlphaFromSep(CFG.sepGain); // 0..1 based on sepGain
+
+    function xBlendAt(t, year) {
+      // xBlend = [(1-a) + a*k] * x(year) + t.x
+      const kx = (1 - a) + a * t.k;
+      return kx * x(year) + t.x;
     }
-    function invYBlendLane(t, fy) {
-      // yLane(lane) = (fy - t.y) / ((1-a) + a*k)
-      const a = yZoomAlpha;
-      const denom = (1 - a) + a * t.k;
-      const base = (fy - t.y) / Math.max(1e-6, denom);
-      return yLane.invert(base);
+    function invXBlendYear(t, fx) {
+      const kx = (1 - a) + a * t.k;
+      return x.invert((fx - t.x) / Math.max(1e-6, kx));
     }
 
-    // locality weights around anchor (anchorYear, anchorLane)
+    function yBlendAt(t, lane) {
+      // yBlend = [(1-a) + a*k] * yLane(lane) + t.y
+      const ky = (1 - a) + a * t.k;
+      return ky * yLane(lane) + t.y;
+    }
+    function invYBlendLane(t, fy) {
+      const ky = (1 - a) + a * t.k;
+      return yLane.invert((fy - t.y) / Math.max(1e-6, ky));
+    }
+
+    // locality weights around anchor (anchorYear, anchorLane) using blended coords
     function buildFocalWeightsUsingAnchor(t, anchorYear, anchorLane) {
       const k = t.k;
       const baseR = 360 / Math.sqrt(k);
       const wById = new Map();
       for (const d of nodes) {
         const lane = fieldIndex(d.field) + jitterLane(d.id);
-        const px = t.rescaleX(x)(d.year ?? yearsDomain[0]) - t.rescaleX(x)(anchorYear);
+        const px = xBlendAt(t, d.year ?? yearsDomain[0]) - xBlendAt(t, anchorYear);
         const py = yBlendAt(t, lane) - yBlendAt(t, anchorLane);
         const dd = Math.sqrt((px * px + py * py) / (baseR * baseR));
         wById.set(d.id, Math.exp(-dd * dd));
@@ -389,7 +394,7 @@ export default function App() {
         if (locked) {
           // anchor = selected node (year + laneWithJitter)
           const lane = fieldIndex(locked.field) + jitterLane(locked.id);
-          fxPlot = t.rescaleX(x)(locked.year ?? yearsDomain[0]);
+          fxPlot = xBlendAt(t, locked.year ?? yearsDomain[0]);
           fyPlot = yBlendAt(t, lane);
           vpYear = locked.year ?? yearsDomain[0];
           vpLane = lane;
@@ -399,7 +404,7 @@ export default function App() {
             (mousePlotRef.current.x != null ? [mousePlotRef.current.x, mousePlotRef.current.y] : [width / 2, height / 2]);
           fxPlot = px;
           fyPlot = py;
-          vpYear = t.rescaleX(x).invert(fxPlot);
+          vpYear = invXBlendYear(t, fxPlot);
           vpLane = invYBlendLane(t, fyPlot);
         }
 
@@ -480,8 +485,8 @@ export default function App() {
           for (const d of nodes) {
             const lane = fieldIndex(d.field) + jitterLane(d.id);
 
-            // Pixel-space vectors using SAME math as selected-node case
-            const px = tNow.rescaleX(x)(d.year ?? yearsDomain[0]) - tNow.rescaleX(x)(anchorYear);
+            // Pixel-space vectors using SAME math as selected-node case (blended X & Y)
+            const px = xBlendAt(tNow, d.year ?? yearsDomain[0]) - xBlendAt(tNow, anchorYear);
             const py = yBlendAt(tNow, lane) - yBlendAt(tNow, anchorLane);
 
             let vx = px * wX, vy = py * wY;
@@ -551,8 +556,8 @@ export default function App() {
       if (sessionRef.current?.active && sessionRef.current.mode === "zoom") {
         const { fxAbs, fyAbs, vpYear, vpLane } = zStateRef.current || {};
         if (fxAbs != null && fyAbs != null && vpYear != null && vpLane != null) {
-          // Where is the anchor under the *current* raw transform?
-          const ax = margin.left + t.rescaleX(x)(vpYear);
+          // Where is the anchor under the *current* raw transform (blended X & Y)?
+          const ax = margin.left + xBlendAt(t, vpYear);
           const ay = margin.top  + yBlendAt(t, vpLane);
 
           // delta needed to keep the anchor fixed at its absolute screen position
@@ -579,7 +584,9 @@ export default function App() {
       }
 
       const k = t.k;
-      const newX = t.rescaleX(x);
+
+      // Blended base positions
+      const newX = (year) => xBlendAt(t, year);
       const newY = (lane) => yBlendAt(t, lane);
 
       // All passive motion (auto-decay) gated by sepGain
@@ -664,13 +671,15 @@ export default function App() {
           return `M${sC.x},${sC.y} L${xm},${ym} L${tC.x},${tC.y}`;
         });
 
-      // axes: X zoom follows k; Y axis follows pan/glue (frozen during zoom if sepGain==0)
-      const yForAxis = (CFG.sepGain === 0 && sessionRef.current?.active && sessionRef.current.mode === "zoom")
+      // axes: X and Y axes follow the same blended affine transforms
+      const kx = (1 - a) + a * t.k;
+      const xAxisScale = x.copy().range(x.range().map(v => kx * v + t.x));
+      const yAxisOffset = (CFG.sepGain === 0 && sessionRef.current?.active && sessionRef.current.mode === "zoom")
         ? (sessionRef.current?.yStart ?? t.y) : t.y;
 
-      yAxisG.attr("transform", `translate(0,${yForAxis})`)
+      yAxisG.attr("transform", `translate(0,${yAxisOffset})`)
         .call(d3.axisLeft(yLane).tickValues(fields.map((_, i) => i)).tickFormat(i => fields[i]));
-      xAxisG.call(d3.axisBottom(newX).ticks(10).tickFormat(d3.format("d")));
+      xAxisG.call(d3.axisBottom(xAxisScale).ticks(10).tickFormat(d3.format("d")));
     }
 
     // Node events
@@ -717,7 +726,7 @@ export default function App() {
           // rebuild gesture anchor to selected node (year+lane), for next gesture start
           const tNow = d3.zoomTransform(svg.node());
           const lane = fieldIndex(d.field) + jitterLane(d.id);
-          const fxAbs = margin.left + tNow.rescaleX(x)(d.year ?? yearsDomain[0]);
+          const fxAbs = margin.left + xBlendAt(tNow, d.year ?? yearsDomain[0]);
           const fyAbs = margin.top  + yBlendAt(tNow, lane);
 
           zStateRef.current = { fxAbs, fyAbs, vpYear: d.year ?? yearsDomain[0], vpLane: lane };
@@ -744,7 +753,7 @@ export default function App() {
       window.removeEventListener("resize", onResize);
       svg.on(".zoom", null).on("click", null).on("pointermove", null);
     };
-  // deps: include all values referenced from outside the effect
+  // deps for everything referenced from outside the effect:
   }, [nodes, edges, fields, yearsDomain, baseTileSize, edgesByNode, fieldIndex]);
 
   return (
