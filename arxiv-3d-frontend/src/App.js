@@ -1,4 +1,5 @@
 // App.js — no end-of-scroll snap, no Y movement when sepGain=0, click-to-focus anchor
+// + Neighbour highlight: grey-out non-neighbours, show edges & in-node wrapped titles for selected & neighbours.
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
@@ -35,6 +36,10 @@ const hash32 = (s) => { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; 
 const hashUnit = (s) => hash32(String(s)) / 4294967296;
 const jitterLane = (id) => (hashUnit(id) - 0.5) * 2 * jitterMaxLaneUnits;
 const smoothstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / Math.max(1e-6, b - a))); return t * t * (3 - 2 * t); };
+
+// simple greys
+const GREY_FILL = "#d8dbe1";
+const GREY_STROKE = "#8e96a3";
 
 export default function App() {
   const svgRef = useRef(null);
@@ -87,6 +92,7 @@ export default function App() {
         citationCount: Number.isFinite(+cites) ? +cites : 0,
         authors: d.authors || d.authors_text || d.author,
         url: d.url || d.doi_url || d.openAlexUrl || d.s2Url,
+        title: d.title || d.display_name || "Untitled",
       };
     });
     nodeByIdRef.current = new Map(ns.map(n => [n.id, n]));
@@ -187,12 +193,46 @@ export default function App() {
 
     const nodesSel = nodesG.selectAll("g.node").data(nodes, d => d.id).join(enter => {
       const g = enter.append("g").attr("class", "node").style("cursor", "pointer");
+
+      // Base rectangle
       g.append("rect")
         .attr("class", "node-rect")
         .attr("stroke", "#333")
         .attr("fill", d => color(d.field))
         .attr("opacity", 0.85)
         .attr("vector-effect", "non-scaling-stroke");
+
+      // Thin top border/line (shown only when label visible)
+      g.append("line")
+        .attr("class", "node-header")
+        .attr("x1", 0).attr("y1", 0)
+        .attr("x2", 0).attr("y2", 0)
+        .attr("stroke", "#1f2937")
+        .attr("stroke-opacity", 0.25)
+        .attr("vector-effect", "non-scaling-stroke")
+        .style("display", "none");
+
+      // Wrapped label via foreignObject (only for selected & neighbours)
+      const fo = g.append("foreignObject")
+        .attr("class", "node-label")
+        .attr("x", 0).attr("y", 0)
+        .attr("width", 0).attr("height", 0)
+        .style("display", "none")
+        .style("pointer-events", "none");
+
+      fo.append("xhtml:div")
+        .attr("class", "label-div")
+        .style("width", "100%")
+        .style("height", "100%")
+        .style("overflow", "hidden")
+        .style("word-wrap", "break-word")
+        .style("text-overflow", "ellipsis")
+        .style("line-height", "1.15")
+        .style("font-weight", "600")
+        .style("font-family", "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial")
+        .style("color", "#111827")
+        .text(d => d.title || "Untitled");
+
       return g;
     });
 
@@ -480,13 +520,40 @@ export default function App() {
         const s = Math.pow(k, 1.2) * (0.9 + 0.4 * (d.z ?? 0.5));
         const tile = { w: bs.w * s, h: bs.h * s, rx: Math.min(bs.rxBase * Math.pow(k, 0.5), 16) };
 
-        d3.select(this).attr("transform", `translate(${cx - tile.w / 2},${cy - tile.h / 2})`);
-        d3.select(this).select("rect.node-rect")
+        const g = d3.select(this);
+        g.attr("transform", `translate(${cx - tile.w / 2},${cy - tile.h / 2})`);
+
+        // rectangle
+        g.select("rect.node-rect")
           .attr("width", tile.w)
           .attr("height", tile.h)
           .attr("rx", tile.rx)
           .attr("ry", tile.rx)
           .attr("fill", color(d.field));
+
+        // header line (will be toggled visible for selected/neighbours)
+        g.select("line.node-header")
+          .attr("x1", 0).attr("y1", 0)
+          .attr("x2", tile.w).attr("y2", 0);
+
+        // label layout
+        const padX = Math.max(6, tile.w * 0.05);
+        const padTop = Math.max(6, tile.h * 0.06) + 2; // a little space below the top line
+        const padBottom = Math.max(4, tile.h * 0.04);
+        const labelW = Math.max(0, tile.w - padX * 2);
+        const labelH = Math.max(0, tile.h - padTop - padBottom);
+        const fontPx = Math.max(9, Math.min(22, Math.floor(tile.h * 0.14)));
+
+        const fo = g.select("foreignObject.node-label")
+          .attr("x", padX)
+          .attr("y", padTop)
+          .attr("width", labelW)
+          .attr("height", labelH);
+
+        fo.select("div.label-div")
+          .style("font-size", `${fontPx}px`)
+          .text(d.title || "Untitled");
+
         P.set(d.id, { cx, cy, w: tile.w, h: tile.h });
       });
 
@@ -516,7 +583,9 @@ export default function App() {
         .join("path")
         .attr("class", "edge")
         .attr("fill", "none")
-        .attr("stroke", "none") // still there, but visually silent unless you want to show them
+        .attr("stroke", "#5b6573")
+        .attr("stroke-opacity", 0.7)
+        .attr("stroke-width", 1.6)
         .attr("vector-effect", "non-scaling-stroke");
       edgesSel.style("display", subset.length ? null : "none");
       edgesSel.raise();
@@ -524,16 +593,38 @@ export default function App() {
 
     function hideAllEdges() { edgesSel.style("display", "none"); }
 
+    // Grey-out all except selected + neighbours; show labels for the highlighted set
     function highlightNeighborhood(id, { raise = false } = {}) {
       const idxs = edgesByNode.get(id) || [];
       const sset = new Set([id]);
       idxs.forEach(i => { const e = edges[i]; sset.add(e.source); sset.add(e.target); });
-      nodesSel.selectAll("rect.node-rect").each(function (d) {
+
+      nodesSel.each(function (d) {
+        const g = d3.select(this);
+        const rect = g.select("rect.node-rect");
+        const header = g.select("line.node-header");
+        const label = g.select("foreignObject.node-label");
         const isN = sset.has(d.id);
-        d3.select(this)
-          .attr("opacity", isN ? 0.95 : 0.25)
-          .attr("stroke-width", isN ? 2.2 : 1.0);
+
+        if (isN) {
+          rect
+            .attr("fill", color(d.field))
+            .attr("opacity", 0.95)
+            .attr("stroke", "#1f2937")
+            .attr("stroke-width", d.id === id ? 2.6 : 2.0);
+          header.style("display", null);
+          label.style("display", null);
+        } else {
+          rect
+            .attr("fill", GREY_FILL)
+            .attr("opacity", 0.55)
+            .attr("stroke", GREY_STROKE)
+            .attr("stroke-width", 1.0);
+          header.style("display", "none");
+          label.style("display", "none");
+        }
       });
+
       if (raise) {
         nodesSel.filter(d => sset.has(d.id)).raise();
         nodesSel.filter(d => d.id === id).raise();
@@ -541,10 +632,16 @@ export default function App() {
     }
 
     function resetNodeStyles() {
-      nodesSel.selectAll("rect.node-rect")
-        .attr("opacity", d => 0.85 * (0.6 + 0.4 * (d.z ?? 0.5)))
-        .attr("stroke-width", 1.2)
-        .attr("fill", d => color(d.field));
+      nodesSel.each(function (d) {
+        const g = d3.select(this);
+        g.select("rect.node-rect")
+          .attr("opacity", d => 0.85 * (0.6 + 0.4 * (d.z ?? 0.5)))
+          .attr("stroke", "#333")
+          .attr("stroke-width", 1.2)
+          .attr("fill", d => d3.scaleOrdinal(d3.schemeTableau10)(d.field));
+        g.select("line.node-header").style("display", "none");
+        g.select("foreignObject.node-label").style("display", "none");
+      });
     }
 
     // Node events
@@ -578,7 +675,8 @@ export default function App() {
           lockedIdRef.current = d.id;
           focusLockRef.current = d.id;
           setSelected(d);
-          showEdgesFor(d.id); highlightNeighborhood(d.id, { raise: true });
+          showEdgesFor(d.id);
+          highlightNeighborhood(d.id, { raise: true });
 
           // freeze absolute anchor on this node for immediate stability
           const tNow = d3.zoomTransform(svg.node());
