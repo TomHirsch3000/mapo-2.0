@@ -1,0 +1,78 @@
+An interactive 2D visualization of academic papers arranged in a temporal and disciplinary layout
+
+Core Layout
+
+The visualization is a 2D chart rendered on a large canvas or SVG.
+-X-axis: publication year (time progression left → right).
+-Y-axis: AI primary field or discipline (grouped by topic).
+-The scene should be pannable and zoomable horizontally and vertically with smooth transitions and inertial motion.
+-no gridlines
+
+Hidden Z-Axis (Depth by Citations)
+-Each node has a hidden z-position derived from its citation count:
+-Higher citations → closer to the viewer (appears larger, brighter, more focused).
+-Lower citations → further back (smaller, slightly faded).
+-As the user zooms in, nodes with higher z-values appear to advance forward, while lower-z nodes subtly drift apart in depth, creating a pseudo-3D parallax effect.
+-The movement should feel organic — like “flying through space” — but still remain visually 2D.
+
+Nodes
+-Each paper is represented as a rectangle with curved corners:
+-Position: (x = year, y = field lane ± jitter).
+-Size: base radius, slightly scaled by citation count.
+-Color: based on AI primary field (consistent palette).
+-Opacity: modulated by z-depth for atmospheric perspective.
+-Each node displays its title in small, legible text inside the node with text wrapping and leaving a lot of blank space in the node
+-the text should be centered in the top of the node and contained within the node. 
+
+When zooming:
+-Nodes grow slightly and separate around the zoom focus point. 
+-There should be separation of the nodes as you zoom in so the closer nodes move further away and avoid overlapping. I also think the separation needs to be a touch quicker than the scroll and hopefully it will create a curving effect as nodes fly past the screen
+-The zoom steps become finer at close range for smooth exploration.
+
+Edges
+-Edges connect nodes that have citation relationships.
+By default:
+-Visible, thin, and neutral grey (#aaa) with no arrowheads.
+-Light transparency to avoid clutter.
+
+When a node is selected:
+-Its connected edges are highlighted and gain arrowheads showing direction.
+-All other edges fade to a muted grey.
+-Connected nodes remain colored; unconnected nodes fade to low opacity.
+
+Interactions
+
+Hover:
+-Highlights the hovered node’s connected edges and nodes.
+-Displays a floating tooltip beside the node with:
+-Title
+-Author(s)
+-Year
+-Field
+-Citation count
+-Link to source (clickable)
+
+Click (Select):
+-Locks the node as “selected.”
+-Highlights only its citation network (incoming + outgoing).
+-Displays a persistent detail panel or tooltip with full paper info.
+-Clicking empty space or pressing Esc clears the selection.
+
+Pan & Zoom:
+-Smooth, continuous movement.
+-Scrolling in increases node size and separation; scrolling out compresses the map.
+-Zoom centered around the mouse pointer for intuitive navigation.
+-All transitions (node position, scale, opacity) should be eased for fluidity.
+-Axes & Styling
+-X-axis: publication years (integer ticks).
+-Y-axis: AI fields (labels on left).
+-Gridlines: no gridlines
+-Background: soft neutral tone (#f0f0f0 or similar).
+-Font: clean sans-serif (e.g., “Plus Jakarta Sans” or “Poppins”).
+-Consistent color palette (e.g., Tableau 10 or custom field colors).
+-Tooltips and side cards styled as lightweight floating panels with soft shadows.
+
+Overall Feel
+
+The visualization should feel immersive, smooth, and data-driven, blending scientific clarity with spatial depth.
+It should invite exploration — users glide through the citation landscape, discovering how ideas connect across time and fields.

@@ -1,0 +1,161 @@
+/* Fullscreen layout for 3D canvas */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: sans-serif;
+  background-color: #f0f0f0;
+}
+
+/* Make canvas fill the screen */
+canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Style for floating info boxes from <Html> */
+div[data-html] {
+  background-color: white;
+  padding: 10px;
+  border-radius: 8px;
+  max-width: 350px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 0.85em;
+  line-height: 1.4em;
+  color: #000;
+}
+.node-popup {
+  background-color: white;
+  padding: 16px;
+  border-radius: 10px;
+  max-width: 500px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  font-size: 0.85em;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.node-title {
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.node-summary {
+  margin: 10px 0;
+}
+
+.node-authors,
+.node-citations {
+  font-size: 0.8em;
+  color: #444;
+  margin: 5px 0;
+}
+
+.node-links a {
+  font-size: 0.85em;
+  color: #3366cc;
+  text-decoration: none;
+}
+
+.node-links a:hover {
+  text-decoration: underline;
+}
+
+.node-category {
+  font-size: 0.8em;
+  color: #666;
+  margin: 4px 0;
+}
+.legend {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 0.9em;
+  max-width: 220px;
+  z-index: 10;
+}
+
+.legend h4 {
+  margin: 0 0 8px;
+  font-size: 1em;
+}
+
+.legend ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.dev-notes {
+  position: absolute;
+  top: 180px;
+  right: 10px;
+  width: 220px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.85em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.dev-notes pre {
+  font-family: inherit;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* minimal additions */
+.chart-wrap { position: relative; height: 74vh; }
+#hover-tooltip {
+  position: absolute; display: none; pointer-events: none;
+  background: rgba(20,20,20,0.9); color: #fff; padding: 8px 10px; border-radius: 6px;
+  font-size: 12px; max-width: 320px; line-height: 1.3;
+}
+
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #333;
+  max-width: 300px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.15);
+  z-index: 1000;
+  line-height: 1.5;
+  pointer-events: auto; /* This line is critical */
+
+}
+
+
+svg { contain: strict; }
+.edges path { shape-rendering: optimizeSpeed; }
+
+svg { contain: strict; }
+.edges path { shape-rendering: optimizeSpeed; }
+.node .node-rect { transition: opacity 120ms linear; }

@@ -1,0 +1,55 @@
+Task list
+
+ - change the backend code 
+  - import all papers on physics 
+  		Task	Feasible on Local?	Notes
+		Just storing paper IDs (~12 bytes each)	✅ Yes	10 million IDs ≈ ~120 MB
+		Storing full metadata (title, abstract, citations, etc.)	⚠️ Maybe	Easily 5–20 GB+ depending on fields stored
+		Analyzing in memory (e.g., pandas)	⚠️ Maybe	You'll need 16GB+ RAM ideally
+		Visualizing all papers in 3D	❌ Not really	You’ll need to filter or cluster
+		Searching/subsetting	✅ Yes	If you store in an indexed format like SQLite, DuckDB, or Elasticsearch
+
+- generate images for each paper 
+
+- make links clickable 
+- make papers searchable 
+- filter the papers being shown 
+
+
+
+📝 Restart Environment: Semantic Scholar + 3D Papers Viewer
+
+1. Activate Python Environment
+
+    cd path/to/your/project
+    source venv/bin/activate         # for Unix/macOS
+    .\venv\Scripts\activate          # for Windows
+
+2. Start Local LLM (Ollama)
+
+    ollama run mistral
+
+   Or keep Ollama running in background:
+
+    ollama serve &
+
+3. Run Backend Script
+
+    python summarize_semantic_scholar.py
+
+   Generates nodes.json and edges.json and copies them to the frontend.
+
+4. Start Frontend (React 3D Viewer)
+
+    cd ../arxiv-3d-frontend
+    npm install         # only needed once
+    npm run dev         # or: npm start
+
+5. Open in Browser
+
+    http://localhost:3000
+
+6. (Optional) Rebuild or Debug
+
+    - Check for errors in summarize_semantic_scholar.py output.
+    - Ensure nodes.json and edges.json are present in arxiv-3d-frontend/public/

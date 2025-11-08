@@ -1,0 +1,91 @@
+
+https://mapo.infinityfreeapp.com/
+
+Open CMD
+
+navigate to the frontend folder 
+cd C:\Users\TomHi\arxiv-3d-frontend\src
+
+run the javascript app
+npm start
+
+
+
+open the backend systems
+open ollama -- this is the ai environment
+open venv -- python environment 
+cd C:\Users\TomHi\arxiv-3d
+.\venv\Scripts\activate 
+
+open the database browser 
+sqllitebrowser
+
+
+
+in venv run 
+-- runs a query against arxiv to extract x papers each with at least y citations 
+-- fetch_arxiv_papers -- gets a list of papers on the subject of physics from arxive
+-- fetch_arxiv_papers_by_id_list -- gets a the details of papers from arxive given the paperid 
+-- clean_arxiv_id -- Normalizes arXiv ID for Semantic Scholar API.
+-- get_semantic_scholar_data -- Returns (citationCount, list of cited arXiv IDs)
+
+
+
+python extract_source_for_testing.py 
+
+python extract_semantic_scholar.py
+--get_semantic_scholar_paper -- Given a Semantic Scholar paperId, fetches metadata, references, and citations.
+   ------
+   I think I need to process one paper at a time and store the results in a local database or storage solution. 
+   I will benefit from validating if I have processed this file before 
+      - first include a local lookup 
+      - store all the data extracted from semantic scholar including the entire abstract 
+    - Run a separate query to process and write it to JSON ready for the frontend
+
+python summarize_semantic_scholar.py
+--summarize_text
+--AI_category
+--AI_category_one
+--get_position_from_citations -- Highly cited papers are placed further from center.
+--get_size_from_citations
+
+--Output
+--node.json -- list of papers with their metadata and position and size based on number of citations
+--edges.json -- links between papers by their ID, source, taget, weight
+
+python extract_semantic_scholar.py
+
+
+
+
+
+To do list
+separation experience solve 
+-Not jerks [DONE]
+-no early separation, accelerating when above a certain size
+-fix left shift [DONE]
+-align pan and scroll movements [DONE]
+-simplify code, annotate everything, modularize, drop, Setup git repo
+
+-zoom towards pointer, not selected node
+it didn't work. the nodes are separating at the same rate regardless of sepgain. I think there is some confusion when I talk about separation because I want the zoom to behave in a very specific way. nodes should not move much while they are small and the rate they move should be defined by sepgain, they should only really grow in size. then when they reach a certain size defined by accelfromwidth they should start to move away from the mouse pointer at the rate defined by accelpow. I also want to control the rate that they grow 
+
+add context to nodes 
+-add fields in the database: ai summary, image URL, 
+-add a picture folder in the frontend 
+
+populate summary field with ai process 
+-option to overwrite or not
+-set output to 16 words
+-
+
+pick up field in node json 
+-add extra fields to export step
+
+add field to node in frontend 
+-read in extra fields from Jason
+-design node layout
+-3 headings and text: title, ai summary, picture, link, citations, year, authors
+
+include a new node in the database manually 
+-put in newton laws of motion 
