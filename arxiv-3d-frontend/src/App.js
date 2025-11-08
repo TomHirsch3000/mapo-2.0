@@ -1,6 +1,7 @@
 // App.js — no end-of-scroll snap, no Y movement when sepGain=0, click-to-focus anchor
 // + Persistent neighbour highlight (grey-out others), edges for selected↔neighbours,
 // + In-node wrapped titles w/ top border & font-size scaling.
+// + sepGain is a continuous factor for BOTH X and Y separation (small => slow drift, big => faster drift)
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
@@ -16,27 +17,29 @@ const CFG = {
   wheelBase: 0.0012,
   wheelSlowCoef: 0.10, // extra damping as k grows
 
-  // separation strength
-  sepGain: 0.0000000,        // separation added per log-zoom unit (0 => fully off)
-  sepgainYoverX: 1.00,       // Y:X separation ratio (0 => only X; big => mostly Y)
+  // separation strength (continuous)
+  sepGain: 0.4,         // separation added per log-zoom unit; 0 => off, small => slow drift, big => fast drift
+  sepgainYoverX: 1.00,   // Y:X separation ratio (0 => only X; big => mostly Y)
 
-  // acceleration when tiles get big enough
-  accelfromWidth: 150,  // start accelerating separation around this rendered width (px)
-  accelPow: 2,          // curve power
+  // acceleration when tiles get big enough (smooth ramp)
+  accelfromWidth: 150,   // characteristic width (px) where extra separation starts to kick in
+  accelPow: 2,           // ramp power
 
   // gentle decay near home zoom (prevents permanent drift)
   autoReturn: { enabled: false, kHome: 1.0, epsilonK: 0.10, halfLifeMs: 900 },
 };
 
 /** Internals derived from CFG */
-const yZoomAlphaFromSep = (sepGain) => (sepGain === 0 ? 0 : 1);
+// Continuous blend 0..1 instead of binary
+const clamp01 = (v) => Math.max(0, Math.min(1, v));
+const yZoomAlphaFromSep = (g) => clamp01(g);
 
 // helpers
 const jitterMaxLaneUnits = 0.35;
 const hash32 = (s) => { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 const hashUnit = (s) => hash32(String(s)) / 4294967296;
 const jitterLane = (id) => (hashUnit(id) - 0.5) * 2 * jitterMaxLaneUnits;
-const smoothstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / Math.max(1e-6, b - a))); return t * t * (3 - 2 * t); };
+const smoothstep = (a, b, x) => { const t = clamp01((x - a) / Math.max(1e-6, b - a)); return t * t * (3 - 2 * t); };
 
 // greys
 const GREY_FILL = "#d8dbe1";
@@ -60,7 +63,7 @@ export default function App() {
   const committingRef = useRef(false);                   // re-entrancy guard for transform commit
   const isMobileRef = useRef(false);
 
-  // NEW: highlight state (persisted across renders)
+  // Highlight state (persisted across renders)
   const highlightSetRef = useRef(null);   // Set<string> of ids (selected + neighbours); null => no highlight
   const highlightRootRef = useRef(null);  // string root id currently highlighted
 
@@ -280,6 +283,7 @@ export default function App() {
     // locality weights
     function buildFocalWeights(t, fxPlot, fyPlot) {
       const invX = t.rescaleX(x), invY = t.rescaleY(yLane);
+      theYearAt: { /* label for readability */ }
       const yearAt = invX.invert(fxPlot), laneAt = invY.invert(fyPlot);
       const k = t.k, baseR = 360 / Math.sqrt(k);
       const wById = new Map();
@@ -292,7 +296,7 @@ export default function App() {
       return wById;
     }
 
-    // Y zoom blend: off when sepGain==0
+    // Y zoom blend: proportional to sepGain
     const yZoomAlpha = yZoomAlphaFromSep(CFG.sepGain);
     function yBlendAt(t, lane) {
       const yZoom = t.rescaleY(yLane)(lane);  // pan+zoom
@@ -413,13 +417,14 @@ export default function App() {
         // final settle frame (no snap)
         requestAnimationFrame(() => renderWithTransform(d3.zoomTransform(svg.node())));
 
-        const sepEnabled = (CFG.sepGain !== 0);
-        if (s.mode !== "zoom" || Math.abs(s.incNow) < 0.015 || !sepEnabled) {
+        // --------- Separation accumulation (continuous by sepGain) ---------
+        const gSep = Math.max(0, CFG.sepGain);
+        if (s.mode !== "zoom" || Math.abs(s.incNow) < 0.015 || gSep === 0) {
           s.active = false; s.incNow = 0; return;
         }
 
         const kNow = d3.zoomTransform(svg.node()).k;
-        const addScale = CFG.sepGain * s.incNow;
+        const addScale = gSep * s.incNow;         // scale increment by sepGain continuously
 
         if (addScale !== 0) {
           const ratio = Math.max(0, CFG.sepgainYoverX);
@@ -432,12 +437,13 @@ export default function App() {
             let vx = px * wX, vy = py * wY;
             const norm = Math.hypot(vx, vy) || 1; vx /= norm; vy /= norm;
 
+            // Smooth acceleration: early stage still moves slowly; big tiles ramp up smoothly
             const w = nodeWidthAtK(d, kNow);
-            const accelU = smoothstep(CFG.accelfromWidth, CFG.accelfromWidth * 1.8, w);
-            const accel = w <= CFG.accelfromWidth ? 0 : Math.pow(accelU, CFG.accelPow);
+            const accelU = smoothstep(CFG.accelfromWidth * 0.6, CFG.accelfromWidth * 1.8, w);
+            const accel = 1 + Math.pow(accelU, CFG.accelPow); // >= 1, continuous
 
-            const local = s.coeffById?.get(d.id) ?? 0;
-            const mag = addScale * (0.25 + 0.75 * local) * (1 + accel);
+            const local = s.coeffById?.get(d.id) ?? 0;        // locality weight (0..1)
+            const mag = addScale * (0.25 + 0.75 * local) * accel;
 
             const prev = sepAccumRef.current.get(d.id) || { x: 0, y: 0 };
             sepAccumRef.current.set(d.id, { x: prev.x + mag * vx, y: prev.y + mag * vy });
@@ -540,7 +546,6 @@ export default function App() {
 
       maybeDecay(k);
 
-      const sepEnabled = (CFG.sepGain !== 0);
       const P = new Map();
 
       // position nodes + apply highlight styling
@@ -550,8 +555,12 @@ export default function App() {
         const baseY = newY(lane);
 
         const v = sepAccumRef.current.get(d.id) || { x: 0, y: 0 };
-        const sepX = sepEnabled ? (v.x * (360 / Math.sqrt(k))) : 0;
-        const sepY = sepEnabled ? (v.y * (360 / Math.sqrt(k))) : 0;
+
+        // --------- Apply separation CONTINUOUSLY in both X and Y ---------
+        const gSep = Math.max(0, CFG.sepGain);
+        const sepFactor = (360 / Math.sqrt(k));            // global scale over zoom
+        const sepX = v.x * gSep * sepFactor;
+        const sepY = v.y * gSep * sepFactor;
 
         const cx = baseX + sepX;
         const cy = baseY + sepY;
