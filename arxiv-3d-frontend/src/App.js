@@ -1,5 +1,6 @@
 // App.js — no end-of-scroll snap, no Y movement when sepGain=0, click-to-focus anchor
-// + Neighbour highlight: grey-out non-neighbours, show edges & in-node wrapped titles for selected & neighbours.
+// + Persistent neighbour highlight (grey-out others), edges for selected↔neighbours,
+// + In-node wrapped titles w/ top border & font-size scaling.
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
@@ -17,7 +18,7 @@ const CFG = {
 
   // separation strength
   sepGain: 0.0000000,        // separation added per log-zoom unit (0 => fully off)
-  sepgainYoverX: 1.00,  // Y:X separation ratio (0 => only X; big => mostly Y)
+  sepgainYoverX: 1.00,       // Y:X separation ratio (0 => only X; big => mostly Y)
 
   // acceleration when tiles get big enough
   accelfromWidth: 150,  // start accelerating separation around this rendered width (px)
@@ -37,7 +38,7 @@ const hashUnit = (s) => hash32(String(s)) / 4294967296;
 const jitterLane = (id) => (hashUnit(id) - 0.5) * 2 * jitterMaxLaneUnits;
 const smoothstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / Math.max(1e-6, b - a))); return t * t * (3 - 2 * t); };
 
-// simple greys
+// greys
 const GREY_FILL = "#d8dbe1";
 const GREY_STROKE = "#8e96a3";
 
@@ -53,11 +54,15 @@ export default function App() {
   const nodeByIdRef = useRef(new Map());
   const sepAccumRef = useRef(new Map());                 // id -> {x, y}
   const sessionRef  = useRef(null);                      // {active, mode, logK0, incNow, coeffById, vpYear, vpLane, yStart}
-  const lockedIdRef = useRef(null);                      // selected node id
+  const lockedIdRef = useRef(null);                      // selected node id (toggle lock)
   const focusLockRef = useRef(null);                     // node id that anchors zoom across gestures
   const correctedTRef = useRef(null);                    // last glued/frozen transform to commit on end
   const committingRef = useRef(false);                   // re-entrancy guard for transform commit
   const isMobileRef = useRef(false);
+
+  // NEW: highlight state (persisted across renders)
+  const highlightSetRef = useRef(null);   // Set<string> of ids (selected + neighbours); null => no highlight
+  const highlightRootRef = useRef(null);  // string root id currently highlighted
 
   // cooldowns to avoid wheel/click races
   const lastWheelTsRef = useRef(0);
@@ -236,12 +241,14 @@ export default function App() {
       return g;
     });
 
+    // edges path selection (bound dynamically to current highlight)
     let edgesSel = edgesG.selectAll("path.edge").data([], d => d ? `${d.source}->${d.target}` : undefined)
       .join("path")
       .attr("class", "edge")
       .attr("fill", "none")
-      .attr("stroke", "#444")
-      .attr("stroke-width", 1.2)
+      .attr("stroke", "#5b6573")
+      .attr("stroke-opacity", 0.7)
+      .attr("stroke-width", 1.6)
       .attr("vector-effect", "non-scaling-stroke")
       .style("display", "none");
 
@@ -396,11 +403,9 @@ export default function App() {
           correctedTRef.current = null;
           committingRef.current = true;
           setTimeout(() => {
-            // This triggers a synthetic zoom+end; the guards above prevent recursion
-            svg.call(zoom.transform, finalT);
+            svg.call(zoom.transform, finalT); // triggers synthetic zoom+end
             committingRef.current = false;
           }, 0);
-          // do not continue with separation on this end; it will re-render next tick
           s.active = false; s.incNow = 0;
           return;
         }
@@ -445,6 +450,41 @@ export default function App() {
 
     svg.call(zoom);
     svg.on("dblclick.zoom", null);
+
+    // ---- Highlight helpers (persist + reapply every frame) ----
+    function resetHighlight() {
+      highlightSetRef.current = null;
+      highlightRootRef.current = null;
+      edgesSel.style("display", "none");
+    }
+
+    function highlightNeighborhood(id, { raise = false } = {}) {
+      const idxs = edgesByNode.get(id) || [];
+      const sset = new Set([id]);
+      idxs.forEach(i => { const e = edges[i]; sset.add(e.source); sset.add(e.target); });
+
+      highlightSetRef.current = sset;
+      highlightRootRef.current = id;
+
+      // bind only selected↔neighbour edges
+      const subset = idxs.map(i => edges[i]);
+      edgesSel = edgesG.selectAll("path.edge")
+        .data(subset, d => d ? `${d.source}->${d.target}` : undefined)
+        .join("path")
+        .attr("class", "edge")
+        .attr("fill", "none")
+        .attr("stroke", "#5b6573")
+        .attr("stroke-opacity", 0.7)
+        .attr("stroke-width", 1.6)
+        .attr("vector-effect", "non-scaling-stroke")
+        .style("display", subset.length ? null : "none");
+
+      if (raise) {
+        const nodesSelLocal = d3.select(gPlot.node()).selectAll("g.node");
+        nodesSelLocal.filter(d => sset.has(d.id)).raise();
+        nodesSelLocal.filter(d => d.id === id).raise();
+      }
+    }
 
     function renderWithTransform(rawT) {
       let t = rawT;
@@ -503,7 +543,7 @@ export default function App() {
       const sepEnabled = (CFG.sepGain !== 0);
       const P = new Map();
 
-      // position nodes
+      // position nodes + apply highlight styling
       nodesSel.each(function (d) {
         const lane = fieldIndex(d.field) + jitterLane(d.id);
         const baseX = newX(d.year ?? yearsDomain[0]);
@@ -523,28 +563,38 @@ export default function App() {
         const g = d3.select(this);
         g.attr("transform", `translate(${cx - tile.w / 2},${cy - tile.h / 2})`);
 
-        // rectangle
+        // highlight logic
+        const inHighlight = !!highlightSetRef.current;
+        const isHighlighted = inHighlight && highlightSetRef.current.has(d.id);
+        const isRoot = inHighlight && highlightRootRef.current === d.id;
+
+        // rectangle (color + grey-out)
         g.select("rect.node-rect")
           .attr("width", tile.w)
           .attr("height", tile.h)
           .attr("rx", tile.rx)
           .attr("ry", tile.rx)
-          .attr("fill", color(d.field));
+          .attr("fill", inHighlight ? (isHighlighted ? color(d.field) : GREY_FILL) : color(d.field))
+          .attr("opacity", inHighlight ? (isHighlighted ? 0.95 : 0.55) : 0.85 * (0.6 + 0.4 * (d.z ?? 0.5)))
+          .attr("stroke", inHighlight ? (isHighlighted ? "#1f2937" : GREY_STROKE) : "#333")
+          .attr("stroke-width", inHighlight ? (isRoot ? 2.6 : (isHighlighted ? 2.0 : 1.2)) : 1.2);
 
-        // header line (will be toggled visible for selected/neighbours)
+        // header line only when highlighted
         g.select("line.node-header")
+          .style("display", inHighlight && isHighlighted ? null : "none")
           .attr("x1", 0).attr("y1", 0)
           .attr("x2", tile.w).attr("y2", 0);
 
-        // label layout
+        // label only when highlighted; scales to fit
         const padX = Math.max(6, tile.w * 0.05);
-        const padTop = Math.max(6, tile.h * 0.06) + 2; // a little space below the top line
+        const padTop = Math.max(6, tile.h * 0.06) + 2;
         const padBottom = Math.max(4, tile.h * 0.04);
         const labelW = Math.max(0, tile.w - padX * 2);
         const labelH = Math.max(0, tile.h - padTop - padBottom);
         const fontPx = Math.max(9, Math.min(22, Math.floor(tile.h * 0.14)));
 
         const fo = g.select("foreignObject.node-label")
+          .style("display", inHighlight && isHighlighted ? null : "none")
           .attr("x", padX)
           .attr("y", padTop)
           .attr("width", labelW)
@@ -557,14 +607,16 @@ export default function App() {
         P.set(d.id, { cx, cy, w: tile.w, h: tile.h });
       });
 
-      // edges
+      // edges (drawn only for selected↔neighbours subset)
       const centerOf = id => { const p = P.get(id); return p ? { x: p.cx, y: p.cy } : null; };
-      edgesSel.attr("d", e => {
-        const sC = centerOf(e.source), tC = centerOf(e.target);
-        if (!sC || !tC) return null;
-        const xm = (sC.x + tC.x) / 2, ym = (sC.y + tC.y) / 2;
-        return `M${sC.x},${sC.y} L${xm},${ym} L${tC.x},${tC.y}`;
-      });
+      edgesSel
+        .style("display", highlightSetRef.current ? null : "none")
+        .attr("d", e => {
+          const sC = centerOf(e.source), tC = centerOf(e.target);
+          if (!sC || !tC) return null;
+          const xm = (sC.x + tC.x) / 2, ym = (sC.y + tC.y) / 2;
+          return `M${sC.x},${sC.y} L${xm},${ym} L${tC.x},${tC.y}`;
+        });
 
       // axes: X zoom follows k; Y is pan-only (and frozen during sepGain==0 zoom)
       const yForAxis = (CFG.sepGain === 0 && sessionRef.current?.active && sessionRef.current.mode === "zoom")
@@ -575,84 +627,21 @@ export default function App() {
       xAxisG.call(d3.axisBottom(newX).ticks(10).tickFormat(d3.format("d")));
     }
 
-    function showEdgesFor(id) {
-      const idxs = edgesByNode.get(id) || [];
-      const subset = idxs.map(i => edges[i]);
-      edgesSel = edgesG.selectAll("path.edge")
-        .data(subset, d => d ? `${d.source}->${d.target}` : undefined)
-        .join("path")
-        .attr("class", "edge")
-        .attr("fill", "none")
-        .attr("stroke", "#5b6573")
-        .attr("stroke-opacity", 0.7)
-        .attr("stroke-width", 1.6)
-        .attr("vector-effect", "non-scaling-stroke");
-      edgesSel.style("display", subset.length ? null : "none");
-      edgesSel.raise();
-    }
-
-    function hideAllEdges() { edgesSel.style("display", "none"); }
-
-    // Grey-out all except selected + neighbours; show labels for the highlighted set
-    function highlightNeighborhood(id, { raise = false } = {}) {
-      const idxs = edgesByNode.get(id) || [];
-      const sset = new Set([id]);
-      idxs.forEach(i => { const e = edges[i]; sset.add(e.source); sset.add(e.target); });
-
-      nodesSel.each(function (d) {
-        const g = d3.select(this);
-        const rect = g.select("rect.node-rect");
-        const header = g.select("line.node-header");
-        const label = g.select("foreignObject.node-label");
-        const isN = sset.has(d.id);
-
-        if (isN) {
-          rect
-            .attr("fill", color(d.field))
-            .attr("opacity", 0.95)
-            .attr("stroke", "#1f2937")
-            .attr("stroke-width", d.id === id ? 2.6 : 2.0);
-          header.style("display", null);
-          label.style("display", null);
-        } else {
-          rect
-            .attr("fill", GREY_FILL)
-            .attr("opacity", 0.55)
-            .attr("stroke", GREY_STROKE)
-            .attr("stroke-width", 1.0);
-          header.style("display", "none");
-          label.style("display", "none");
-        }
-      });
-
-      if (raise) {
-        nodesSel.filter(d => sset.has(d.id)).raise();
-        nodesSel.filter(d => d.id === id).raise();
-      }
-    }
-
-    function resetNodeStyles() {
-      nodesSel.each(function (d) {
-        const g = d3.select(this);
-        g.select("rect.node-rect")
-          .attr("opacity", d => 0.85 * (0.6 + 0.4 * (d.z ?? 0.5)))
-          .attr("stroke", "#333")
-          .attr("stroke-width", 1.2)
-          .attr("fill", d => d3.scaleOrdinal(d3.schemeTableau10)(d.field));
-        g.select("line.node-header").style("display", "none");
-        g.select("foreignObject.node-label").style("display", "none");
-      });
-    }
-
     // Node events
     nodesSel
       .on("mouseover", function (_, d) {
         if (inCooldown() || focusLockRef.current) return;
-        if (!lockedIdRef.current) { showEdgesFor(d.id); highlightNeighborhood(d.id, { raise: true }); renderWithTransform(d3.zoomTransform(svg.node())); }
+        if (!lockedIdRef.current) {
+          highlightNeighborhood(d.id, { raise: true });
+          renderWithTransform(d3.zoomTransform(svg.node()));
+        }
       })
       .on("mouseout", function () {
         if (inCooldown() || focusLockRef.current) return;
-        if (!lockedIdRef.current) { hideAllEdges(); resetNodeStyles(); renderWithTransform(d3.zoomTransform(svg.node())); }
+        if (!lockedIdRef.current) {
+          resetHighlight();
+          renderWithTransform(d3.zoomTransform(svg.node()));
+        }
       })
       .on("mousemove", (event, d) => {
         if (inCooldown()) return;
@@ -670,12 +659,11 @@ export default function App() {
           lockedIdRef.current = null;
           focusLockRef.current = null;
           setSelected(null);
-          hideAllEdges(); resetNodeStyles();
+          resetHighlight();
         } else {
           lockedIdRef.current = d.id;
           focusLockRef.current = d.id;
           setSelected(d);
-          showEdgesFor(d.id);
           highlightNeighborhood(d.id, { raise: true });
 
           // freeze absolute anchor on this node for immediate stability
@@ -697,7 +685,7 @@ export default function App() {
       lockedIdRef.current = null;
       focusLockRef.current = null;
       setSelected(null);
-      hideAllEdges(); resetNodeStyles();
+      resetHighlight();
       renderWithTransform(d3.zoomTransform(svg.node()));
     });
 
