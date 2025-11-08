@@ -1,7 +1,9 @@
-// App.js — no end-of-scroll snap, no Y movement when sepGain=0, click-to-focus anchor
-// + Persistent neighbour highlight (grey-out others), edges for selected↔neighbours,
-// + In-node wrapped titles w/ top border & font-size scaling.
-// + sepGain is a continuous factor for BOTH X and Y separation (small => slow drift, big => faster drift)
+// App.js — All node movement depends on sepGain, anchored to selected node OR mouse.
+// One canonical anchor per gesture (frozen from zoom.start), identical math for both modes.
+// • Separation accumulation & display ∝ sepGain
+// • Y-zoom blend ∝ sepGain (sepGain==0 => Y frozen during zoom)
+// • Auto-decay disabled when sepGain==0; otherwise scaled by sepGain
+// • Glue to absolute anchor removes start/end wobble
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
@@ -15,35 +17,43 @@ const CFG = {
 
   // wheel behaviour
   wheelBase: 0.0012,
-  wheelSlowCoef: 0.10, // extra damping as k grows
+  wheelSlowCoef: 0.10,
 
   // separation strength (continuous)
-  sepGain: 0.4,         // separation added per log-zoom unit; 0 => off, small => slow drift, big => fast drift
-  sepgainYoverX: 1.00,   // Y:X separation ratio (0 => only X; big => mostly Y)
+  // 0 => no separation; also disables vertical zoom component & freezes Y during zoom
+  sepGain: 0.0005,
+  // relative Y weight vs X inside separation vectors
+  sepgainYoverX: 1.00,
 
   // acceleration when tiles get big enough (smooth ramp)
-  accelfromWidth: 150,   // characteristic width (px) where extra separation starts to kick in
-  accelPow: 2,           // ramp power
+  accelfromWidth: 150,
+  accelPow: 2,
 
   // gentle decay near home zoom (prevents permanent drift)
   autoReturn: { enabled: false, kHome: 1.0, epsilonK: 0.10, halfLifeMs: 900 },
 };
 
 /** Internals derived from CFG */
-// Continuous blend 0..1 instead of binary
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
-const yZoomAlphaFromSep = (g) => clamp01(g);
+const yZoomAlphaFromSep = (g) => clamp01(g); // tie vertical zoom blend to sepGain
 
-// helpers
+// jitter helpers
 const jitterMaxLaneUnits = 0.35;
 const hash32 = (s) => { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 const hashUnit = (s) => hash32(String(s)) / 4294967296;
 const jitterLane = (id) => (hashUnit(id) - 0.5) * 2 * jitterMaxLaneUnits;
 const smoothstep = (a, b, x) => { const t = clamp01((x - a) / Math.max(1e-6, b - a)); return t * t * (3 - 2 * t); };
 
-// greys
+// grey palette
 const GREY_FILL = "#d8dbe1";
 const GREY_STROKE = "#8e96a3";
+
+// glue epsilon scaled by sepGain to suppress micro-commits
+const baseGlueEps = 0.8;
+const epsGlue = () => {
+  const g = clamp01(CFG.sepGain);
+  return Math.max(0.6, baseGlueEps * (0.9 + 0.6 * g));
+};
 
 export default function App() {
   const svgRef = useRef(null);
@@ -56,22 +66,29 @@ export default function App() {
 
   const nodeByIdRef = useRef(new Map());
   const sepAccumRef = useRef(new Map());                 // id -> {x, y}
-  const sessionRef  = useRef(null);                      // {active, mode, logK0, incNow, coeffById, vpYear, vpLane, yStart}
-  const lockedIdRef = useRef(null);                      // selected node id (toggle lock)
-  const focusLockRef = useRef(null);                     // node id that anchors zoom across gestures
-  const correctedTRef = useRef(null);                    // last glued/frozen transform to commit on end
-  const committingRef = useRef(false);                   // re-entrancy guard for transform commit
+  const sessionRef  = useRef(null);                      // gesture session info
+  const lockedIdRef = useRef(null);                      // selected node id
+  const focusLockRef = useRef(null);                     // selected id used for anchoring
+  const correctedTRef = useRef(null);                    // glued transform to commit
+  const glueDeltaRef = useRef({ dx: 0, dy: 0 });         // latest glue delta
+  const committingRef = useRef(false);
   const isMobileRef = useRef(false);
 
-  // Highlight state (persisted across renders)
-  const highlightSetRef = useRef(null);   // Set<string> of ids (selected + neighbours); null => no highlight
-  const highlightRootRef = useRef(null);  // string root id currently highlighted
+  // highlight state
+  const highlightSetRef = useRef(null);
+  const highlightRootRef = useRef(null);
 
-  // cooldowns to avoid wheel/click races
+  // live mouse (plot coords) — only used to pick the anchor at zoom.start
+  const mousePlotRef = useRef({ x: null, y: null });
+
+  // zoom/anchor state (frozen per-gesture)
+  // vpYear/vpLane: canonical anchor in data coords; fxAbs/fyAbs: absolute screen anchor (pixels)
+  const zStateRef = useRef({ fxAbs: null, fyAbs: null, vpYear: null, vpLane: null });
+
+  // cooldowns
   const lastWheelTsRef = useRef(0);
   const INTERACT = { CLICK_MS: 200, HOVER_MS: 140, COOLDOWN_MS: 220 };
   const now = () => performance.now();
-  const inCooldown = () => (now() - lastWheelTsRef.current) < INTERACT.COOLDOWN_MS;
 
   /** Load data */
   useEffect(() => {
@@ -261,7 +278,7 @@ export default function App() {
       return base.w * Math.pow(k, 1.2) * sizeBoost;
     };
 
-    // wheel delta solely from CFG
+    // wheel delta independent of sepGain; anchor glue removes perceived jump.
     function wheelDelta(ev) {
       const dy = -ev.deltaY;
       const mode = ev.deltaMode;
@@ -274,44 +291,66 @@ export default function App() {
       return Math.sign(raw) * Math.max(Math.abs(raw), floor);
     }
 
-    // pointer to plot coords
+    // pointer to plot coords, clamped
     function pointerInPlot(sourceEvent) {
-      const [px, py] = d3.pointer(sourceEvent, gRoot.node());
-      return [Math.max(0, Math.min(width, px)), Math.max(0, Math.min(height, py))];
+      const [px0, py0] = d3.pointer(sourceEvent, gRoot.node());
+      const px = Math.max(0, Math.min(width, px0));
+      const py = Math.max(0, Math.min(height, py0));
+      return [px, py];
     }
 
-    // locality weights
-    function buildFocalWeights(t, fxPlot, fyPlot) {
-      const invX = t.rescaleX(x), invY = t.rescaleY(yLane);
-      theYearAt: { /* label for readability */ }
-      const yearAt = invX.invert(fxPlot), laneAt = invY.invert(fyPlot);
-      const k = t.k, baseR = 360 / Math.sqrt(k);
+    // track mouse (used only to choose anchor at gesture start)
+    svg.on("pointermove", (ev) => {
+      const [px, py] = pointerInPlot(ev);
+      mousePlotRef.current = { x: px, y: py };
+    });
+
+    // ----- Blended Y (forward and inverse) -----
+    const yZoomAlpha = yZoomAlphaFromSep(CFG.sepGain); // 0..1 based on sepGain
+    function yBlendAt(t, lane) {
+      // yBlend = [(1-a) + a*k] * yLane(lane) + t.y
+      const a = yZoomAlpha;
+      const base = yLane(lane);
+      return ((1 - a) + a * t.k) * base + t.y;
+    }
+    function invYBlendLane(t, fy) {
+      // yLane(lane) = (fy - t.y) / ((1-a) + a*k)
+      const a = yZoomAlpha;
+      const denom = (1 - a) + a * t.k;
+      const base = (fy - t.y) / Math.max(1e-6, denom);
+      return yLane.invert(base);
+    }
+
+    // locality weights around anchor (anchorYear, anchorLane)
+    function buildFocalWeightsUsingAnchor(t, anchorYear, anchorLane) {
+      const k = t.k;
+      const baseR = 360 / Math.sqrt(k);
       const wById = new Map();
       for (const d of nodes) {
-        const px = x(d.year ?? yearsDomain[0]) - x(yearAt);
-        const py = yLane(fieldIndex(d.field) + jitterLane(d.id)) - yLane(laneAt);
+        const lane = fieldIndex(d.field) + jitterLane(d.id);
+        const px = t.rescaleX(x)(d.year ?? yearsDomain[0]) - t.rescaleX(x)(anchorYear);
+        const py = yBlendAt(t, lane) - yBlendAt(t, anchorLane);
         const dd = Math.sqrt((px * px + py * py) / (baseR * baseR));
         wById.set(d.id, Math.exp(-dd * dd));
       }
       return wById;
     }
 
-    // Y zoom blend: proportional to sepGain
-    const yZoomAlpha = yZoomAlphaFromSep(CFG.sepGain);
-    function yBlendAt(t, lane) {
-      const yZoom = t.rescaleY(yLane)(lane);  // pan+zoom
-      const yPan  = yLane(lane) + t.y;        // pan-only
-      return (1 - yZoomAlpha) * yPan + yZoomAlpha * yZoom;
-    }
-
-    // auto-decay for separation
+    // auto-decay for separation — depends on sepGain
     let lastDecayTs = performance.now();
     function maybeDecay(k) {
-      const ar = CFG.autoReturn; if (!ar.enabled) return;
+      const ar = CFG.autoReturn;
+      const gain = Math.max(0, CFG.sepGain);
+      if (!ar.enabled || gain === 0) return;  // no decay motion if sepGain==0
+
       const within = Math.abs(k - ar.kHome) <= (ar.kHome * ar.epsilonK);
       if (!within) { lastDecayTs = performance.now(); return; }
       const tNow = performance.now(); const dt = tNow - lastDecayTs; if (dt <= 0) return; lastDecayTs = tNow;
-      const decay = Math.pow(0.5, dt / Math.max(100, ar.halfLifeMs));
+
+      // decay rate scaled by sepGain (small gain => slower decay => less visible motion)
+      const scaledHalfLife = Math.max(80, ar.halfLifeMs) / Math.max(1e-6, gain);
+      const decay = Math.pow(0.5, dt / scaledHalfLife);
+
       const acc = sepAccumRef.current;
       for (const [id, v] of acc) acc.set(id, { x: v.x * decay, y: v.y * decay });
     }
@@ -319,16 +358,13 @@ export default function App() {
     // rAF coalescing
     let rafId = null, pendingT = null;
 
-    // current anchor (absolute screen + inverse coords)
-    const focalRef = { fxAbs: null, fyAbs: null, vpYear: null, vpLane: null };
-
     const zoom = d3.zoom()
       .scaleExtent([CFG.kMin, CFG.kMax])
       .wheelDelta(wheelDelta)
       .translateExtent([[-1e7, -1e7], [width + 1e7, height + 1e7]])
       .filter(ev => !(ev.ctrlKey && ev.type === "wheel"))
       .on("start", (ev) => {
-        if (committingRef.current) return; // ignore synthetic start during commit
+        if (committingRef.current) return;
         const se = ev?.sourceEvent;
         const isZoom = !!se && (se.type === "wheel" || se.type === "gesturechange" || se.type === "dblclick" || (se.touches && se.touches.length === 2));
         const t = d3.zoomTransform(svg.node());
@@ -341,51 +377,53 @@ export default function App() {
           coeffById: null,
           vpYear: null,
           vpLane: null,
-          yStart: t.y, // freeze Y during zoom if sepGain == 0
+          fxAbs: null,
+          fyAbs: null,
+          yStart: t.y, // used to freeze Y during zoom when sepGain==0
         };
 
-        if (isZoom) {
-          // anchor: locked node (if any) else pointer
-          let fxPlot, fyPlot, vpYear, vpLane;
-          const locked = focusLockRef.current ? nodeByIdRef.current.get(focusLockRef.current) : null;
+        // ----- Choose ONE canonical anchor for the whole gesture -----
+        let fxPlot, fyPlot, vpYear, vpLane;
 
-          if (locked) {
-            const lane = fieldIndex(locked.field) + jitterLane(locked.id);
-            fxPlot = t.rescaleX(x)(locked.year ?? yearsDomain[0]);
-            fyPlot = yBlendAt(t, lane);
-            vpYear = t.rescaleX(x).invert(fxPlot);
-            vpLane = t.rescaleY(yLane).invert(fyPlot);
-          } else {
-            const [px, py] = se ? pointerInPlot(se) : [width / 2, height / 2];
-            fxPlot = px; fyPlot = py;
-            const invX = t.rescaleX(x), invY = t.rescaleY(yLane);
-            vpYear = invX.invert(fxPlot); vpLane = invY.invert(fyPlot);
-          }
-
-          focalRef.fxAbs = margin.left + fxPlot;
-          focalRef.fyAbs = margin.top + fyPlot;
-          focalRef.vpYear = vpYear;
-          focalRef.vpLane = vpLane;
-
-          sessionRef.current.vpYear = vpYear;
-          sessionRef.current.vpLane = vpLane;
-          sessionRef.current.coeffById = buildFocalWeights(t, fxPlot, fyPlot);
+        const locked = focusLockRef.current ? nodeByIdRef.current.get(focusLockRef.current) : null;
+        if (locked) {
+          // anchor = selected node (year + laneWithJitter)
+          const lane = fieldIndex(locked.field) + jitterLane(locked.id);
+          fxPlot = t.rescaleX(x)(locked.year ?? yearsDomain[0]);
+          fyPlot = yBlendAt(t, lane);
+          vpYear = locked.year ?? yearsDomain[0];
+          vpLane = lane;
         } else {
-          focalRef.fxAbs = focalRef.fyAbs = null;
-          focalRef.vpYear = focalRef.vpLane = null;
+          // anchor = mouse pointer converted to (year,lane) at gesture start (not live-updated)
+          const [px, py] = se ? pointerInPlot(se) :
+            (mousePlotRef.current.x != null ? [mousePlotRef.current.x, mousePlotRef.current.y] : [width / 2, height / 2]);
+          fxPlot = px;
+          fyPlot = py;
+          vpYear = t.rescaleX(x).invert(fxPlot);
+          vpLane = invYBlendLane(t, fyPlot);
         }
+
+        // store absolute screen anchor and data anchor
+        const fxAbs = margin.left + fxPlot;
+        const fyAbs = margin.top  + fyPlot;
+
+        zStateRef.current = { fxAbs, fyAbs, vpYear, vpLane };
+
+        sessionRef.current.vpYear = vpYear;
+        sessionRef.current.vpLane = vpLane;
+        sessionRef.current.fxAbs  = fxAbs;
+        sessionRef.current.fyAbs  = fyAbs;
+        sessionRef.current.coeffById = buildFocalWeightsUsingAnchor(t, vpYear, vpLane);
       })
       .on("zoom", (ev) => {
-        if (committingRef.current) return; // ignore synthetic zoom during commit
+        if (committingRef.current) return;
         const t = ev.transform;
         const s = sessionRef.current;
         if (s?.mode === "zoom") {
-          lastWheelTsRef.current = now();
+          lastWheelTsRef.current = performance.now();
           s.incNow = Math.log(Math.max(1e-6, t.k)) - s.logK0;
         } else {
           s.incNow = 0;
-          focalRef.fxAbs = focalRef.fyAbs = null;
-          focalRef.vpYear = focalRef.vpLane = null;
         }
         pendingT = t;
         if (!rafId) {
@@ -397,52 +435,65 @@ export default function App() {
         }
       })
       .on("end", () => {
-        if (committingRef.current) return; // ignore synthetic end during commit
+        if (committingRef.current) return;
         const s = sessionRef.current;
         if (!s?.active) return;
 
-        // If we produced a glued/frozen transform, commit it asynchronously
+        // Commit glued transform only if visible correction
         if (correctedTRef.current) {
+          const { dx, dy } = glueDeltaRef.current || { dx: 0, dy: 0 };
+          const delta = Math.hypot(dx, dy);
           const finalT = correctedTRef.current;
           correctedTRef.current = null;
-          committingRef.current = true;
-          setTimeout(() => {
-            svg.call(zoom.transform, finalT); // triggers synthetic zoom+end
-            committingRef.current = false;
-          }, 0);
-          s.active = false; s.incNow = 0;
-          return;
+
+          if (delta >= epsGlue()) {
+            committingRef.current = true;
+            setTimeout(() => {
+              d3.select(svg.node()).call(zoom.transform, finalT); // synthetic zoom+end
+              committingRef.current = false;
+            }, 0);
+            s.active = false; s.incNow = 0;
+            return;
+          }
         }
 
-        // final settle frame (no snap)
         requestAnimationFrame(() => renderWithTransform(d3.zoomTransform(svg.node())));
 
-        // --------- Separation accumulation (continuous by sepGain) ---------
+        // --------- Separation accumulation (∝ sepGain), anchored to s.vpYear/s.vpLane ---------
         const gSep = Math.max(0, CFG.sepGain);
         if (s.mode !== "zoom" || Math.abs(s.incNow) < 0.015 || gSep === 0) {
           s.active = false; s.incNow = 0; return;
         }
 
-        const kNow = d3.zoomTransform(svg.node()).k;
-        const addScale = gSep * s.incNow;         // scale increment by sepGain continuously
+        const tNow = d3.zoomTransform(svg.node());
+        const kNow = tNow.k;
+        const addScale = gSep * s.incNow; // scaled by sepGain
+
+        const anchorYear = s.vpYear;
+        const anchorLane = s.vpLane;
 
         if (addScale !== 0) {
           const ratio = Math.max(0, CFG.sepgainYoverX);
           const wX = 1;
-          const wY = Number.isFinite(ratio) ? ratio : 1e6; // huge => only Y
+          const wY = Number.isFinite(ratio) ? ratio : 1e6;
+
           for (const d of nodes) {
             const lane = fieldIndex(d.field) + jitterLane(d.id);
-            const px = x(d.year ?? yearsDomain[0]) - x(s.vpYear ?? (d.year ?? yearsDomain[0]));
-            const py = yLane(lane) - yLane(s.vpLane ?? lane);
+
+            // Pixel-space vectors using SAME math as selected-node case
+            const px = tNow.rescaleX(x)(d.year ?? yearsDomain[0]) - tNow.rescaleX(x)(anchorYear);
+            const py = yBlendAt(tNow, lane) - yBlendAt(tNow, anchorLane);
+
             let vx = px * wX, vy = py * wY;
             const norm = Math.hypot(vx, vy) || 1; vx /= norm; vy /= norm;
 
-            // Smooth acceleration: early stage still moves slowly; big tiles ramp up smoothly
+            // acceleration with size
             const w = nodeWidthAtK(d, kNow);
             const accelU = smoothstep(CFG.accelfromWidth * 0.6, CFG.accelfromWidth * 1.8, w);
-            const accel = 1 + Math.pow(accelU, CFG.accelPow); // >= 1, continuous
+            const accel = 1 + Math.pow(accelU, CFG.accelPow);
 
-            const local = s.coeffById?.get(d.id) ?? 0;        // locality weight (0..1)
+            // locality weight
+            const local = s.coeffById?.get(d.id) ?? 0;
             const mag = addScale * (0.25 + 0.75 * local) * accel;
 
             const prev = sepAccumRef.current.get(d.id) || { x: 0, y: 0 };
@@ -457,7 +508,7 @@ export default function App() {
     svg.call(zoom);
     svg.on("dblclick.zoom", null);
 
-    // ---- Highlight helpers (persist + reapply every frame) ----
+    // ---- Highlight helpers ----
     function resetHighlight() {
       highlightSetRef.current = null;
       highlightRootRef.current = null;
@@ -465,6 +516,7 @@ export default function App() {
     }
 
     function highlightNeighborhood(id, { raise = false } = {}) {
+      if (!id) { resetHighlight(); return; }
       const idxs = edgesByNode.get(id) || [];
       const sset = new Set([id]);
       idxs.forEach(i => { const e = edges[i]; sset.add(e.source); sset.add(e.target); });
@@ -472,7 +524,6 @@ export default function App() {
       highlightSetRef.current = sset;
       highlightRootRef.current = id;
 
-      // bind only selected↔neighbour edges
       const subset = idxs.map(i => edges[i]);
       edgesSel = edgesG.selectAll("path.edge")
         .data(subset, d => d ? `${d.source}->${d.target}` : undefined)
@@ -492,63 +543,54 @@ export default function App() {
       }
     }
 
+    // ------- RENDER -------
     function renderWithTransform(rawT) {
       let t = rawT;
 
-      // Keep anchor glued during zoom
-      if (sessionRef.current?.active && sessionRef.current.mode === "zoom" &&
-          focalRef.fxAbs != null && focalRef.fyAbs != null) {
+      // Anchor glue (works the same for selected or mouse anchor).
+      if (sessionRef.current?.active && sessionRef.current.mode === "zoom") {
+        const { fxAbs, fyAbs, vpYear, vpLane } = zStateRef.current || {};
+        if (fxAbs != null && fyAbs != null && vpYear != null && vpLane != null) {
+          // Where is the anchor under the *current* raw transform?
+          const ax = margin.left + t.rescaleX(x)(vpYear);
+          const ay = margin.top  + yBlendAt(t, vpLane);
 
-        let xAbsNow = null, yAbsNow = null;
+          // delta needed to keep the anchor fixed at its absolute screen position
+          const dx = fxAbs - ax;
+          const dy = fyAbs - ay;
 
-        if (focusLockRef.current) {
-          const nd = nodeByIdRef.current.get(focusLockRef.current);
-          if (nd) {
-            const lane = fieldIndex(nd.field) + jitterLane(nd.id);
-            xAbsNow = margin.left + t.rescaleX(x)(nd.year ?? yearsDomain[0]);
-            yAbsNow = margin.top  + yBlendAt(t, lane);
-          }
-        }
-
-        if (xAbsNow == null || yAbsNow == null) {
-          const vpYear = sessionRef.current?.vpYear ?? focalRef.vpYear;
-          const vpLane = sessionRef.current?.vpLane ?? focalRef.vpLane;
-          if (vpYear != null && vpLane != null) {
-            xAbsNow = margin.left + t.rescaleX(x)(vpYear);
-            yAbsNow = margin.top  + yBlendAt(t, vpLane);
-          }
-        }
-
-        if (xAbsNow != null && yAbsNow != null) {
-          let dx = focalRef.fxAbs - xAbsNow;
-          let dy = focalRef.fyAbs - yAbsNow;
-
-          // Freeze Y during zoom when sepGain==0 (no vertical shift at all)
           if (CFG.sepGain === 0) {
-            dy = 0;
-            const yFrozen = sessionRef.current?.yStart ?? t.y;
+            const yFrozen = sessionRef.current?.yStart ?? t.y; // freeze Y during zoom when sepGain==0
             t = d3.zoomIdentity.translate(t.x + dx, yFrozen).scale(t.k);
+            glueDeltaRef.current = { dx, dy: 0 };
           } else {
             t = d3.zoomIdentity.translate(t.x + dx, t.y + dy).scale(t.k);
+            glueDeltaRef.current = { dx, dy };
           }
 
-          correctedTRef.current = t; // remember glued (or frozen) transform for commit on end
+          correctedTRef.current = t; // remember glued transform for commit-on-end decision
         } else {
           correctedTRef.current = null;
+          glueDeltaRef.current = { dx: 0, dy: 0 };
         }
       } else {
         correctedTRef.current = null;
+        glueDeltaRef.current = { dx: 0, dy: 0 };
       }
 
       const k = t.k;
       const newX = t.rescaleX(x);
       const newY = (lane) => yBlendAt(t, lane);
 
+      // All passive motion (auto-decay) gated by sepGain
       maybeDecay(k);
 
       const P = new Map();
 
       // position nodes + apply highlight styling
+      const gSep = Math.max(0, CFG.sepGain);
+      const sepFactor = 360 / Math.sqrt(k); // display scaling over zoom
+
       nodesSel.each(function (d) {
         const lane = fieldIndex(d.field) + jitterLane(d.id);
         const baseX = newX(d.year ?? yearsDomain[0]);
@@ -556,9 +598,7 @@ export default function App() {
 
         const v = sepAccumRef.current.get(d.id) || { x: 0, y: 0 };
 
-        // --------- Apply separation CONTINUOUSLY in both X and Y ---------
-        const gSep = Math.max(0, CFG.sepGain);
-        const sepFactor = (360 / Math.sqrt(k));            // global scale over zoom
+        // Display-time separation depends on sepGain
         const sepX = v.x * gSep * sepFactor;
         const sepY = v.y * gSep * sepFactor;
 
@@ -577,7 +617,6 @@ export default function App() {
         const isHighlighted = inHighlight && highlightSetRef.current.has(d.id);
         const isRoot = inHighlight && highlightRootRef.current === d.id;
 
-        // rectangle (color + grey-out)
         g.select("rect.node-rect")
           .attr("width", tile.w)
           .attr("height", tile.h)
@@ -588,13 +627,11 @@ export default function App() {
           .attr("stroke", inHighlight ? (isHighlighted ? "#1f2937" : GREY_STROKE) : "#333")
           .attr("stroke-width", inHighlight ? (isRoot ? 2.6 : (isHighlighted ? 2.0 : 1.2)) : 1.2);
 
-        // header line only when highlighted
         g.select("line.node-header")
           .style("display", inHighlight && isHighlighted ? null : "none")
           .attr("x1", 0).attr("y1", 0)
           .attr("x2", tile.w).attr("y2", 0);
 
-        // label only when highlighted; scales to fit
         const padX = Math.max(6, tile.w * 0.05);
         const padTop = Math.max(6, tile.h * 0.06) + 2;
         const padBottom = Math.max(4, tile.h * 0.04);
@@ -616,7 +653,7 @@ export default function App() {
         P.set(d.id, { cx, cy, w: tile.w, h: tile.h });
       });
 
-      // edges (drawn only for selected↔neighbours subset)
+      // edges (selected↔neighbours only)
       const centerOf = id => { const p = P.get(id); return p ? { x: p.cx, y: p.cy } : null; };
       edgesSel
         .style("display", highlightSetRef.current ? null : "none")
@@ -627,7 +664,7 @@ export default function App() {
           return `M${sC.x},${sC.y} L${xm},${ym} L${tC.x},${tC.y}`;
         });
 
-      // axes: X zoom follows k; Y is pan-only (and frozen during sepGain==0 zoom)
+      // axes: X zoom follows k; Y axis follows pan/glue (frozen during zoom if sepGain==0)
       const yForAxis = (CFG.sepGain === 0 && sessionRef.current?.active && sessionRef.current.mode === "zoom")
         ? (sessionRef.current?.yStart ?? t.y) : t.y;
 
@@ -637,6 +674,8 @@ export default function App() {
     }
 
     // Node events
+    const inCooldown = () => (performance.now() - lastWheelTsRef.current) < INTERACT.COOLDOWN_MS;
+
     nodesSel
       .on("mouseover", function (_, d) {
         if (inCooldown() || focusLockRef.current) return;
@@ -660,9 +699,9 @@ export default function App() {
         t.style.top = `${event.pageY + 12}px`;
         t.innerHTML = `<strong>${d.title || "Untitled"}</strong><br/>${d.authors ? `<span>${d.authors}</span><br/>` : ""}<em>${d.field}</em> • ${d.year ?? "n/a"}<br/><strong>Citations:</strong> ${d.citationCount}${d.url ? `<br/><a href="${d.url}" target="_blank" rel="noreferrer">Open source</a>` : ""}`;
       })
-      .on("mouseleave", () => { const t = tooltipRef.current; if (t) t.style.display = "none"; })
+      .on("mouseleave", () => { const t = tooltipRef.current; if (!t) t.style.display = "none"; })
       .on("click", function (event, d) {
-        if ((now() - lastWheelTsRef.current) < INTERACT.CLICK_MS) return;
+        if ((performance.now() - lastWheelTsRef.current) < INTERACT.CLICK_MS) return;
         event.stopPropagation();
         if (lockedIdRef.current === d.id) {
           lockedIdRef.current = null;
@@ -675,22 +714,20 @@ export default function App() {
           setSelected(d);
           highlightNeighborhood(d.id, { raise: true });
 
-          // freeze absolute anchor on this node for immediate stability
+          // rebuild gesture anchor to selected node (year+lane), for next gesture start
           const tNow = d3.zoomTransform(svg.node());
           const lane = fieldIndex(d.field) + jitterLane(d.id);
-          const fxPlot = tNow.rescaleX(x)(d.year ?? yearsDomain[0]);
-          const fyPlot = yBlendAt(tNow, lane);
-          focalRef.fxAbs = margin.left + fxPlot;
-          focalRef.fyAbs = margin.top + fyPlot;
-          focalRef.vpYear = tNow.rescaleX(x).invert(fxPlot);
-          focalRef.vpLane = tNow.rescaleY(yLane).invert(fyPlot);
+          const fxAbs = margin.left + tNow.rescaleX(x)(d.year ?? yearsDomain[0]);
+          const fyAbs = margin.top  + yBlendAt(tNow, lane);
+
+          zStateRef.current = { fxAbs, fyAbs, vpYear: d.year ?? yearsDomain[0], vpLane: lane };
         }
         renderWithTransform(d3.zoomTransform(svg.node()));
       });
 
     // Background click => unlock
     svg.on("click", () => {
-      if ((now() - lastWheelTsRef.current) < INTERACT.CLICK_MS) return;
+      if ((performance.now() - lastWheelTsRef.current) < INTERACT.CLICK_MS) return;
       lockedIdRef.current = null;
       focusLockRef.current = null;
       setSelected(null);
@@ -705,9 +742,10 @@ export default function App() {
 
     return () => {
       window.removeEventListener("resize", onResize);
-      svg.on(".zoom", null).on("click", null);
+      svg.on(".zoom", null).on("click", null).on("pointermove", null);
     };
-  }, [nodes, edges, fields, yearsDomain]);
+  // deps: include all values referenced from outside the effect
+  }, [nodes, edges, fields, yearsDomain, baseTileSize, edgesByNode, fieldIndex]);
 
   return (
     <div className="app-wrap" ref={wrapRef} style={{ position: "relative" }}>
