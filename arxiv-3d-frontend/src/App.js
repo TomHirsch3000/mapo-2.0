@@ -2,9 +2,8 @@
 // X AND Y both blended by sepGain:
 // • xBlendAt(t, year)  = ((1-a)+a*k)*x(year) + t.x
 // • yBlendAt(t, lane)  = ((1-a)+a*k)*yLane(lane) + t.y
-// with a = yZoomAlphaFromSep(sepGain).
 // Separation accumulation & display ∝ sepGain; auto-decay scaled by sepGain.
-// Anchor is chosen once per gesture (selected node or mouse), removing wobble.
+// Per-node acceleration: when tile width > accelfromWidth, magnitude *= (width/accelfromWidth)^accelPow.
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
@@ -17,16 +16,16 @@ const CFG = {
   kMax: 300,
 
   // wheel behaviour
-  wheelBase: 0.0012,
+  wheelBase: 0.0001,
   wheelSlowCoef: 0.10,
 
   // separation strength (continuous)
-  sepGain: 0.5,        // 0 => no X/Y zoom component; separation off; Y frozen during zoom
+  sepGain: 0.2,        // 0 => no X/Y zoom component; separation off; Y frozen during zoom
   sepgainYoverX: 1.00,  // relative Y weight vs X inside separation vectors
 
-  // acceleration when tiles get big enough (smooth ramp)
-  accelfromWidth: 150,
-  accelPow: 2,
+  // acceleration when tiles get big enough (ratio ramp)
+  accelfromWidth: 200,  // width (px) at which acceleration starts
+  accelPow: 500,          // exponent for (width/accelfromWidth)^accelPow
 
   // gentle decay near home zoom (prevents permanent drift)
   autoReturn: { enabled: false, kHome: 1.0, epsilonK: 0.10, halfLifeMs: 900 },
@@ -41,7 +40,6 @@ const jitterMaxLaneUnits = 0.35;
 const hash32 = (s) => { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 const hashUnit = (s) => hash32(String(s)) / 4294967296;
 const jitterLane = (id) => (hashUnit(id) - 0.5) * 2 * jitterMaxLaneUnits;
-const smoothstep = (a, b, x) => { const t = clamp01((x - a) / Math.max(1e-6, b - a)); return t * t * (3 - 2 * t); };
 
 // grey palette
 const GREY_FILL = "#d8dbe1";
@@ -307,7 +305,6 @@ export default function App() {
     const a = yZoomAlphaFromSep(CFG.sepGain); // 0..1 based on sepGain
 
     function xBlendAt(t, year) {
-      // xBlend = [(1-a) + a*k] * x(year) + t.x
       const kx = (1 - a) + a * t.k;
       return kx * x(year) + t.x;
     }
@@ -317,7 +314,6 @@ export default function App() {
     }
 
     function yBlendAt(t, lane) {
-      // yBlend = [(1-a) + a*k] * yLane(lane) + t.y
       const ky = (1 - a) + a * t.k;
       return ky * yLane(lane) + t.y;
     }
@@ -352,7 +348,6 @@ export default function App() {
       if (!within) { lastDecayTs = performance.now(); return; }
       const tNow = performance.now(); const dt = tNow - lastDecayTs; if (dt <= 0) return; lastDecayTs = tNow;
 
-      // decay rate scaled by sepGain (small gain => slower decay => less visible motion)
       const scaledHalfLife = Math.max(80, ar.halfLifeMs) / Math.max(1e-6, gain);
       const decay = Math.pow(0.5, dt / scaledHalfLife);
 
@@ -444,6 +439,58 @@ export default function App() {
         const s = sessionRef.current;
         if (!s?.active) return;
 
+
+        requestAnimationFrame(() => renderWithTransform(d3.zoomTransform(svg.node())));
+
+        // --------- Separation accumulation (∝ sepGain), anchored to s.vpYear/s.vpLane ---------
+        const gSep = Math.max(0, CFG.sepGain);
+        if (s.mode !== "zoom" || Math.abs(s.incNow) < 0.015 || gSep === 0) {
+          s.active = false; s.incNow = 0; return;
+        }
+
+        const tNow = d3.zoomTransform(svg.node());
+        const kNow = tNow.k;
+        const addScale = gSep * s.incNow; // scaled by sepGain
+
+        const anchorYear = s.vpYear;
+        const anchorLane = s.vpLane;
+
+        if (addScale !== 0) {
+          const ratioYX = Math.max(0, CFG.sepgainYoverX);
+          const wX = 1;
+          const wY = Number.isFinite(ratioYX) ? ratioYX : 1e6;
+
+          for (const d of nodes) {
+            const lane = fieldIndex(d.field) + jitterLane(d.id);
+
+            // Direction vector away from anchor (blended X & Y)
+            const px = xBlendAt(tNow, d.year ?? yearsDomain[0]) - xBlendAt(tNow, anchorYear);
+            const py = yBlendAt(tNow, lane) - yBlendAt(tNow, anchorLane);
+
+            let vx = px * wX, vy = py * wY;
+            const norm = Math.hypot(vx, vy) || 1; vx /= norm; vy /= norm;
+
+            // ---- Per-node acceleration: only if this node is wider than threshold ----
+            const W = nodeWidthAtK(d, kNow);
+            const th = Math.max(1e-6, CFG.accelfromWidth);
+            //const ratio = W / th;
+            //const accel = ratio <= 1 ? 1 : Math.pow(ratio, CFG.accelPow); // >= 1, per-node
+
+
+            const accel = W > th ? CFG.accelPow : 1;   // binary switch (per node)
+
+            // locality weight (precomputed at gesture start)
+            const local = s.coeffById?.get(d.id) ?? 0;
+            // magnitude: sepGain * gesture log-scale * locality * per-node accel
+
+
+            const mag = addScale * (0.25 + 0.75 * local) * accel;
+
+            const prev = sepAccumRef.current.get(d.id) || { x: 0, y: 0 };
+            sepAccumRef.current.set(d.id, { x: prev.x + mag * vx, y: prev.y + mag * vy });
+          }
+        }
+
         // Commit glued transform only if visible correction
         if (correctedTRef.current) {
           const { dx, dy } = glueDeltaRef.current || { dx: 0, dy: 0 };
@@ -462,49 +509,6 @@ export default function App() {
           }
         }
 
-        requestAnimationFrame(() => renderWithTransform(d3.zoomTransform(svg.node())));
-
-        // --------- Separation accumulation (∝ sepGain), anchored to s.vpYear/s.vpLane ---------
-        const gSep = Math.max(0, CFG.sepGain);
-        if (s.mode !== "zoom" || Math.abs(s.incNow) < 0.015 || gSep === 0) {
-          s.active = false; s.incNow = 0; return;
-        }
-
-        const tNow = d3.zoomTransform(svg.node());
-        const kNow = tNow.k;
-        const addScale = gSep * s.incNow; // scaled by sepGain
-
-        const anchorYear = s.vpYear;
-        const anchorLane = s.vpLane;
-
-        if (addScale !== 0) {
-          const ratio = Math.max(0, CFG.sepgainYoverX);
-          const wX = 1;
-          const wY = Number.isFinite(ratio) ? ratio : 1e6;
-
-          for (const d of nodes) {
-            const lane = fieldIndex(d.field) + jitterLane(d.id);
-
-            // Pixel-space vectors using SAME math as selected-node case (blended X & Y)
-            const px = xBlendAt(tNow, d.year ?? yearsDomain[0]) - xBlendAt(tNow, anchorYear);
-            const py = yBlendAt(tNow, lane) - yBlendAt(tNow, anchorLane);
-
-            let vx = px * wX, vy = py * wY;
-            const norm = Math.hypot(vx, vy) || 1; vx /= norm; vy /= norm;
-
-            // acceleration with size
-            const w = nodeWidthAtK(d, kNow);
-            const accelU = smoothstep(CFG.accelfromWidth * 0.6, CFG.accelfromWidth * 1.8, w);
-            const accel = 1 + Math.pow(accelU, CFG.accelPow);
-
-            // locality weight
-            const local = s.coeffById?.get(d.id) ?? 0;
-            const mag = addScale * (0.25 + 0.75 * local) * accel;
-
-            const prev = sepAccumRef.current.get(d.id) || { x: 0, y: 0 };
-            sepAccumRef.current.set(d.id, { x: prev.x + mag * vx, y: prev.y + mag * vy });
-          }
-        }
 
         s.active = false;
         s.incNow = 0;
