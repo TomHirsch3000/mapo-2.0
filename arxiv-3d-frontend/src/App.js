@@ -24,8 +24,8 @@ const CFG = {
   sepgainYoverX: 1.00,  // relative Y weight vs X inside separation vectors
 
   // acceleration when tiles get big enough (ratio ramp)
-  accelfromWidth: 200,  // width (px) at which acceleration starts
-  accelPow: 500,          // exponent for (width/accelfromWidth)^accelPow
+  accelfromWidth: 150,  // width (px) at which acceleration starts
+  accelPow: 50,          // exponent for (width/accelfromWidth)^accelPow
 
   // gentle decay near home zoom (prevents permanent drift)
   autoReturn: { enabled: false, kHome: 1.0, epsilonK: 0.10, halfLifeMs: 900 },
@@ -286,6 +286,51 @@ export default function App() {
       const floor = 0.0017 + 0.0007 * Math.sqrt(Math.max(1, kNow));
       return Math.sign(raw) * Math.max(Math.abs(raw), floor);
     }
+// --- Incremental separation step during zoom ---
+// deltaInc = change in log(k) since last zoom frame (can be small + or -).
+function accumulateSeparationStep(deltaInc, t, session, kNow) {
+  const gSep = Math.max(0, CFG.sepGain);
+  if (!session || session.mode !== "zoom") return;
+  if (gSep === 0 || Math.abs(deltaInc) < 0.0003) return; // small deadzone
+
+  const addScaleStep = gSep * deltaInc; // signed
+  if (addScaleStep === 0) return;
+
+  const anchorYear = session.vpYear;
+  const anchorLane = session.vpLane;
+
+  const ratioYX = Math.max(0, CFG.sepgainYoverX);
+  const wX = 1;
+  const wY = Number.isFinite(ratioYX) ? ratioYX : 1e6;
+
+  const th = Math.max(1e-6, CFG.accelfromWidth);
+
+  for (const d of nodes) {
+    const lane = fieldIndex(d.field) + jitterLane(d.id);
+
+    // Use the SAME blended transform t as rendering (up to translation, which cancels)
+    const px = xBlendAt(t, d.year ?? yearsDomain[0]) - xBlendAt(t, anchorYear);
+    const py = yBlendAt(t, lane) - yBlendAt(t, anchorLane);
+
+    let vx = px * wX, vy = py * wY;
+    const norm = Math.hypot(vx, vy) || 1;
+    vx /= norm; vy /= norm;
+
+    // --- Smooth, non-binary acceleration ---
+    const W = nodeWidthAtK(d, kNow);
+    const ratio = W / th;
+    const accel = ratio <= 1 ? 1 : Math.pow(ratio, CFG.accelPow);
+
+    const local = session.coeffById?.get(d.id) ?? 0;
+    const mag = addScaleStep * (0.25 + 0.75 * local) * accel;
+
+    const prev = sepAccumRef.current.get(d.id) || { x: 0, y: 0 };
+    sepAccumRef.current.set(d.id, {
+      x: prev.x + mag * vx,
+      y: prev.y + mag * vy,
+    });
+  }
+}
 
     // pointer to plot coords, clamped
     function pointerInPlot(sourceEvent) {
@@ -374,6 +419,8 @@ export default function App() {
           mode: isZoom ? "zoom" : "pan",
           logK0: Math.log(Math.max(1e-6, t.k)),
           incNow: 0,
+            incPrev: 0,      // <— NEW: previous inc for delta
+
           coeffById: null,
           vpYear: null,
           vpLane: null,
@@ -415,104 +462,69 @@ export default function App() {
         sessionRef.current.fyAbs  = fyAbs;
         sessionRef.current.coeffById = buildFocalWeightsUsingAnchor(t, vpYear, vpLane);
       })
-      .on("zoom", (ev) => {
-        if (committingRef.current) return;
-        const t = ev.transform;
-        const s = sessionRef.current;
-        if (s?.mode === "zoom") {
-          lastWheelTsRef.current = performance.now();
-          s.incNow = Math.log(Math.max(1e-6, t.k)) - s.logK0;
-        } else {
-          s.incNow = 0;
-        }
-        pendingT = t;
-        if (!rafId) {
-          rafId = requestAnimationFrame(() => {
-            const tr = pendingT || d3.zoomTransform(svg.node());
-            pendingT = null; rafId = null;
-            renderWithTransform(tr);
-          });
-        }
-      })
-      .on("end", () => {
-        if (committingRef.current) return;
-        const s = sessionRef.current;
-        if (!s?.active) return;
+.on("zoom", (ev) => {
+  if (committingRef.current) return;
+  const t = ev.transform;
+  const s = sessionRef.current;
+
+  if (s?.mode === "zoom") {
+    lastWheelTsRef.current = performance.now();
+
+    const logK = Math.log(Math.max(1e-6, t.k));
+    const prevInc = s.incNow ?? 0;
+    const incNow = logK - s.logK0;
+    const deltaInc = incNow - prevInc;
+
+    s.incPrev = prevInc;
+    s.incNow = incNow;
+
+    // 🔑 smooth separation during the gesture
+    accumulateSeparationStep(deltaInc, t, s, t.k);
+  } else if (s) {
+    s.incPrev = 0;
+    s.incNow = 0;
+  }
+
+  pendingT = t;
+  if (!rafId) {
+    rafId = requestAnimationFrame(() => {
+      const tr = pendingT || d3.zoomTransform(svg.node());
+      pendingT = null; rafId = null;
+      renderWithTransform(tr);
+    });
+  }
+})
+
+.on("end", () => {
+  if (committingRef.current) return;
+  const s = sessionRef.current;
+  if (!s?.active) return;
+
+  // Use glued transform if present, else raw
+  const tNow = correctedTRef.current || d3.zoomTransform(svg.node());
+
+  const finalT = correctedTRef.current;
+  const { dx = 0, dy = 0 } = glueDeltaRef.current || {};
+  const delta = Math.hypot(dx, dy);
+
+  if (finalT && delta >= epsGlue()) {
+    committingRef.current = true;
+    d3.select(svg.node()).call(zoom.transform, finalT);
+    committingRef.current = false;
+
+    requestAnimationFrame(() => renderWithTransform(finalT));
+  } else {
+    requestAnimationFrame(() => renderWithTransform(tNow));
+  }
+
+  s.active = false;
+  s.incNow = 0;
+  s.incPrev = 0;
+  correctedTRef.current = null;
+  glueDeltaRef.current = { dx: 0, dy: 0 };
+});
 
 
-        requestAnimationFrame(() => renderWithTransform(d3.zoomTransform(svg.node())));
-
-        // --------- Separation accumulation (∝ sepGain), anchored to s.vpYear/s.vpLane ---------
-        const gSep = Math.max(0, CFG.sepGain);
-        if (s.mode !== "zoom" || Math.abs(s.incNow) < 0.015 || gSep === 0) {
-          s.active = false; s.incNow = 0; return;
-        }
-
-        const tNow = d3.zoomTransform(svg.node());
-        const kNow = tNow.k;
-        const addScale = gSep * s.incNow; // scaled by sepGain
-
-        const anchorYear = s.vpYear;
-        const anchorLane = s.vpLane;
-
-        if (addScale !== 0) {
-          const ratioYX = Math.max(0, CFG.sepgainYoverX);
-          const wX = 1;
-          const wY = Number.isFinite(ratioYX) ? ratioYX : 1e6;
-
-          for (const d of nodes) {
-            const lane = fieldIndex(d.field) + jitterLane(d.id);
-
-            // Direction vector away from anchor (blended X & Y)
-            const px = xBlendAt(tNow, d.year ?? yearsDomain[0]) - xBlendAt(tNow, anchorYear);
-            const py = yBlendAt(tNow, lane) - yBlendAt(tNow, anchorLane);
-
-            let vx = px * wX, vy = py * wY;
-            const norm = Math.hypot(vx, vy) || 1; vx /= norm; vy /= norm;
-
-            // ---- Per-node acceleration: only if this node is wider than threshold ----
-            const W = nodeWidthAtK(d, kNow);
-            const th = Math.max(1e-6, CFG.accelfromWidth);
-            //const ratio = W / th;
-            //const accel = ratio <= 1 ? 1 : Math.pow(ratio, CFG.accelPow); // >= 1, per-node
-
-
-            const accel = W > th ? CFG.accelPow : 1;   // binary switch (per node)
-
-            // locality weight (precomputed at gesture start)
-            const local = s.coeffById?.get(d.id) ?? 0;
-            // magnitude: sepGain * gesture log-scale * locality * per-node accel
-
-
-            const mag = addScale * (0.25 + 0.75 * local) * accel;
-
-            const prev = sepAccumRef.current.get(d.id) || { x: 0, y: 0 };
-            sepAccumRef.current.set(d.id, { x: prev.x + mag * vx, y: prev.y + mag * vy });
-          }
-        }
-
-        // Commit glued transform only if visible correction
-        if (correctedTRef.current) {
-          const { dx, dy } = glueDeltaRef.current || { dx: 0, dy: 0 };
-          const delta = Math.hypot(dx, dy);
-          const finalT = correctedTRef.current;
-          correctedTRef.current = null;
-
-          if (delta >= epsGlue()) {
-            committingRef.current = true;
-            setTimeout(() => {
-              d3.select(svg.node()).call(zoom.transform, finalT); // synthetic zoom+end
-              committingRef.current = false;
-            }, 0);
-            s.active = false; s.incNow = 0;
-            return;
-          }
-        }
-
-
-        s.active = false;
-        s.incNow = 0;
-      });
 
     svg.call(zoom);
     svg.on("dblclick.zoom", null);
