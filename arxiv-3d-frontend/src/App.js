@@ -16,7 +16,7 @@ const CFG = {
   kMax: 300,
 
   // wheel behaviour
-  wheelBase: 0.0001,
+  wheelBase: 0.00005,
   wheelSlowCoef: 0.10,
 
   // separation strength (continuous)
@@ -24,11 +24,13 @@ const CFG = {
   sepgainYoverX: 1.00,  // relative Y weight vs X inside separation vectors
 
   // acceleration when tiles get big enough (ratio ramp)
-  accelfromWidth: 150,  // width (px) at which acceleration starts
+  accelfromWidth: 100,  // width (px) at which acceleration starts
   accelPow: 50,          // exponent for (width/accelfromWidth)^accelPow
 
+  maxSepRadius: 40,  // cap on |sepAccum| (dimensionless); tweak to taste
+
   // gentle decay near home zoom (prevents permanent drift)
-  autoReturn: { enabled: false, kHome: 1.0, epsilonK: 0.10, halfLifeMs: 900 },
+  autoReturn: { enabled: false, kHome: 1.0, epsilonK: 0.12, halfLifeMs: 700 },
 };
 
 /** Internals derived from CFG */
@@ -256,6 +258,12 @@ export default function App() {
 
       return g;
     });
+    // Ensure larger / more-cited nodes are drawn on top (later in DOM)
+    nodesSel.sort((a, b) => {
+      const ca = a.citationCount ?? 0;
+      const cb = b.citationCount ?? 0;
+      return ca - cb; // smaller first, bigger last (on top)
+    });
 
     // edges path selection (bound dynamically to current highlight)
     let edgesSel = edgesG.selectAll("path.edge").data([], d => d ? `${d.source}->${d.target}` : undefined)
@@ -286,15 +294,18 @@ export default function App() {
       const floor = 0.0017 + 0.0007 * Math.sqrt(Math.max(1, kNow));
       return Math.sign(raw) * Math.max(Math.abs(raw), floor);
     }
-// --- Incremental separation step during zoom ---
+    // --- Incremental separation step during zoom ---
 // deltaInc = change in log(k) since last zoom frame (can be small + or -).
+// Behaviour:
+//  - zoom IN  (deltaInc > 0): push nodes away from anchor (vpYear/vpLane)
+//  - zoom OUT (deltaInc < 0): pull each node back towards its own home (sep → 0)
 function accumulateSeparationStep(deltaInc, t, session, kNow) {
   const gSep = Math.max(0, CFG.sepGain);
   if (!session || session.mode !== "zoom") return;
-  if (gSep === 0 || Math.abs(deltaInc) < 0.0003) return; // small deadzone
+  if (gSep === 0 || deltaInc === 0) return;
 
-  const addScaleStep = gSep * deltaInc; // signed
-  if (addScaleStep === 0) return;
+  const isZoomIn = deltaInc > 0;
+  const stepBase = gSep * deltaInc; // signed: >0 on zoom-in, <0 on zoom-out
 
   const anchorYear = session.vpYear;
   const anchorLane = session.vpLane;
@@ -304,33 +315,70 @@ function accumulateSeparationStep(deltaInc, t, session, kNow) {
   const wY = Number.isFinite(ratioYX) ? ratioYX : 1e6;
 
   const th = Math.max(1e-6, CFG.accelfromWidth);
+  const maxR = CFG.maxSepRadius ?? 40;  // make sure this exists in CFG (see below)
 
   for (const d of nodes) {
     const lane = fieldIndex(d.field) + jitterLane(d.id);
 
-    // Use the SAME blended transform t as rendering (up to translation, which cancels)
-    const px = xBlendAt(t, d.year ?? yearsDomain[0]) - xBlendAt(t, anchorYear);
-    const py = yBlendAt(t, lane) - yBlendAt(t, anchorLane);
-
-    let vx = px * wX, vy = py * wY;
-    const norm = Math.hypot(vx, vy) || 1;
-    vx /= norm; vy /= norm;
-
-    // --- Smooth, non-binary acceleration ---
+    // --- per-node acceleration (depends only on size) ---
     const W = nodeWidthAtK(d, kNow);
     const ratio = W / th;
-    const accel = ratio <= 1 ? 1 : Math.pow(ratio, CFG.accelPow);
+    const accel = ratio <= 1 ? 1 : Math.pow(ratio, CFG.accelPow); // smooth, non-binary
 
     const local = session.coeffById?.get(d.id) ?? 0;
-    const mag = addScaleStep * (0.25 + 0.75 * local) * accel;
+    const strength = (0.25 + 0.75 * local) * accel;
 
     const prev = sepAccumRef.current.get(d.id) || { x: 0, y: 0 };
-    sepAccumRef.current.set(d.id, {
-      x: prev.x + mag * vx,
-      y: prev.y + mag * vy,
-    });
+    let nx = prev.x;
+    let ny = prev.y;
+
+    if (isZoomIn) {
+      // ===== ZOOM IN: radial push away from gesture anchor =====
+      // direction from anchor → node (using blended coords)
+      const px = xBlendAt(t, d.year ?? yearsDomain[0]) - xBlendAt(t, anchorYear);
+      const py = yBlendAt(t, lane) - yBlendAt(t, anchorLane);
+      let vx = px * wX;
+      let vy = py * wY;
+      const norm = Math.hypot(vx, vy) || 1;
+      vx /= norm;
+      vy /= norm;
+
+      const mag = stepBase * strength; // stepBase > 0 here
+      nx += mag * vx;
+      ny += mag * vy;
+} else {
+  // ===== ZOOM OUT: gentle shrink towards home (0,0 in sep-space) =====
+  const r = Math.hypot(prev.x, prev.y);
+  if (r > 1e-6) {
+    // Base “shrink factor” from negative deltaInc:
+    // stepBase is gSep * deltaInc, so for zoom-out it's < 0.
+    const baseAlpha = (-stepBase) * strength;  // >= 0
+
+    // Soften it so one tick doesn't kill all separation:
+    // - clamp to [0, 0.35] so we never remove more than 35% per frame
+    //   (you can tweak 0.35 up/down to taste)
+    const alpha = Math.max(0, Math.min(0.2, baseAlpha));
+
+    // Multiplicative decay: move a fraction alpha towards 0.
+    const keep = 1 - alpha;      // in [0.65, 1]
+    nx = prev.x * keep;
+    ny = prev.y * keep;
   }
 }
+
+
+    // --- radial clamp to avoid nodes flying to infinity ---
+    const rNew = Math.hypot(nx, ny);
+    if (rNew > maxR) {
+      const sClamp = maxR / rNew;
+      nx *= sClamp;
+      ny *= sClamp;
+    }
+
+    sepAccumRef.current.set(d.id, { x: nx, y: ny });
+  }
+}
+
 
     // pointer to plot coords, clamped
     function pointerInPlot(sourceEvent) {
