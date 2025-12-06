@@ -1,0 +1,12 @@
+# Python virtual environments
+venv/
+.venv/
+venv311/
+arxiv-3d/venv311/
+
+# Python cache/junk
+__pycache__/
+*.pyc
+
+# Env files
+.env/

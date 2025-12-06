@@ -1,27 +1,183 @@
 
+-------------------------------------------------
+webhost
+-------------------------------------------------
 https://mapo.infinityfreeapp.com/
+https://dash.infinityfree.com/accounts/if0_40231986/domains/mapo.infinityfreeapp.com
 
+-------------------------------------------------
+Start frontend local 
+-------------------------------------------------
 Open CMD
 
 navigate to the frontend folder 
-cd C:\Users\TomHi\arxiv-3d-frontend\src
+cd C:\Users\TomHi\Documents\GitHub\mapo-2.0\arxiv-3d-frontend\src
 
 run the javascript app
 npm start
 
+build ready for publishing
+npm run build
 
-
+-------------------------------------------------
 open the backend systems
+-------------------------------------------------
 open ollama -- this is the ai environment
-open venv -- python environment 
+
+open venv
+Open CMD
+navigate to venv environment -- python environment 
 cd C:\Users\TomHi\arxiv-3d
+C:\Users\TomHi\Documents\GitHub\mapo-2.0\arxiv-3d
+start venv
 .\venv\Scripts\activate 
 
 open the database browser 
 sqllitebrowser
 
 
+-------------------------------------------------
+-------------------------------------------------
+-------------------------------------------------
+run backend process
+-------------------------------------------------
+-------------------------------------------------
+-------------------------------------------------
 
+
+-------------------------------------------------
+extract papers
+-------------------------------------------------
+
+-import_openalex.py
+
+# Example: import 500 highly-cited particle physics papers to a fresh DB
+python import_openalex.py \
+  --topic-name "particle physics" \
+  --db papers_particle_physics.db \
+  --sample 500 \
+  --email your@email.com \
+  --reset
+
+-------------------------------------------------
+build citations edges
+-------------------------------------------------
+-rebuild_citations_openalex.py
+
+python rebuild_citations_openalex.py
+
+-------------------------------------------------
+Find rows missing abstracts, prep for S2
+-------------------------------------------------
+-stage_0_discover_rows_needing_enrichment.py
+
+python stage_0_discover_rows_needing_enrichment.py \
+  --db papers_particle_physics.db \
+  --limit 0
+
+-------------------------------------------------
+Fill missing DOIs/arXiv + add S2 IDs
+-------------------------------------------------
+-stage_1_enrich_identifiers.py
+
+python stage_1_enrich_identifiers.py \
+  --db papers_particle_physics.db \
+  --input stage0_missing_ids.json \
+  --email your@email.com \
+  --batch-size 10
+
+-------------------------------------------------
+Pull abstracts & metadata from Semantic Scholar
+-------------------------------------------------
+-stage_2_fetch_abstracts_from_s2.py
+
+# Public mode (no key)
+python stage_2_fetch_abstracts_from_s2.py \
+  --db papers_particle_physics.db \
+  --input stage1_identifier_map.jsonl \
+  --batch-size 100  # will be internally clipped to 10 in public mode
+
+# With API key
+python stage_2_fetch_abstracts_from_s2.py \
+  --db papers_particle_physics.db \
+  --input stage1_identifier_map.jsonl \
+  --batch-size 100 \
+  --s2-api-key YOUR_S2_KEY_HERE
+
+-------------------------------------------------
+Generate nodes.json + edges.json for the frontend
+-------------------------------------------------
+-Process_AI_Edges_v2.py
+
+python Process_AI_Edges_v2.py \
+  --db papers_particle_physics.db \
+  --frontend-dir ../arxiv-3d-frontend/public \
+  --overwrite-ai 0 \
+  --only-unprocessed 1
+
+
+
+
+
+
+
+-------------------------------------------------
+-------------------------------------------------
+-------------------------------------------------
+-------------------------------------------------
+To do list
+-------------------------------------------------
+-------------------------------------------------
+-------------------------------------------------
+-------------------------------------------------
+
+
+-------------------------------------------------
+Backend backlog
+-------------------------------------------------
+populate summary field with ai process 
+-option to overwrite or not
+-set output to 16 words
+-
+
+pick up field in node json 
+-add extra fields to export step
+
+add field to node in frontend 
+-read in extra fields from Jason
+-design node layout
+-3 headings and text: title, ai summary, picture, link, citations, year, authors
+
+include a new node in the database manually 
+-put in newton laws of motion 
+
+
+-------------------------------------------------
+front end backlog 
+-------------------------------------------------
+ - fix axis 
+ - add content to nodes add context to nodes 
+      -add fields in the database: ai summary, image URL, 
+      -add a picture folder in the frontend 
+
+separation experience solve 
+-Not jerks [DONE]
+-no early separation, accelerating when above a certain size [DONE]
+-fix left shift [DONE]
+-align pan and scroll movements [DONE]
+-simplify code, annotate everything, modularize, drop, Setup git repo [DONE]
+
+-zoom towards pointer, not selected node [DONE]
+it didn't work. the nodes are separating at the same rate regardless of sepgain. I think there is some confusion when I talk about separation because I want the zoom to behave in a very specific way. nodes should not move much while they are small and the rate they move should be defined by sepgain, they should only really grow in size. then when they reach a certain size defined by accelfromwidth they should start to move away from the mouse pointer at the rate defined by accelpow. I also want to control the rate that they grow [DONE]
+ 
+
+
+
+
+
+ -------------------------------------------------
+Something old
+-------------------------------------------------
 in venv run 
 -- runs a query against arxiv to extract x papers each with at least y citations 
 -- fetch_arxiv_papers -- gets a list of papers on the subject of physics from arxive
@@ -54,38 +210,4 @@ python summarize_semantic_scholar.py
 --edges.json -- links between papers by their ID, source, taget, weight
 
 python extract_semantic_scholar.py
-
-
-
-
-
-To do list
-separation experience solve 
--Not jerks [DONE]
--no early separation, accelerating when above a certain size
--fix left shift [DONE]
--align pan and scroll movements [DONE]
--simplify code, annotate everything, modularize, drop, Setup git repo
-
--zoom towards pointer, not selected node
-it didn't work. the nodes are separating at the same rate regardless of sepgain. I think there is some confusion when I talk about separation because I want the zoom to behave in a very specific way. nodes should not move much while they are small and the rate they move should be defined by sepgain, they should only really grow in size. then when they reach a certain size defined by accelfromwidth they should start to move away from the mouse pointer at the rate defined by accelpow. I also want to control the rate that they grow 
-
-add context to nodes 
--add fields in the database: ai summary, image URL, 
--add a picture folder in the frontend 
-
-populate summary field with ai process 
--option to overwrite or not
--set output to 16 words
--
-
-pick up field in node json 
--add extra fields to export step
-
-add field to node in frontend 
--read in extra fields from Jason
--design node layout
--3 headings and text: title, ai summary, picture, link, citations, year, authors
-
-include a new node in the database manually 
--put in newton laws of motion 
+-------------------------------------------------
