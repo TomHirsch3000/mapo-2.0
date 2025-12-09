@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-import_openalex.py — Import OpenAlex works into SQLite with DOI & arXiv stored.
+import_openalex.py — Import OpenAlex works into SQLite with rich metadata.
 Supports either --concept-id or --topic-name. Use --reset to overwrite from scratch.
-
-Examples:
-  python import_openalex.py --topic-name "particle physics" --db papers_particle_physics.db --sample 500 --email you@example.com
-  python import_openalex.py --concept-id C154945302 --from-year 2018 --db papers.db --sample 200 --email you@example.com
-  python import_openalex.py --topic-name "particle physics" --db papers_particle_physics.db --sample 500 --email you@example.com --reset
 """
 
 import argparse
@@ -18,20 +13,38 @@ import time
 import urllib.parse
 import urllib.request
 import urllib.error
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 OPENALEX_BASE = "https://api.openalex.org"
 WORKS_URL     = f"{OPENALEX_BASE}/works"
 CONCEPTS_URL  = f"{OPENALEX_BASE}/concepts"
 
 # -----------------------------
+# WHAT WE ASK FOR FROM OPENALEX
+# -----------------------------
+# host_venue is NOT valid → removed
+OPENALEX_SELECT_FIELDS: List[str] = [
+    "id",
+    "title",
+    "abstract_inverted_index",
+    "cited_by_count",
+    "publication_year",
+    "publication_date",
+    "type",
+    "language",
+    "doi",
+    "ids",
+    "authorships",
+    "primary_location",    # contains source info (journal)
+    "concepts",
+    "open_access",
+]
+
+# -----------------------------
 # HTTP utils
 # -----------------------------
-def safe_get_json(url: str, params: Dict[str, Any], max_retries: int = 6, base_sleep: float = 0.8) -> Dict[str, Any]:
-    """
-    GET with query params + basic retry/backoff (handles 429/5xx/URLError).
-    `params` should be a dict of querystring parameters.
-    """
+def safe_get_json(url: str, params: Dict[str, Any],
+                  max_retries: int = 6, base_sleep: float = 0.8) -> Dict[str, Any]:
     qs = urllib.parse.urlencode(params, doseq=True, safe=":,")
     full = f"{url}?{qs}" if qs else url
     for attempt in range(1, max_retries + 1):
@@ -44,43 +57,80 @@ def safe_get_json(url: str, params: Dict[str, Any], max_retries: int = 6, base_s
                 body = e.read().decode("utf-8", errors="ignore")
             except Exception:
                 pass
-            if e.code in (429, 500, 502, 503) and attempt < max_retries:
+            if e.code in (429,500,502,503) and attempt < max_retries:
                 sleep_s = base_sleep * attempt
-                print(f"[warn] HTTP {e.code} → retry {attempt}/{max_retries} in {sleep_s:.1f}s")
+                print(f"[warn] HTTP {e.code} → retry in {sleep_s:.1f}s")
                 time.sleep(sleep_s)
                 continue
             raise RuntimeError(f"HTTP {e.code} on {full}: {body}") from e
         except urllib.error.URLError as e:
             if attempt < max_retries:
                 sleep_s = base_sleep * attempt
-                print(f"[warn] URL error '{e}' → retry {attempt}/{max_retries} in {sleep_s:.1f}s")
+                print(f"[warn] URL error '{e}' → retry in {sleep_s:.1f}s")
                 time.sleep(sleep_s)
                 continue
             raise
 
 def reconstruct_openalex_abstract(inv_idx: Optional[Dict[str, Any]]) -> str:
-    """Rebuild abstract text from OpenAlex abstract_inverted_index."""
+    """
+    Rebuild abstract text from OpenAlex abstract_inverted_index.
+
+    OpenAlex does NOT guarantee that every integer from 0..max_pos appears,
+    so we must handle missing positions gracefully instead of indexing dict[]
+    directly.
+    """
     if not inv_idx:
         return ""
+
     pos2tok = {}
     for tok, positions in inv_idx.items():
         for p in positions:
             pos2tok[p] = tok
-    return " ".join(pos2tok[i] for i in range(0, max(pos2tok.keys()) + 1))
+
+    if not pos2tok:
+        return ""
+
+    max_pos = max(pos2tok.keys())
+    # Use .get() and drop missing positions instead of raising KeyError
+    tokens = [pos2tok.get(i) for i in range(max_pos + 1)]
+    return " ".join(t for t in tokens if t)
+
+
+def uniq_preserve_order(seq):
+    seen = set()
+    out = []
+    for x in seq:
+        if x not in seen:
+            seen.add(x)
+            out.append(x)
+    return out
 
 # -----------------------------
-# DB utils
+# DB schema
 # -----------------------------
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS papers (
-    paperId TEXT PRIMARY KEY,          -- OpenAlex W-id (short form, e.g. W2752782242)
+    paperId TEXT PRIMARY KEY,
     title TEXT,
     abstract TEXT,
     cited_by_count INTEGER,
     year INTEGER,
     publicationDate TEXT,
     doi TEXT,
-    arxivId TEXT
+    arxivId TEXT,
+    journal_name TEXT,
+    journal_type TEXT,
+    journal_id TEXT,
+    first_author_name TEXT,
+    all_author_names TEXT,
+    all_institution_names TEXT,
+    primary_concept TEXT,
+    concepts_json TEXT,
+    landing_page_url TEXT,
+    is_oa INTEGER,
+    oa_url TEXT,
+    work_type TEXT,
+    language TEXT
 );
 """
 
@@ -89,61 +139,129 @@ def open_db(path: str) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     return conn
 
-def ensure_schema(conn: sqlite3.Connection, reset: bool = False):
-    """Ensure the 'papers' table exists with the expected columns. If reset=True, drop and recreate."""
+def ensure_schema(conn: sqlite3.Connection, reset=False):
     if reset:
         conn.execute("DROP TABLE IF EXISTS papers")
         conn.commit()
     conn.executescript(SCHEMA_SQL)
-    # Upgrade path: if table pre-existed, add missing columns
+
     existing = {row[1] for row in conn.execute("PRAGMA table_info(papers)").fetchall()}
     for col, ctype in [
-        ("title","TEXT"),
-        ("abstract","TEXT"),
-        ("cited_by_count","INTEGER"),
-        ("year","INTEGER"),
-        ("publicationDate","TEXT"),
-        ("doi","TEXT"),
-        ("arxivId","TEXT"),
+        ("journal_name","TEXT"),
+        ("journal_type","TEXT"),
+        ("journal_id","TEXT"),
+        ("first_author_name","TEXT"),
+        ("all_author_names","TEXT"),
+        ("all_institution_names","TEXT"),
+        ("primary_concept","TEXT"),
+        ("concepts_json","TEXT"),
+        ("landing_page_url","TEXT"),
+        ("is_oa","INTEGER"),
+        ("oa_url","TEXT"),
+        ("work_type","TEXT"),
+        ("language","TEXT"),
     ]:
         if col not in existing:
             conn.execute(f"ALTER TABLE papers ADD COLUMN {col} {ctype}")
     conn.commit()
 
+# -----------------------------
+# INSERT WORK
+# -----------------------------
 def insert_or_replace_work(conn: sqlite3.Connection, work: Dict[str, Any]):
-    """Insert/replace one row using the canonical schema."""
     paper_id_full = work.get("id")
     if not paper_id_full:
         return
-    paper_id = paper_id_full.split("/")[-1]  # keep short W-id
+    paper_id = paper_id_full.split("/")[-1]
 
     title = work.get("title")
     abstract = reconstruct_openalex_abstract(work.get("abstract_inverted_index"))
     cited_by_count = work.get("cited_by_count")
     year = work.get("publication_year")
     pub_date = work.get("publication_date")
-    doi = work.get("doi") or None
+    work_type = work.get("type")
+    language = work.get("language")
+
+    # DOI + arXiv ID
+    doi = work.get("doi")
     ids = work.get("ids") or {}
     arxiv_url = ids.get("arxiv")
-    arxiv_id = (arxiv_url.split("/")[-1] if arxiv_url else None)
+    arxiv_id = arxiv_url.split("/")[-1] if arxiv_url else None
 
-    conn.execute("""
-        INSERT OR REPLACE INTO papers
-        (paperId, title, abstract, cited_by_count, year, publicationDate, doi, arxivId)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        paper_id, title, abstract, cited_by_count, year, pub_date, doi, arxiv_id
-    ))
+    # Journal info via primary_location.source
+    primary_loc = work.get("primary_location") or {}
+    source = primary_loc.get("source") or {}
+
+    journal_name = source.get("display_name")
+    journal_type = source.get("type")
+    journal_id = source.get("id")
+
+    landing_page_url = primary_loc.get("landing_page_url")
+
+    # Open access info
+    oa = work.get("open_access") or {}
+    is_oa_val = 1 if oa.get("is_oa") else 0
+    oa_url = oa.get("oa_url")
+
+    # Authors + institutions
+    authorships = work.get("authorships") or []
+    authors = []
+    insts = []
+    for a in authorships:
+        auth = a.get("author") or {}
+        name = auth.get("display_name") or a.get("raw_author_name")
+        if name:
+            authors.append(name)
+        for inst in a.get("institutions") or []:
+            nm = inst.get("display_name")
+            if nm:
+                insts.append(nm)
+
+    authors_u = uniq_preserve_order(authors)
+    insts_u = uniq_preserve_order(insts)
+
+    first_author_name = authors_u[0] if authors_u else None
+    all_author_names = "; ".join(authors_u) if authors_u else None
+    all_institution_names = "; ".join(insts_u) if insts_u else None
+
+    # Concepts
+    concepts = work.get("concepts") or []
+    if concepts:
+        best = max(concepts, key=lambda c: c.get("score", 0))
+        primary_concept = best.get("display_name")
+        concepts_json = json.dumps(concepts, ensure_ascii=False)
+    else:
+        primary_concept = None
+        concepts_json = None
+
+    conn.execute(
+        """
+        INSERT OR REPLACE INTO papers (
+            paperId, title, abstract, cited_by_count, year, publicationDate,
+            doi, arxivId,
+            journal_name, journal_type, journal_id,
+            first_author_name, all_author_names, all_institution_names,
+            primary_concept, concepts_json,
+            landing_page_url, is_oa, oa_url,
+            work_type, language
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            paper_id, title, abstract, cited_by_count, year, pub_date,
+            doi, arxiv_id,
+            journal_name, journal_type, journal_id,
+            first_author_name, all_author_names, all_institution_names,
+            primary_concept, concepts_json,
+            landing_page_url, is_oa_val, oa_url,
+            work_type, language,
+        ),
+    )
 
 # -----------------------------
 # Concept resolution
 # -----------------------------
 def resolve_concept_name(name: str, mailto: str) -> str:
-    """
-    Resolve a concept display name to its OpenAlex concept ID (C#######).
-    1) Try filter=display_name.search:<name>
-    2) Fallback to search=<name>
-    """
     params = {
         "filter": f"display_name.search:{name}",
         "sort": "relevance_score:desc",
@@ -162,62 +280,52 @@ def resolve_concept_name(name: str, mailto: str) -> str:
         data = safe_get_json(CONCEPTS_URL, params)
         results = data.get("results", [])
     if not results:
-        raise RuntimeError(f"No OpenAlex concept found for name '{name}'")
-    cid_url = results[0].get("id") or ""
-    cid = cid_url.split("/")[-1] if cid_url else ""
-    if not cid.startswith("C"):
-        raise RuntimeError(f"Unexpected concept id for '{name}': {cid_url}")
+        raise RuntimeError(f"No OpenAlex concept found for '{name}'")
+    cid_url = results[0].get("id")
+    cid = cid_url.split("/")[-1]
     return cid
 
 # -----------------------------
-# Import logic
+# Import loop
 # -----------------------------
-def build_filter(concept_id: Optional[str], from_year: Optional[int]) -> str:
-    filters = []
+def build_filter(concept_id: Optional[str], from_year: Optional[int], to_year: Optional[int]) -> str:
+    """Build OpenAlex filter string from concept + optional year range.
+
+    - If both from_year and to_year: use "from-to".
+    - If only from_year: from_year-2100.
+    - If only to_year: 1900-to_year (arbitrary early year).
+    """
+    f = []
     if concept_id:
-        filters.append(f"concepts.id:https://openalex.org/{concept_id}")
-    if from_year:
-        filters.append(f"publication_year:{from_year}-2100")
-    return ",".join(filters)
+        f.append(f"concepts.id:https://openalex.org/{concept_id}")
+    if from_year and to_year:
+        f.append(f"publication_year:{from_year}-{to_year}")
+    elif from_year:
+        f.append(f"publication_year:{from_year}-2100")
+    elif to_year:
+        f.append(f"publication_year:1900-{to_year}")
+    return ",".join(f)
+
 
 def import_openalex(args):
     conn = open_db(args.db)
-    print("[debug] Opening DB…")
     ensure_schema(conn, reset=args.reset)
-    print("[debug] Ensuring SQLite schema…")
-    print("[debug] Schema ready")
 
-    # Resolve topic-name → concept-id if provided
     if args.topic_name and not args.concept_id:
-        print(f"[info] Resolving topic name '{args.topic_name}' to concept-id via OpenAlex…")
+        print(f"[info] Resolving topic '{args.topic_name}' → concept ID")
         args.concept_id = resolve_concept_name(args.topic_name, args.email)
 
-    if not args.concept_id and not args.topic_name:
-        raise SystemExit("Please provide either --concept-id or --topic-name")
+    if not args.concept_id:
+        raise SystemExit("Provide --topic-name or --concept-id")
 
-    filter_str = build_filter(args.concept_id, args.from_year)
-    print("[debug] Building filters…")
-    filters_dbg = []
-    if args.concept_id:
-        filters_dbg.append(f"concepts.id:https://openalex.org/{args.concept_id}")
-    if args.from_year:
-        filters_dbg.append(f"publication_year:{args.from_year}-2100")
-    print(f"[debug] Filters = {filters_dbg}")
+    filter_str = build_filter(args.concept_id, args.from_year, getattr(args, "to_year", None))
 
-    cursor   = "*"
+    cursor = "*"
     per_page = 200
     inserted = 0
-    target   = args.sample if args.sample and args.sample > 0 else float("inf")
+    target = args.sample if args.sample > 0 else float("inf")
 
-    debug_first = {
-        'per_page': per_page,
-        'cursor': '*',
-        'sort': 'cited_by_count:desc',
-        'filter': filter_str,
-        'mailto': args.email,
-        'select': 'id,title,abstract_inverted_index,cited_by_count,publication_year,publication_date,doi,ids'
-    }
-    print(f"[debug] First request params = {debug_first}")
+    select_str = ",".join(OPENALEX_SELECT_FIELDS)
 
     while cursor and inserted < target:
         params = {
@@ -226,10 +334,10 @@ def import_openalex(args):
             "sort": "cited_by_count:desc",
             "filter": filter_str,
             "mailto": args.email,
-            # ask explicitly for the fields we need
-            "select": "id,title,abstract_inverted_index,cited_by_count,publication_year,publication_date,doi,ids",
+            "select": select_str,
         }
-        print(f"[debug] Requesting works page (cursor={cursor})…")
+
+        print(f"[debug] Requesting page cursor={cursor}…")
         data = safe_get_json(WORKS_URL, params)
         results = data.get("results", [])
         next_cursor = (data.get("meta") or {}).get("next_cursor")
@@ -241,33 +349,26 @@ def import_openalex(args):
                 if inserted >= target:
                     break
 
-        print(f"[debug] Got {len(results)} works in this page")
-        print(f"[debug] Total inserted so far: {inserted}")
-
+        print(f"[debug] Inserted so far: {inserted}")
         cursor = next_cursor
-        time.sleep(0.2)  # polite pacing
+        time.sleep(0.2)
 
-    print(f"[info] Finished. Inserted total: {inserted}")
+    print(f"[info] Done. Total inserted: {inserted}")
     conn.close()
 
 # -----------------------------
 # CLI
 # -----------------------------
 def parse_args(argv=None):
-    p = argparse.ArgumentParser(description="Import OpenAlex works into SQLite (with DOI + arXiv).")
-    p.add_argument("--concept-id", type=str, default=None,
-                   help="OpenAlex concept id (e.g., C154945302).")
-    p.add_argument("--topic-name", type=str, default=None,
-                   help="Human-readable concept/topic name (e.g., 'particle physics'). "
-                        "Will be resolved to a concept-id via OpenAlex.")
-    p.add_argument("--from-year", type=int, default=None,
-                   help="Lower bound of publication_year (e.g., 2018).")
-    p.add_argument("--db", type=str, default="papers.db", help="SQLite database path.")
-    p.add_argument("--sample", type=int, default=0,
-                   help="Stop after inserting this many works (0 = no limit).")
-    p.add_argument("--email", type=str, required=True, help="mailto parameter for OpenAlex.")
-    p.add_argument("--reset", action="store_true",
-                   help="Drop and recreate the 'papers' table before importing.")
+    p = argparse.ArgumentParser(description="Import OpenAlex works into SQLite with rich metadata.")
+    p.add_argument("--concept-id", type=str)
+    p.add_argument("--topic-name", type=str)
+    p.add_argument("--from-year", type=int, help="Lower bound (inclusive) for publication_year")
+    p.add_argument("--to-year", type=int, help="Upper bound (inclusive) for publication_year")
+    p.add_argument("--db", type=str, default="papers.db")
+    p.add_argument("--sample", type=int, default=0)
+    p.add_argument("--email", type=str, required=True)
+    p.add_argument("--reset", action="store_true")
     return p.parse_args(argv)
 
 def main():
@@ -275,7 +376,7 @@ def main():
     try:
         import_openalex(args)
     except KeyboardInterrupt:
-        print("\n[info] Interrupted by user.")
+        print("\nInterrupted by user")
         sys.exit(130)
 
 if __name__ == "__main__":

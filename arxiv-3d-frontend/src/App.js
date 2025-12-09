@@ -16,7 +16,7 @@ const CFG = {
   kMax: 300,
 
   // wheel behaviour
-  wheelBase: 0.00005,
+  wheelBase: 0.00008,
   wheelSlowCoef: 0.10,
 
   // separation strength (continuous)
@@ -57,11 +57,11 @@ const epsGlue = () => {
 export default function App() {
   const svgRef = useRef(null);
   const wrapRef = useRef(null);
-  const tooltipRef = useRef(null);
 
   const [rawNodes, setRawNodes] = useState([]);
   const [rawEdges, setRawEdges] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [hovered, setHovered] = useState(null);
 
   const nodeByIdRef = useRef(new Map());
   const sepAccumRef = useRef(new Map());                 // id -> {x, y}
@@ -104,20 +104,42 @@ export default function App() {
   /** Normalize nodes */
   const nodes = useMemo(() => {
     const ns = (rawNodes || []).map(d => {
-      const yr = d.year ?? d.publication_year ?? (d.publicationDate ? new Date(d.publicationDate).getFullYear() : undefined);
-      const field = d.AI_primary_field || d.field || d.primary_field || "Unassigned";
+      const yr =
+        d.year ??
+        d.publication_year ??
+        (d.publicationDate ? new Date(d.publicationDate).getFullYear() : undefined);
+
+      // Prefer backend's primaryField from build_frontend_json, then fall back
+      const field =
+        d.primaryField ||
+        d.AI_primary_field ||
+        d.field ||
+        d.primary_field ||
+        "Unassigned";
+
       const cites = d.citationCount ?? d.cited_by_count ?? 0;
+
+      const authors =
+        d.allAuthors ||
+        d.firstAuthor ||
+        d.authors ||
+        d.authors_text ||
+        d.author;
+
+      const url = d.url || d.doi_url || d.openAlexUrl || d.s2Url;
+
       return {
         ...d,
-        id: String(d.id),
+        id: String(d.id ?? d.paperId),
         year: Number.isFinite(+yr) ? +yr : undefined,
         field,
         citationCount: Number.isFinite(+cites) ? +cites : 0,
-        authors: d.authors || d.authors_text || d.author,
-        url: d.url || d.doi_url || d.openAlexUrl || d.s2Url,
+        authors,
+        url,
         title: d.title || d.display_name || "Untitled",
       };
     });
+
     nodeByIdRef.current = new Map(ns.map(n => [n.id, n]));
     return ns;
   }, [rawNodes]);
@@ -182,7 +204,7 @@ export default function App() {
 
     const vw = typeof window !== "undefined" ? window.innerWidth : 1400;
     const vh = typeof window !== "undefined" ? window.innerHeight : 900;
-    const margin = { top: 28, right: 28, bottom: 48, left: 180 };
+    const margin = { top: 28, right: 16, bottom: 48, left: 32 };
     const cw = Math.max(720, (wrapRef.current.clientWidth || vw * 0.96));
     const ch = Math.max(1000, (wrapRef.current.clientHeight || vh * 0.86));
     const width = cw - margin.left - margin.right;
@@ -205,11 +227,10 @@ export default function App() {
       .attr("transform", `translate(0,${height})`)
       .call(d3.axisBottom(x).ticks(10).tickFormat(d3.format("d")));
 
+    // Create an empty y-axis group that stays hidden
     const yAxisG = gAxes.append("g")
-      .call(d3.axisLeft(yLane).tickValues(fields.map((_, i) => i)).tickFormat(i => fields[i]));
-
-    const applyAxisVisibility = () => { yAxisG.style("display", isMobileRef.current ? "none" : null); };
-    applyAxisVisibility();
+      .attr("class", "y-axis")
+      .style("display", "none");
 
     const edgesG = gPlot.append("g").attr("class", "edges");
     const nodesG = gPlot.append("g").attr("class", "nodes");
@@ -738,11 +759,6 @@ function accumulateSeparationStep(deltaInc, t, session, kNow) {
       // axes: X and Y axes follow the same blended affine transforms
       const kx = (1 - a) + a * t.k;
       const xAxisScale = x.copy().range(x.range().map(v => kx * v + t.x));
-      const yAxisOffset = (CFG.sepGain === 0 && sessionRef.current?.active && sessionRef.current.mode === "zoom")
-        ? (sessionRef.current?.yStart ?? t.y) : t.y;
-
-      yAxisG.attr("transform", `translate(0,${yAxisOffset})`)
-        .call(d3.axisLeft(yLane).tickValues(fields.map((_, i) => i)).tickFormat(i => fields[i]));
       xAxisG.call(d3.axisBottom(xAxisScale).ticks(10).tickFormat(d3.format("d")));
     }
 
@@ -752,6 +768,8 @@ function accumulateSeparationStep(deltaInc, t, session, kNow) {
     nodesSel
       .on("mouseover", function (_, d) {
         if (inCooldown() || focusLockRef.current) return;
+        setHovered(d);  // <-- track hovered
+
         if (!lockedIdRef.current) {
           highlightNeighborhood(d.id, { raise: true });
           renderWithTransform(d3.zoomTransform(svg.node()));
@@ -759,35 +777,31 @@ function accumulateSeparationStep(deltaInc, t, session, kNow) {
       })
       .on("mouseout", function () {
         if (inCooldown() || focusLockRef.current) return;
+        setHovered(null);  // <-- clear hovered when leaving
+
         if (!lockedIdRef.current) {
           resetHighlight();
           renderWithTransform(d3.zoomTransform(svg.node()));
         }
       })
-      .on("mousemove", (event, d) => {
-        if (inCooldown()) return;
-        const t = tooltipRef.current; if (!t) return;
-        t.style.display = "block";
-        t.style.left = `${event.pageX + 12}px`;
-        t.style.top = `${event.pageY + 12}px`;
-        t.innerHTML = `<strong>${d.title || "Untitled"}</strong><br/>${d.authors ? `<span>${d.authors}</span><br/>` : ""}<em>${d.field}</em> • ${d.year ?? "n/a"}<br/><strong>Citations:</strong> ${d.citationCount}${d.url ? `<br/><a href="${d.url}" target="_blank" rel="noreferrer">Open source</a>` : ""}`;
-      })
-      .on("mouseleave", () => { const t = tooltipRef.current; if (!t) t.style.display = "none"; })
+      // no more .on("mousemove") or .on("mouseleave") that touch tooltipRef
       .on("click", function (event, d) {
         if ((performance.now() - lastWheelTsRef.current) < INTERACT.CLICK_MS) return;
         event.stopPropagation();
+
         if (lockedIdRef.current === d.id) {
           lockedIdRef.current = null;
           focusLockRef.current = null;
           setSelected(null);
+          // keep hovered as is or clear it; your choice
           resetHighlight();
         } else {
           lockedIdRef.current = d.id;
           focusLockRef.current = d.id;
           setSelected(d);
+          setHovered(null);  // optional: clear hover when selecting
           highlightNeighborhood(d.id, { raise: true });
 
-          // rebuild gesture anchor to selected node (year+lane), for next gesture start
           const tNow = d3.zoomTransform(svg.node());
           const lane = fieldIndex(d.field) + jitterLane(d.id);
           const fxAbs = margin.left + xBlendAt(tNow, d.year ?? yearsDomain[0]);
@@ -795,8 +809,10 @@ function accumulateSeparationStep(deltaInc, t, session, kNow) {
 
           zStateRef.current = { fxAbs, fyAbs, vpYear: d.year ?? yearsDomain[0], vpLane: lane };
         }
+
         renderWithTransform(d3.zoomTransform(svg.node()));
       });
+
 
     // Background click => unlock
     svg.on("click", () => {
@@ -809,7 +825,7 @@ function accumulateSeparationStep(deltaInc, t, session, kNow) {
     });
 
     // Responsive
-    const onResize = () => { renderWithTransform(d3.zoomTransform(svg.node())); updateMobileFlag(); applyAxisVisibility(); };
+    const onResize = () => { renderWithTransform(d3.zoomTransform(svg.node())); updateMobileFlag(); };
     window.addEventListener("resize", onResize);
     renderWithTransform(d3.zoomTransform(svg.node()));
 
@@ -820,25 +836,57 @@ function accumulateSeparationStep(deltaInc, t, session, kNow) {
   // deps for everything referenced from outside the effect:
   }, [nodes, edges, fields, yearsDomain, baseTileSize, edgesByNode, fieldIndex]);
 
+  const activeNode = selected || hovered;
+
   return (
-    <div className="app-wrap" ref={wrapRef} style={{ position: "relative" }}>
-      <svg ref={svgRef} />
-      <div
-        ref={tooltipRef}
-        className="tooltip"
-        style={{
-          position: "absolute",
-          display: "none",
-          background: "rgba(255,255,255,0.98)",
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: "8px 10px",
-          boxShadow: "0 6px 18px rgba(0,0,0,0.12)",
-          pointerEvents: "none",
-          maxWidth: 380,
-          zIndex: 10
-        }}
-      />
+    <div className="app-wrap">
+      {/* --- HEADER --- */}
+      <header className="mobile-header">
+        <button className="menu-btn">☰</button>
+        <div className="app-title">MAPO</div>
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Search papers..."
+        />
+      </header>
+
+      {/* --- MAIN CONTENT --- */}
+      <div className="app-main">
+        <div className="canvas-container" ref={wrapRef}>
+          <svg ref={svgRef} />
+        </div>
+      </div>
+
+      {/* --- FOOTER --- */}
+      <footer className="mobile-footer">
+        {activeNode ? (
+          <div className="footer-details">
+            <div className="footer-title">
+              {activeNode.title || "Untitled"}
+            </div>
+            <div className="footer-meta">
+              {activeNode.authors && (
+                <span className="footer-authors">{activeNode.authors}</span>
+              )}
+              {activeNode.field && (
+                <span className="footer-dot"> • {activeNode.field}</span>
+              )}
+              {activeNode.year && (
+                <span className="footer-dot"> • {activeNode.year}</span>
+              )}
+              <span className="footer-dot">
+                {" "}• Citations: {activeNode.citationCount ?? 0}
+              </span>
+            </div>
+          </div>
+        ) : (
+          "Explore the map"
+        )}
+      </footer>
+
     </div>
   );
+
+
 }

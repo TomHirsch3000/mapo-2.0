@@ -1,18 +1,14 @@
-import sqlite3, json
+# show_schema.py
+import sqlite3, os
 
-with open("nodes.json", encoding="utf-8") as f:
-    nodes = json.load(f)
-pid_set = {n["id"] for n in nodes}
+path = "papers_particle_physics.db"
+print("Opening:", os.path.abspath(path))
 
-conn = sqlite3.connect("papers_particle_physics.db")
-c = conn.cursor()
+conn = sqlite3.connect(path)
+conn.row_factory = sqlite3.Row
 
-# Pick one known ID
-test_id = "W1551729708"
-print("Is in nodes.json?", test_id in pid_set)
+print("\nColumns:")
+for cid, name, ctype, *_ in conn.execute("PRAGMA table_info(papers)"):
+    print(cid, name, ctype)
 
-rows = c.execute("SELECT source, target FROM citations WHERE source=? OR target=?", (test_id, test_id)).fetchall()
-print("Citations involving", test_id, ":", rows)
-
-for src, dst in rows:
-    print("src==node?", src in pid_set, "dst==node?", dst in pid_set, "pair=", (src, dst))
+conn.close()

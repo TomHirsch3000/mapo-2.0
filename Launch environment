@@ -19,21 +19,7 @@ npm start
 build ready for publishing
 npm run build
 
--------------------------------------------------
-open the backend systems
--------------------------------------------------
-open ollama -- this is the ai environment
 
-open venv
-Open CMD
-navigate to venv environment -- python environment 
-cd C:\Users\TomHi\arxiv-3d
-C:\Users\TomHi\Documents\GitHub\mapo-2.0\arxiv-3d
-start venv
-.\venv\Scripts\activate 
-
-open the database browser 
-sqllitebrowser
 
 
 -------------------------------------------------
@@ -44,81 +30,162 @@ run backend process
 -------------------------------------------------
 -------------------------------------------------
 
+-------------------------------------------------
+open the backend systems
+-------------------------------------------------
+open ollama -- this is the ai environment
+
+Open CMD
+
+navigate to venv environment -- python environment 
+cd C:\Users\TomHi\Documents\GitHub\mapo-2.0\arxiv-3d
+
+start venv
+.\venv\Scripts\activate 
+
+open the database browser 
+sqllitebrowser
 
 -------------------------------------------------
 extract papers
 -------------------------------------------------
+select a bunch of papers with a filter on 'topic name'
 
 -import_openalex.py
 
 # Example: import 500 highly-cited particle physics papers to a fresh DB
-python import_openalex.py \
-  --topic-name "particle physics" \
-  --db papers_particle_physics.db \
-  --sample 500 \
-  --email your@email.com \
+python import_openalex.py ^
+  --topic-name "particle physics" ^
+  --db papers_particle_physics_100.db ^
+  --sample 100000 ^
+  --email tom.hirsch3000@gmail.com ^
   --reset
+
+
+run live batch by year
+
+:: 1900–1950
+python import_openalex.py ^
+  --topic-name "particle physics" ^
+  --db papers_particle_physics_all.db ^
+  --from-year 1900 ^
+  --to-year 1950 ^
+  --sample 0 ^
+  --email tom.hirsch3000@gmail.com ^
+  --reset
+
+:: 1950–1969
+python import_openalex.py ^
+  --topic-name "particle physics" ^
+  --db papers_particle_physics_all.db ^
+  --from-year 1950 ^
+  --to-year 1969 ^
+  --sample 0 ^
+  --email tom.hirsch3000@gmail.com 
+
+:: 1970–1989
+python import_openalex.py ^
+  --topic-name "particle physics" ^
+  --db papers_particle_physics_all.db ^
+  --from-year 1969 ^
+  --to-year 1989 ^
+  --sample 0 ^
+  --email tom.hirsch3000@gmail.com 
+
+
+:: 1990–1999
+python import_openalex.py ^
+  --topic-name "particle physics" ^
+  --db papers_particle_physics_all.db ^
+  --from-year 1990 ^
+  --to-year 1999 ^
+  --sample 0 ^
+  --email tom.hirsch3000@gmail.com
+
+:: 2000–2009
+python import_openalex.py ^
+  --topic-name "particle physics" ^
+  --db papers_particle_physics_all.db ^
+  --from-year 2000 ^
+  --to-year 2009 ^
+  --sample 0 ^
+  --email tom.hirsch3000@gmail.com
+
+:: 2010–2019
+python import_openalex.py ^
+  --topic-name "particle physics" ^
+  --db papers_particle_physics_all.db ^
+  --from-year 2010 ^
+  --to-year 2019 ^
+  --sample 0 ^
+  --email tom.hirsch3000@gmail.com
+
+:: 2020–2025 (or whatever current year)
+python import_openalex.py ^
+  --topic-name "particle physics" ^
+  --db papers_particle_physics_all.db 
+  --from-year 2020 ^
+  --to-year 2025 ^
+  --sample 0 ^
+  --email tom.hirsch3000@gmail.com
 
 -------------------------------------------------
 build citations edges
 -------------------------------------------------
--rebuild_citations_openalex.py
+for all of the papers in the sample, find the citations between them 
 
-python rebuild_citations_openalex.py
+# Full rebuild of citations for the big particle-physics DB
+python rebuild_citations_openalex.py --db papers_particle_physics.db --reset
 
--------------------------------------------------
-Find rows missing abstracts, prep for S2
--------------------------------------------------
--stage_0_discover_rows_needing_enrichment.py
+# For the smaller 100-sample DB
+python rebuild_citations_openalex.py --db papers_particle_physics_100.db --reset
 
-python stage_0_discover_rows_needing_enrichment.py \
-  --db papers_particle_physics.db \
-  --limit 0
+--id-chunk-size 5000 --batch-size 50
 
--------------------------------------------------
-Fill missing DOIs/arXiv + add S2 IDs
--------------------------------------------------
--stage_1_enrich_identifiers.py
+python rebuild_citations_openalex.py ^
+  --db papers_particle_physics_all.db ^
+  --reset ^
+  --id-chunk-size 5000 ^
+  --batch-size 50
 
-python stage_1_enrich_identifiers.py \
-  --db papers_particle_physics.db \
-  --input stage0_missing_ids.json \
-  --email your@email.com \
-  --batch-size 10
 
 -------------------------------------------------
-Pull abstracts & metadata from Semantic Scholar
+Find rows missing abstracts from semantic scholar and arxiv
 -------------------------------------------------
--stage_2_fetch_abstracts_from_s2.py
+-fetch_abstracts_s2_arxiv.py
 
-# Public mode (no key)
-python stage_2_fetch_abstracts_from_s2.py \
-  --db papers_particle_physics.db \
-  --input stage1_identifier_map.jsonl \
-  --batch-size 100  # will be internally clipped to 10 in public mode
+python fetch_abstracts_s2_arxiv.py --db papers_particle_physics.db --verbose --limit 50
 
-# With API key
-python stage_2_fetch_abstracts_from_s2.py \
-  --db papers_particle_physics.db \
-  --input stage1_identifier_map.jsonl \
-  --batch-size 100 \
-  --s2-api-key YOUR_S2_KEY_HERE
+
+
+-------------------------------------------------
+generate AI metadata
+-------------------------------------------------
+
+python process_ai_metadata.py --db papers_particle_physics.db --only-unprocessed 1
+
+python process_ai_metadata.py --db papers_particle_physics.db --only-unprocessed 0 --paper-id W1234567890
+python process_ai_metadata.py --db papers_particle_physics.db --only-unprocessed 0 --title-contains Higgs
+python process_ai_metadata.py --db papers_particle_physics_all.db --limit 10
+python process_ai_metadata.py --db papers_particle_physics_all.db --only-unprocessed 0 --limit 10
+python process_ai_metadata.py --db papers_particle_physics_all.db --only-unprocessed 1 --limit 1000 --min-citations 1000
 
 -------------------------------------------------
 Generate nodes.json + edges.json for the frontend
 -------------------------------------------------
--Process_AI_Edges_v2.py
 
-python Process_AI_Edges_v2.py \
-  --db papers_particle_physics.db \
-  --frontend-dir ../arxiv-3d-frontend/public \
-  --overwrite-ai 0 \
-  --only-unprocessed 1
+python build_frontend_json.py --db papers_particle_physics_all.db
 
+python build_frontend_json.py --db papers_particle_physics_all.db --frontend-dir ../arxiv-3d-frontend/public
 
+python build_frontend_json.py --db papers_particle_physics.db --top-n 1000 --frontend-dir ../arxiv-3d-frontend/public
 
-
-
+python build_frontend_json.py ^
+    --db papers_particle_physics_all.db ^
+    --min-citations 2000 ^
+    --frontend-dir ../arxiv-3d-frontend/public
+    --field "High energy physics" \
+    --year-from 1990 --year-to 2020
 
 
 -------------------------------------------------
