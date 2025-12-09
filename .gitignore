@@ -4,6 +4,12 @@ venv/
 venv311/
 arxiv-3d/venv311/
 
+# SQLite Databases
+*.db
+*.sqlite
+*.sqlite3
+/data/
+
 # Python cache/junk
 __pycache__/
 *.pyc
