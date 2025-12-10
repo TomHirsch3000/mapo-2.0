@@ -212,6 +212,7 @@ div[data-html] {
   position: relative;
   width: 100%;
   height: 100%;
+  touch-action: none;   /* <- important: let D3 handle touch */
 }
 
 /* Let the SVG fill its container */

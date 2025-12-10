@@ -53,6 +53,7 @@ const epsGlue = () => {
   const g = clamp01(CFG.sepGain);
   return Math.max(0.6, baseGlueEps * (0.9 + 0.6 * g));
 };
+const INTERACT = { CLICK_MS: 200, HOVER_MS: 140, COOLDOWN_MS: 220 };
 
 export default function App() {
   const svgRef = useRef(null);
@@ -86,7 +87,6 @@ export default function App() {
 
   // cooldowns
   const lastWheelTsRef = useRef(0);
-  const INTERACT = { CLICK_MS: 200, HOVER_MS: 140, COOLDOWN_MS: 220 };
 
   /** Load data */
   useEffect(() => {
@@ -227,10 +227,6 @@ export default function App() {
       .attr("transform", `translate(0,${height})`)
       .call(d3.axisBottom(x).ticks(10).tickFormat(d3.format("d")));
 
-    // Create an empty y-axis group that stays hidden
-    const yAxisG = gAxes.append("g")
-      .attr("class", "y-axis")
-      .style("display", "none");
 
     const edgesG = gPlot.append("g").attr("class", "edges");
     const nodesG = gPlot.append("g").attr("class", "nodes");
@@ -322,11 +318,16 @@ export default function App() {
 //  - zoom OUT (deltaInc < 0): pull each node back towards its own home (sep → 0)
 function accumulateSeparationStep(deltaInc, t, session, kNow) {
   const gSep = Math.max(0, CFG.sepGain);
-  if (!session || session.mode !== "zoom") return;
+  if (!session) return;
   if (gSep === 0 || deltaInc === 0) return;
 
   const isZoomIn = deltaInc > 0;
-  const stepBase = gSep * deltaInc; // signed: >0 on zoom-in, <0 on zoom-out
+
+  // Clamp how strong one zoom step can be
+  const rawStep = gSep * deltaInc;
+  const maxStep = 0.22; // tweak smaller/bigger if needed
+  const stepBase = Math.max(-maxStep, Math.min(maxStep, rawStep)); // signed
+
 
   const anchorYear = session.vpYear;
   const anchorLane = session.vpLane;
@@ -409,6 +410,23 @@ function accumulateSeparationStep(deltaInc, t, session, kNow) {
       return [px, py];
     }
 
+    // For pinch gestures: use midpoint between the two fingers as anchor.
+    function gestureAnchorPlot(sourceEvent) {
+      const se = sourceEvent;
+      if (se && se.touches && se.touches.length >= 2) {
+        const rect = gRoot.node().getBoundingClientRect();
+        const cx = (se.touches[0].clientX + se.touches[1].clientX) / 2 - rect.left;
+        const cy = (se.touches[0].clientY + se.touches[1].clientY) / 2 - rect.top;
+        const px = Math.max(0, Math.min(width, cx));
+        const py = Math.max(0, Math.min(height, cy));
+        return [px, py];
+      }
+      // fallback: single pointer (mouse or single touch)
+      return se ? pointerInPlot(se) : [width / 2, height / 2];
+    }
+
+
+
     // track mouse (used only to choose anchor at gesture start)
     svg.on("pointermove", (ev) => {
       const [px, py] = pointerInPlot(ev);
@@ -480,118 +498,136 @@ function accumulateSeparationStep(deltaInc, t, session, kNow) {
       .on("start", (ev) => {
         if (committingRef.current) return;
         const se = ev?.sourceEvent;
-        const isZoom = !!se && (se.type === "wheel" || se.type === "gesturechange" || se.type === "dblclick" || (se.touches && se.touches.length === 2));
         const t = d3.zoomTransform(svg.node());
 
+        // Start a gesture session. We don't yet know if it's zoom or pan.
         sessionRef.current = {
           active: true,
-          mode: isZoom ? "zoom" : "pan",
+          isZooming: false,              // <-- NEW: we’ll flip this when scale actually changes
           logK0: Math.log(Math.max(1e-6, t.k)),
           incNow: 0,
-            incPrev: 0,      // <— NEW: previous inc for delta
-
+          incPrev: 0,
           coeffById: null,
           vpYear: null,
           vpLane: null,
           fxAbs: null,
           fyAbs: null,
-          yStart: t.y, // used to freeze Y during zoom when sepGain==0
+          yStart: t.y,
         };
 
         // ----- Choose ONE canonical anchor for the whole gesture -----
         let fxPlot, fyPlot, vpYear, vpLane;
 
-        const locked = focusLockRef.current ? nodeByIdRef.current.get(focusLockRef.current) : null;
-        if (locked) {
-          // anchor = selected node (year + laneWithJitter)
-          const lane = fieldIndex(locked.field) + jitterLane(locked.id);
-          fxPlot = xBlendAt(t, locked.year ?? yearsDomain[0]);
-          fyPlot = yBlendAt(t, lane);
-          vpYear = locked.year ?? yearsDomain[0];
-          vpLane = lane;
-        } else {
-          // anchor = mouse pointer converted to (year,lane) at gesture start (not live-updated)
-          const [px, py] = se ? pointerInPlot(se) :
-            (mousePlotRef.current.x != null ? [mousePlotRef.current.x, mousePlotRef.current.y] : [width / 2, height / 2]);
-          fxPlot = px;
-          fyPlot = py;
-          vpYear = invXBlendYear(t, fxPlot);
-          vpLane = invYBlendLane(t, fyPlot);
-        }
+        const locked = focusLockRef.current
+          ? nodeByIdRef.current.get(focusLockRef.current)
+          : null;
 
-        // store absolute screen anchor and data anchor
+            if (locked) {
+            // Anchor = selected node
+            const lane = fieldIndex(locked.field) + jitterLane(locked.id);
+            fxPlot = xBlendAt(t, locked.year ?? yearsDomain[0]);
+            fyPlot = yBlendAt(t, lane);
+            vpYear = locked.year ?? yearsDomain[0];
+            vpLane = lane;
+          } else {
+            let px, py;
+
+            if (isMobileRef.current) {
+              // 📱 Mobile, no node selected:
+              // use viewport centre as a stable anchor so separation is symmetric,
+              // instead of relying on event coordinates that are messy for pinch.
+              px = width / 2;
+              py = height / 2;
+            } else {
+              // 🖥 Desktop: keep pointer-based anchor (mouse / trackpad)
+              [px, py] = gestureAnchorPlot(se);
+            }
+
+            fxPlot = px;
+            fyPlot = py;
+            vpYear = invXBlendYear(t, fxPlot);
+            vpLane = invYBlendLane(t, fyPlot);
+          }
+
+
         const fxAbs = margin.left + fxPlot;
-        const fyAbs = margin.top  + fyPlot;
+        const fyAbs = margin.top + fyPlot;
 
         zStateRef.current = { fxAbs, fyAbs, vpYear, vpLane };
 
         sessionRef.current.vpYear = vpYear;
         sessionRef.current.vpLane = vpLane;
-        sessionRef.current.fxAbs  = fxAbs;
-        sessionRef.current.fyAbs  = fyAbs;
-        sessionRef.current.coeffById = buildFocalWeightsUsingAnchor(t, vpYear, vpLane);
+        sessionRef.current.fxAbs = fxAbs;
+        sessionRef.current.fyAbs = fyAbs;
+        sessionRef.current.coeffById =
+          buildFocalWeightsUsingAnchor(t, vpYear, vpLane);
       })
-.on("zoom", (ev) => {
-  if (committingRef.current) return;
-  const t = ev.transform;
-  const s = sessionRef.current;
 
-  if (s?.mode === "zoom") {
-    lastWheelTsRef.current = performance.now();
 
-    const logK = Math.log(Math.max(1e-6, t.k));
-    const prevInc = s.incNow ?? 0;
-    const incNow = logK - s.logK0;
-    const deltaInc = incNow - prevInc;
+      .on("zoom", (ev) => {
+        if (committingRef.current) return;
+        const t = ev.transform;
+        const s = sessionRef.current;
+        if (!s) return;
 
-    s.incPrev = prevInc;
-    s.incNow = incNow;
+        const logK = Math.log(Math.max(1e-6, t.k));
+        const prevInc = s.incNow ?? 0;
+        const incNow = logK - s.logK0;
+        const deltaInc = incNow - prevInc;
 
-    // 🔑 smooth separation during the gesture
-    accumulateSeparationStep(deltaInc, t, s, t.k);
-  } else if (s) {
-    s.incPrev = 0;
-    s.incNow = 0;
-  }
+        s.incPrev = prevInc;
+        s.incNow = incNow;
 
-  pendingT = t;
-  if (!rafId) {
-    rafId = requestAnimationFrame(() => {
-      const tr = pendingT || d3.zoomTransform(svg.node());
-      pendingT = null; rafId = null;
-      renderWithTransform(tr);
-    });
-  }
-})
+        // Detect whether this gesture is actually changing scale
+        const isScaleChange = Math.abs(deltaInc) > 1e-7;
 
-.on("end", () => {
-  if (committingRef.current) return;
-  const s = sessionRef.current;
-  if (!s?.active) return;
+        if (isScaleChange) {
+          s.isZooming = true; // <-- mark this gesture as a zoom
+          accumulateSeparationStep(deltaInc, t, s, t.k);
+        } else {
+          // pure pan -> no separation update
+        }
 
-  // Use glued transform if present, else raw
-  const tNow = correctedTRef.current || d3.zoomTransform(svg.node());
+        pendingT = t;
+        if (!rafId) {
+          rafId = requestAnimationFrame(() => {
+            const tr = pendingT || d3.zoomTransform(svg.node());
+            pendingT = null; rafId = null;
+            renderWithTransform(tr);
+          });
+        }
+      })
 
-  const finalT = correctedTRef.current;
-  const { dx = 0, dy = 0 } = glueDeltaRef.current || {};
-  const delta = Math.hypot(dx, dy);
+      .on("end", () => {
+        if (committingRef.current) return;
+        const s = sessionRef.current;
+        if (!s?.active) return;
 
-  if (finalT && delta >= epsGlue()) {
-    committingRef.current = true;
-    d3.select(svg.node()).call(zoom.transform, finalT);
-    committingRef.current = false;
+        const tNow = correctedTRef.current || d3.zoomTransform(svg.node());
 
-    requestAnimationFrame(() => renderWithTransform(finalT));
-  } else {
-    requestAnimationFrame(() => renderWithTransform(tNow));
-  }
+        const finalT = correctedTRef.current;
+        const { dx = 0, dy = 0 } = glueDeltaRef.current || {};
+        const delta = Math.hypot(dx, dy);
 
-  s.active = false;
-  s.incNow = 0;
-  s.incPrev = 0;
-  correctedTRef.current = null;
-  glueDeltaRef.current = { dx: 0, dy: 0 };
-});
+        if (finalT && delta >= epsGlue()) {
+          committingRef.current = true;
+          d3.select(svg.node()).call(zoom.transform, finalT);
+          committingRef.current = false;
+
+          requestAnimationFrame(() => renderWithTransform(finalT));
+        } else {
+          requestAnimationFrame(() => renderWithTransform(tNow));
+        }
+
+        s.active = false;
+        s.isZooming = false;  // <-- add this line
+        s.incNow = 0;
+        s.incPrev = 0;
+        correctedTRef.current = null;
+        glueDeltaRef.current = { dx: 0, dy: 0 };
+      });
+
+
 
 
 
@@ -638,8 +674,9 @@ function accumulateSeparationStep(deltaInc, t, session, kNow) {
       let t = rawT;
 
       // Anchor glue (works the same for selected or mouse anchor).
-      if (sessionRef.current?.active && sessionRef.current.mode === "zoom") {
+      if (sessionRef.current?.active && sessionRef.current.isZooming) {
         const { fxAbs, fyAbs, vpYear, vpLane } = zStateRef.current || {};
+
         if (fxAbs != null && fyAbs != null && vpYear != null && vpLane != null) {
           // Where is the anchor under the *current* raw transform (blended X & Y)?
           const ax = margin.left + xBlendAt(t, vpYear);
