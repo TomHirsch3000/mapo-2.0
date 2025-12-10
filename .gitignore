@@ -8,7 +8,10 @@ arxiv-3d/venv311/
 *.db
 *.sqlite
 *.sqlite3
+
+
 /data/
+
 
 # Python cache/junk
 __pycache__/
