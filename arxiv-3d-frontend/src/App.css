@@ -225,22 +225,59 @@ div[data-html] {
 /* Footer */
 .mobile-footer {
   flex-shrink: 0;
-  height: 80px;                /* more space */
-  background: #ffffffee;
+  height: 180px;                /* more space for details */
+  background: #fdfdff;
   border-top: 1px solid #ccc;
   display: flex;
-  align-items: flex-start;      /* so text can wrap inside */
+  align-items: stretch;
   justify-content: center;
-  padding: 8px 12px;
+  padding: 12px 16px 16px;
   font-size: 14px;
   z-index: 10;
   box-sizing: border-box;
 }
 
-.footer-details {
+.footer-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   width: 100%;
-  max-width: 100%;
-  overflow: hidden;
+  height: 100%;
+}
+
+.footer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #e3e6ec;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 4px rgba(16, 24, 40, 0.06);
+  min-width: 0;
+}
+
+.footer-panel-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5a6475;
+}
+
+.footer-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.footer-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
 }
 
 .footer-title {
@@ -249,23 +286,73 @@ div[data-html] {
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  margin-bottom: 2px;
 }
 
-.footer-meta {
+.footer-year {
   font-size: 12px;
-  color: #555;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.footer-authors {
+  font-size: 12px;
+  color: #444;
+  font-style: italic;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
 }
 
-.footer-dot {
-  margin-left: 2px;
+.footer-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 10px;
+  font-size: 12px;
 }
 
-.footer-authors {
-  font-style: italic;
+.footer-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.footer-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #7b8190;
+}
+
+.footer-value {
+  font-size: 12px;
+  color: #1f2937;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.footer-link {
+  font-size: 12px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+.footer-empty {
+  font-size: 12px;
+  color: #6b7280;
+  padding: 6px 0;
+}
+
+.footer-hint {
+  font-size: 11px;
+  color: #7b8190;
+  line-height: 1.4;
 }
 
 
@@ -273,6 +360,14 @@ div[data-html] {
 @media (max-width: 768px) {
   .search-input {
     max-width: 110px;
+  }
+
+  .mobile-footer {
+    height: 220px;
+  }
+
+  .footer-panels {
+    grid-template-columns: 1fr;
   }
 }
 
