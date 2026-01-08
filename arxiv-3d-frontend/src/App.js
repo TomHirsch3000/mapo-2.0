@@ -1158,7 +1158,7 @@ export default function App() {
 
     nodesSel
       .on("mouseover", function (_, d) {
-        if (inCooldown() || focusLockRef.current) return;
+        if (inCooldown()) return;
         setHovered(d);
 
         if (!lockedIdRef.current) {
@@ -1167,7 +1167,7 @@ export default function App() {
         }
       })
       .on("mouseout", function () {
-        if (inCooldown() || focusLockRef.current) return;
+        if (inCooldown()) return;
         setHovered(null);
 
         if (!lockedIdRef.current) {
@@ -1188,7 +1188,6 @@ export default function App() {
           lockedIdRef.current = d.id;
           focusLockRef.current = d.id;
           setSelected(d);
-          setHovered(null);
           highlightNeighborhood(d.id, { raise: true });
 
           const tNow = d3.zoomTransform(svg.node());
@@ -1214,7 +1213,6 @@ export default function App() {
           lockedIdRef.current = d.id;
           focusLockRef.current = d.id;
           setSelected(d);
-          setHovered(null);
           highlightNeighborhood(d.id, { raise: true });
           trailDepthRef.current = 1;
         } else if (lockedIdRef.current === d.id && trailDepthRef.current === 1) {
@@ -1226,7 +1224,6 @@ export default function App() {
           lockedIdRef.current = d.id;
           focusLockRef.current = d.id;
           setSelected(d);
-          setHovered(null);
         }
         
         highlightCitationTrail(d.id, trailDepthRef.current, { raise: true });
@@ -1255,7 +1252,47 @@ export default function App() {
     };
   }, [nodes, edges, fields, yearsDomain, baseTileSize, edgesByNode, fieldIndex]);
 
-  const activeNode = selected || hovered;
+  const renderNodeInfo = (node, emptyMessage) => {
+    if (!node) {
+      return (
+        <div className="footer-empty">
+          {emptyMessage}
+        </div>
+      );
+    }
+
+    const metaItems = [
+      { label: "Field", value: node.field },
+      { label: "Citations", value: node.citationCount ?? 0 },
+      { label: "Cluster", value: node.clusterId >= 0 ? `#${node.clusterId}` : null },
+      { label: "Paper ID", value: node.id },
+    ].filter(item => item.value !== null && item.value !== undefined && item.value !== "");
+
+    return (
+      <div className="footer-card">
+        <div className="footer-title-row">
+          <div className="footer-title">{node.title || "Untitled"}</div>
+          {node.year && <span className="footer-year">{node.year}</span>}
+        </div>
+        {node.authors && (
+          <div className="footer-authors">{node.authors}</div>
+        )}
+        <div className="footer-meta-grid">
+          {metaItems.map(item => (
+            <div className="footer-meta-item" key={item.label}>
+              <span className="footer-label">{item.label}</span>
+              <span className="footer-value">{item.value}</span>
+            </div>
+          ))}
+        </div>
+        {node.url && (
+          <a className="footer-link" href={node.url} target="_blank" rel="noreferrer">
+            Open paper →
+          </a>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="app-wrap">
@@ -1281,49 +1318,29 @@ export default function App() {
       </div>
 
       <footer className="mobile-footer">
-        {activeNode ? (
-          <div className="footer-details">
-            <div className="footer-title">
-              {activeNode.title || "Untitled"}
-            </div>
-            <div className="footer-meta">
-              {activeNode.authors && (
-                <span className="footer-authors">{activeNode.authors}</span>
-              )}
-              {activeNode.field && (
-                <span className="footer-dot"> • {activeNode.field}</span>
-              )}
-              {activeNode.year && (
-                <span className="footer-dot"> • {activeNode.year}</span>
-              )}
-              <span className="footer-dot">
-                {" "}• Citations: {activeNode.citationCount ?? 0}
-              </span>
-              {activeNode.clusterId >= 0 && (
-                <span className="footer-dot">
-                  {" "}• Cluster {activeNode.clusterId}
-                </span>
-              )}
-            </div>
+        <div className="footer-panels">
+          <section className="footer-panel">
+            <div className="footer-panel-title">Hovering</div>
+            {renderNodeInfo(hovered, "Hover a node to preview details.")}
+          </section>
+          <section className="footer-panel">
+            <div className="footer-panel-title">Selected</div>
+            {renderNodeInfo(selected, "Click a node to pin its details here.")}
             {selected && (
-              <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
+              <div className="footer-hint">
                 {trailModeRef.current && trailDepthRef.current === 2 ? (
                   <>
-                    Information flow: {highlightSetRef.current?.size || 0} papers • 
-                    Earlier work → Selected paper → Later citations • 
+                    Information flow: {highlightSetRef.current?.size || 0} papers •
+                    Earlier work → Selected paper → Later citations •
                     Double-click again to reset
                   </>
                 ) : (
-                  'Single-click: neighbors • Double-click: information flow through time'
+                  "Single-click: neighbors • Double-click: information flow through time"
                 )}
               </div>
             )}
-          </div>
-        ) : (
-          <div style={{ textAlign: 'center', color: '#666' }}>
-            Explore • Click to select • Double-click for citation trail
-          </div>
-        )}
+          </section>
+        </div>
       </footer>
     </div>
   );
