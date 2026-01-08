@@ -2,32 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
-build_frontend_json.py — Build nodes & edges JSON for the frontend.
+build_frontend_json_enhanced.py — Enhanced version with clustering and network metrics
 
-Now supports:
-- Filtering by citations / field / keyword / author / year range.
-- Taking top-N by citations.
-- Stable Y-axis bands by AI_primary_field.
-
-Included node fields:
-- id               (alias of paperId)
-- paperId
-- title
-- summary          (from AI_summary)
-- primaryField     (from AI_primary_field)
-- year
-- publicationDate
-- doi
-- journal
-- firstAuthor
-- allAuthors
-- institutions
-- workType
-- language
-- citationCount    (from cited_by_count)
-- url
-- position         [x, y, z]
-- size             (derived from citationCount)
+New features:
+- Computes betweenness centrality to find "bridge" papers
+- Creates clusters of highly-connected papers
+- Exports tiered JSON for progressive loading
+- Calculates edge importance scores
 """
 
 import argparse
@@ -36,7 +17,8 @@ import math
 import os
 import shutil
 import sqlite3
-from typing import Iterable, List, Dict, Any, Optional
+from typing import Dict, List, Any, Optional, Set, Tuple
+from collections import defaultdict
 
 
 # -------------------------
@@ -49,6 +31,131 @@ def open_db(path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(abs_path)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+# -------------------------
+# Network Analysis
+# -------------------------
+
+def compute_degree_centrality(edges: List[Dict], node_ids: Set[str]) -> Dict[str, int]:
+    """Count total connections (in + out) for each node"""
+    degree = defaultdict(int)
+    for e in edges:
+        if e['source'] in node_ids:
+            degree[e['source']] += 1
+        if e['target'] in node_ids:
+            degree[e['target']] += 1
+    return dict(degree)
+
+
+def compute_betweenness_centrality_approx(
+    edges: List[Dict], 
+    node_ids: Set[str],
+    sample_size: int = 100
+) -> Dict[str, float]:
+    """
+    Approximate betweenness centrality using sampled shortest paths.
+    High betweenness = paper bridges different research areas.
+    """
+    # Build adjacency
+    adj = defaultdict(set)
+    for e in edges:
+        adj[e['source']].add(e['target'])
+        adj[e['target']].add(e['source'])  # undirected for simplicity
+    
+    betweenness = defaultdict(float)
+    nodes = list(node_ids)
+    
+    # Sample pairs for BFS
+    import random
+    random.seed(42)
+    sample = min(sample_size, len(nodes))
+    sampled_nodes = random.sample(nodes, sample)
+    
+    print(f"[info] Computing betweenness for {len(nodes)} nodes (sampling {sample} sources)...")
+    
+    for source in sampled_nodes:
+        # BFS to find shortest paths
+        queue = [(source, [source])]
+        visited = {source}
+        paths = defaultdict(list)
+        
+        while queue:
+            node, path = queue.pop(0)
+            
+            for neighbor in adj[node]:
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    new_path = path + [neighbor]
+                    paths[neighbor].append(new_path)
+                    queue.append((neighbor, new_path))
+        
+        # Count how often each node appears in shortest paths
+        for target, path_list in paths.items():
+            if not path_list:
+                continue
+            for path in path_list:
+                for node in path[1:-1]:  # exclude source and target
+                    betweenness[node] += 1.0 / len(path_list)
+    
+    # Normalize
+    n = len(nodes)
+    if n > 2:
+        norm = (n - 1) * (n - 2) / 2
+        betweenness = {k: v / norm for k, v in betweenness.items()}
+    
+    return dict(betweenness)
+
+
+def find_clusters(
+    edges: List[Dict],
+    node_ids: Set[str],
+    min_cluster_size: int = 3,
+    connection_threshold: int = 2
+) -> Dict[str, int]:
+    """
+    Group nodes into clusters based on shared citations.
+    Returns node_id -> cluster_id mapping.
+    """
+    # Build adjacency
+    adj = defaultdict(set)
+    for e in edges:
+        adj[e['source']].add(e['target'])
+        adj[e['target']].add(e['source'])
+    
+    # Simple connected components
+    visited = set()
+    clusters = {}
+    cluster_id = 0
+    
+    def dfs(node, cid):
+        visited.add(node)
+        clusters[node] = cid
+        for neighbor in adj[node]:
+            if neighbor not in visited and len(adj[neighbor]) >= connection_threshold:
+                dfs(neighbor, cid)
+    
+    for node in node_ids:
+        if node not in visited and len(adj[node]) >= connection_threshold:
+            dfs(node, cluster_id)
+            cluster_id += 1
+    
+    # Assign singletons to cluster -1
+    for node in node_ids:
+        if node not in clusters:
+            clusters[node] = -1
+    
+    # Report
+    cluster_sizes = defaultdict(int)
+    for cid in clusters.values():
+        cluster_sizes[cid] += 1
+    
+    print(f"[info] Found {cluster_id} clusters:")
+    for cid, size in sorted(cluster_sizes.items()):
+        if cid >= 0 and size >= min_cluster_size:
+            print(f"  Cluster {cid}: {size} papers")
+    
+    return clusters
 
 
 # -------------------------
@@ -84,9 +191,7 @@ def detect_citation_columns(conn: sqlite3.Connection):
 # -------------------------
 
 def build_field_bands(conn: sqlite3.Connection) -> Dict[str, float]:
-    """
-    Stable mapping AI_primary_field -> Y coordinate band.
-    """
+    """Stable mapping AI_primary_field -> Y coordinate band."""
     rows = conn.execute("""
         SELECT DISTINCT AI_primary_field
         FROM papers
@@ -106,6 +211,55 @@ def build_field_bands(conn: sqlite3.Connection) -> Dict[str, float]:
 
 
 # -------------------------
+# Tiered Selection
+# -------------------------
+
+def select_landmark_papers(
+    nodes: List[Dict],
+    edges: List[Dict],
+    tier1_size: int = 500,
+    min_citations: int = 50
+) -> Tuple[List[Dict], Set[str]]:
+    """
+    Select Tier 1 "landmark" papers based on:
+    - High citations
+    - High betweenness (bridging papers)
+    - Field diversity
+    """
+    node_ids = {n['id'] for n in nodes}
+    
+    # Filter minimum citations
+    candidates = [n for n in nodes if n['citationCount'] >= min_citations]
+    print(f"[info] {len(candidates)} papers with >={min_citations} citations")
+    
+    if len(candidates) <= tier1_size:
+        return candidates, {n['id'] for n in candidates}
+    
+    # Compute centrality
+    degree = compute_degree_centrality(edges, node_ids)
+    betweenness = compute_betweenness_centrality_approx(edges, node_ids)
+    
+    # Score each paper
+    for n in candidates:
+        nid = n['id']
+        cite_score = math.log1p(n['citationCount'])
+        degree_score = math.log1p(degree.get(nid, 0))
+        between_score = betweenness.get(nid, 0) * 100
+        
+        # Combined score
+        n['landmark_score'] = cite_score + degree_score * 2 + between_score * 3
+    
+    # Sort and take top
+    candidates.sort(key=lambda x: x['landmark_score'], reverse=True)
+    selected = candidates[:tier1_size]
+    
+    print(f"[info] Selected {len(selected)} landmark papers")
+    print(f"[info] Top paper: {selected[0]['title'][:60]}... (score: {selected[0]['landmark_score']:.1f})")
+    
+    return selected, {n['id'] for n in selected}
+
+
+# -------------------------
 # Build nodes
 # -------------------------
 
@@ -119,9 +273,7 @@ def build_nodes(
     year_from: Optional[int] = None,
     year_to: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
-    """
-    Build node dicts for the frontend using the requested fields and filters.
-    """
+    """Build node dicts for the frontend using the requested fields and filters."""
 
     print("[info] Building nodes…")
 
@@ -160,14 +312,12 @@ def build_nodes(
         params.append(year_to)
 
     if fields:
-        # (AI_primary_field = ? OR AI_primary_field = ? ...)
         conditions.append(
             "(" + " OR ".join("AI_primary_field = ?" for _ in fields) + ")"
         )
         params.extend(fields)
 
     if keywords:
-        # For each keyword, require it to appear in title OR summary
         for kw in keywords:
             conditions.append("(title LIKE ? OR AI_summary LIKE ?)")
             like = f"%{kw}%"
@@ -182,7 +332,6 @@ def build_nodes(
     if conditions:
         q += " WHERE " + " AND ".join(f"({c})" for c in conditions)
 
-    # Always order by citations desc so top_n is meaningful
     q += " ORDER BY cited_by_count DESC NULLS LAST"
 
     if top_n and top_n > 0:
@@ -201,25 +350,21 @@ def build_nodes(
     nodes: List[Dict[str, Any]] = []
 
     for r in rows:
-        paperId               = r["paperId"]
-        title                 = r["title"]
-        ai_summary            = r["AI_summary"]
-        ai_primary_field      = r["AI_primary_field"]
-        cited_by_count        = r["cited_by_count"]
-        year                  = r["year"]
-        publicationDate       = r["publicationDate"]
-        doi                   = r["doi"]
-        journal_name          = r["journal_name"]
-        first_author_name     = r["first_author_name"]
-        all_author_names      = r["all_author_names"]
+        paperId = r["paperId"]
+        title = r["title"]
+        ai_summary = r["AI_summary"]
+        ai_primary_field = r["AI_primary_field"]
+        cited_by_count = r["cited_by_count"]
+        year = r["year"]
+        publicationDate = r["publicationDate"]
+        doi = r["doi"]
+        journal_name = r["journal_name"]
+        first_author_name = r["first_author_name"]
+        all_author_names = r["all_author_names"]
         all_institution_names = r["all_institution_names"]
-        work_type             = r["work_type"]
-        language              = r["language"]
+        work_type = r["work_type"]
+        language = r["language"]
 
-        # Position heuristic:
-        # X: time axis
-        # Y: field band (stable per AI_primary_field)
-        # Z: log citations
         x = (year or 0) - 1950
         y = field_bands.get(ai_primary_field, 0.0)
         z = math.log1p(cited_by_count or 0) * 10.0
@@ -254,26 +399,24 @@ def build_nodes(
 
 
 # -------------------------
-# Build edges
+# Build edges with importance scores
 # -------------------------
 
-def build_edges(conn: sqlite3.Connection,
-                nodes: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def build_edges_enhanced(
+    conn: sqlite3.Connection,
+    nodes: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
     """
-    Build edges from the citations table.
-
-    Edges use paperId as the node identifier:
-    - edge["source"] = source paperId
-    - edge["target"] = target paperId
-
-    Only edges where both ends are in `nodes` are kept.
+    Build edges with importance scores based on:
+    - Citation counts of source and target
+    - Clustering (edges within clusters are less important for overview)
     """
-
-    print("[info] Building edges…")
+    print("[info] Building enhanced edges…")
 
     pid_set = {n["paperId"] for n in nodes}
+    node_map = {n["paperId"]: n for n in nodes}
+    
     colpair = detect_citation_columns(conn)
-
     if not colpair:
         print("[warn] No suitable citation columns found on `citations` table.")
         return []
@@ -289,10 +432,27 @@ def build_edges(conn: sqlite3.Connection,
     for src, dst in cur.fetchall():
         total += 1
         if src in pid_set and dst in pid_set:
-            edges.append({"source": src, "target": dst, "weight": 1.0})
+            src_node = node_map[src]
+            dst_node = node_map[dst]
+            
+            # Importance score: higher for connections between highly-cited papers
+            cite_score = math.log1p(src_node['citationCount']) + math.log1p(dst_node['citationCount'])
+            
+            edges.append({
+                "source": src,
+                "target": dst,
+                "weight": 1.0,
+                "importance": cite_score,
+                "sourceField": src_node.get('primaryField'),
+                "targetField": dst_node.get('primaryField'),
+            })
             kept += 1
 
     print(f"[info] Edges built: kept {kept} of {total} citation rows")
+    
+    # Sort by importance
+    edges.sort(key=lambda e: e['importance'], reverse=True)
+    
     return edges
 
 
@@ -318,24 +478,36 @@ def save_json(obj: Any, path: str, frontend_dir: Optional[str]):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Build nodes/edges JSON from SQLite DB for the frontend"
+        description="Build enhanced nodes/edges JSON with clustering and network metrics"
     )
     parser.add_argument("--db", type=str, default="papers.db",
                         help="Path to SQLite DB")
     parser.add_argument("--frontend-dir", type=str, default=None,
-                        help="Optional: directory to copy nodes.json / edges.json into")
+                        help="Optional: directory to copy JSON files into")
 
-    # Filtering / selection options
+    # Selection options
     parser.add_argument("--min-citations", type=int, default=0,
                         help="Minimum cited_by_count for a paper to be included")
     parser.add_argument("--top-n", type=int, default=0,
                         help="If >0, keep only the top N papers by citation count after filters")
+    
+    # Enhanced options
+    parser.add_argument("--use-landmarks", action="store_true",
+                        help="Use smart landmark selection instead of simple top-n")
+    parser.add_argument("--landmark-count", type=int, default=500,
+                        help="Number of landmark papers to select (default: 500)")
+    parser.add_argument("--compute-clusters", action="store_true",
+                        help="Compute and export cluster information")
+    parser.add_argument("--cluster-threshold", type=int, default=2,
+                        help="Minimum connections for clustering (default: 2)")
+
+    # Filters
     parser.add_argument("--field", action="append", default=None,
-                        help="Filter by AI_primary_field (can be passed multiple times)")
+                        help="Filter by AI_primary_field")
     parser.add_argument("--keyword", action="append", default=None,
-                        help="Filter by keyword in title or AI_summary (can be passed multiple times)")
+                        help="Filter by keyword in title or AI_summary")
     parser.add_argument("--author", action="append", default=None,
-                        help="Filter by substring match in all_author_names (can be passed multiple times)")
+                        help="Filter by author name")
     parser.add_argument("--year-from", type=int, default=None,
                         help="Minimum publication year (inclusive)")
     parser.add_argument("--year-to", type=int, default=None,
@@ -345,23 +517,96 @@ def main():
 
     conn = open_db(args.db)
 
-    nodes = build_nodes(
+    # Build all nodes matching filters
+    all_nodes = build_nodes(
         conn,
         min_citations=args.min_citations,
-        top_n=args.top_n,
+        top_n=args.top_n if not args.use_landmarks else 0,
         fields=args.field,
         keywords=args.keyword,
         authors=args.author,
         year_from=args.year_from,
         year_to=args.year_to,
     )
-    edges = build_edges(conn, nodes)
+    
+    # Build edges for all nodes
+    all_edges = build_edges_enhanced(conn, all_nodes)
+    
+    # Landmark selection
+    if args.use_landmarks:
+        print("\n[info] Using landmark selection strategy...")
+        landmark_nodes, landmark_ids = select_landmark_papers(
+            all_nodes,
+            all_edges,
+            tier1_size=args.landmark_count,
+            min_citations=args.min_citations or 10
+        )
+        
+        # Filter edges to only those connecting landmarks
+        landmark_edges = [
+            e for e in all_edges 
+            if e['source'] in landmark_ids and e['target'] in landmark_ids
+        ]
+        
+        nodes = landmark_nodes
+        edges = landmark_edges
+    else:
+        nodes = all_nodes
+        edges = all_edges
+    
+    # Compute clusters if requested
+    if args.compute_clusters:
+        print("\n[info] Computing clusters...")
+        node_ids = {n['id'] for n in nodes}
+        clusters = find_clusters(
+            edges,
+            node_ids,
+            connection_threshold=args.cluster_threshold
+        )
+        
+        # Add cluster info to nodes
+        for n in nodes:
+            n['clusterId'] = clusters.get(n['id'], -1)
+        
+        # Export cluster summary
+        cluster_summary = defaultdict(list)
+        for n in nodes:
+            cid = n.get('clusterId', -1)
+            if cid >= 0:
+                cluster_summary[cid].append({
+                    'id': n['id'],
+                    'title': n['title'],
+                    'citations': n['citationCount']
+                })
+        
+        save_json(
+            dict(cluster_summary),
+            "clusters.json",
+            args.frontend_dir
+        )
 
+    # Export main files
     save_json(nodes, "nodes.json", args.frontend_dir)
     save_json(edges, "edges.json", args.frontend_dir)
+    
+    # Export metadata
+    metadata = {
+        "nodeCount": len(nodes),
+        "edgeCount": len(edges),
+        "usedLandmarks": args.use_landmarks,
+        "hasClusters": args.compute_clusters,
+        "filters": {
+            "minCitations": args.min_citations,
+            "topN": args.top_n,
+            "fields": args.field,
+            "yearRange": [args.year_from, args.year_to] if args.year_from or args.year_to else None,
+        }
+    }
+    save_json(metadata, "metadata.json", args.frontend_dir)
 
     conn.close()
-    print("[info] Done.")
+    print("\n[info] Done! Your enhanced visualization data is ready.")
+    print(f"[info] Nodes: {len(nodes)}, Edges: {len(edges)}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,2494 @@
+{
+  "0": [
+    {
+      "id": "W2258584306",
+      "title": "PYTHIA 6.4 physics and manual",
+      "citations": 8623
+    },
+    {
+      "id": "W1858542512",
+      "title": "Observation of a new particle in the search for the Standard Model Higgs boson with the ATLAS detector at the LHC",
+      "citations": 10294
+    },
+    {
+      "id": "W2167727518",
+      "title": "Observation of a new boson at a mass of 125 GeV with the CMS experiment at the LHC",
+      "citations": 9567
+    },
+    {
+      "id": "W2110999179",
+      "title": "The automated computation of tree-level and next-to-leading order differential cross sections, and their matching to parton shower simulations",
+      "citations": 7073
+    },
+    {
+      "id": "W3084106382",
+      "title": "Review of Particle Physics",
+      "citations": 7221
+    },
+    {
+      "id": "W2070151728",
+      "title": "A Model of Leptons",
+      "citations": 7121
+    },
+    {
+      "id": "W1581228648",
+      "title": "Review of Particle Physics",
+      "citations": 5840
+    },
+    {
+      "id": "W4292322877",
+      "title": "Review of Particle Physics",
+      "citations": 6683
+    },
+    {
+      "id": "W2165739256",
+      "title": "Review of Particle Physics",
+      "citations": 5626
+    },
+    {
+      "id": "W2166252135",
+      "title": "Neutrino Mass and Spontaneous Parity Nonconservation",
+      "citations": 5588
+    },
+    {
+      "id": "W2061044423",
+      "title": "<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi>CP</mml:mi></mml:math>Conservation in the Presence of Pseudoparticles",
+      "citations": 6604
+    },
+    {
+      "id": "W2151165908",
+      "title": "Parton distributions for the LHC",
+      "citations": 3793
+    },
+    {
+      "id": "W2169090745",
+      "title": "<i>C</i><i>P</i>-Violation in the Renormalizable Theory of Weak Interaction",
+      "citations": 6346
+    },
+    {
+      "id": "W2163097950",
+      "title": "A brief introduction to PYTHIA 8.1",
+      "citations": 5026
+    },
+    {
+      "id": "W1989494434",
+      "title": "Asymptotic freedom in parton language",
+      "citations": 5028
+    },
+    {
+      "id": "W266195994",
+      "title": "Review of Particle Physics",
+      "citations": 4907
+    },
+    {
+      "id": "W2043935734",
+      "title": "Supersymmetry, supergravity and particle physics",
+      "citations": 3947
+    },
+    {
+      "id": "W2956145564",
+      "title": "Review of particle properties",
+      "citations": 4264
+    },
+    {
+      "id": "W2064777467",
+      "title": "Large Mass Hierarchy from a Small Extra Dimension",
+      "citations": 8583
+    },
+    {
+      "id": "W3041586415",
+      "title": "Supersymmetric dark matter",
+      "citations": 3875
+    },
+    {
+      "id": "W2102639000",
+      "title": "Particle dark matter: evidence, candidates and constraints",
+      "citations": 4623
+    },
+    {
+      "id": "W2899140785",
+      "title": "Review of Particle Physics",
+      "citations": 7001
+    },
+    {
+      "id": "W4292875581",
+      "title": "<i>Planck</i>2015 results",
+      "citations": 10120
+    },
+    {
+      "id": "W3124311860",
+      "title": "Review of Particle Physics",
+      "citations": 3989
+    },
+    {
+      "id": "W3102931941",
+      "title": "New Generation of Parton Distributions with Uncertainties from Global QCD Analysis",
+      "citations": 3003
+    },
+    {
+      "id": "W2058808507",
+      "title": "A New Light Boson?",
+      "citations": 4824
+    },
+    {
+      "id": "W2134803267",
+      "title": "Evidence for Oscillation of Atmospheric Neutrinos",
+      "citations": 4787
+    },
+    {
+      "id": "W1489445685",
+      "title": "μ→eγ at a rate of one out of 109 muon decays?",
+      "citations": 4465
+    },
+    {
+      "id": "W2151512268",
+      "title": "The CMS experiment at the CERN LHC",
+      "citations": 5322
+    },
+    {
+      "id": "W2115896628",
+      "title": "Neutrino oscillations in matter",
+      "citations": 3902
+    },
+    {
+      "id": "W2147875900",
+      "title": "SEVEN-YEAR<i>WILKINSON MICROWAVE ANISOTROPY PROBE</i>(<i>WMAP</i>) OBSERVATIONS: COSMOLOGICAL INTERPRETATION",
+      "citations": 8340
+    },
+    {
+      "id": "W2014632813",
+      "title": "Chiral perturbation theory to one loop",
+      "citations": 3811
+    },
+    {
+      "id": "W2090314870",
+      "title": "The search for supersymmetry: Probing physics beyond the standard model",
+      "citations": 3622
+    },
+    {
+      "id": "W1998909324",
+      "title": "Dynamical Model of Elementary Particles Based on an Analogy with Superconductivity. I",
+      "citations": 5294
+    },
+    {
+      "id": "W2097455345",
+      "title": "The hierarchy problem and new dimensions at a millimeter",
+      "citations": 6076
+    },
+    {
+      "id": "W2232454336",
+      "title": "Partial-symmetries of weak interactions",
+      "citations": 4550
+    },
+    {
+      "id": "W2081122760",
+      "title": "Chiral perturbation theory: Expansions in the mass of the strange quark",
+      "citations": 3289
+    },
+    {
+      "id": "W2125102738",
+      "title": "An introduction to PYTHIA 8.2",
+      "citations": 4908
+    },
+    {
+      "id": "W1733171988",
+      "title": "REVIEW OF PARTICLE PHYSICS Particle Data Group",
+      "citations": 3596
+    },
+    {
+      "id": "W2949980967",
+      "title": "Big-Bang Nucleosynthesis",
+      "citations": 3416
+    },
+    {
+      "id": "W2030690537",
+      "title": "Review of Particle Physics",
+      "citations": 2128
+    },
+    {
+      "id": "W1997985887",
+      "title": "Barygenesis without grand unification",
+      "citations": 3614
+    },
+    {
+      "id": "W2139937287",
+      "title": "<i>Planck</i>2013 results. XVI. Cosmological parameters",
+      "citations": 6265
+    },
+    {
+      "id": "W2097435698",
+      "title": "QCD and strongly coupled gauge theories: challenges and perspectives",
+      "citations": 520
+    },
+    {
+      "id": "W1965142446",
+      "title": "Unitary Symmetry and Leptonic Decays",
+      "citations": 4534
+    },
+    {
+      "id": "W2169127494",
+      "title": "Heavy quarkonium: progress, puzzles, and opportunities",
+      "citations": 1699
+    },
+    {
+      "id": "W2130052854",
+      "title": "Lepton number as the fourth \"color\"",
+      "citations": 3710
+    },
+    {
+      "id": "W2963002078",
+      "title": "Review of Particle Physics",
+      "citations": 5929
+    },
+    {
+      "id": "W2125707848",
+      "title": "Regularization and renormalization of gauge fields",
+      "citations": 4363
+    },
+    {
+      "id": "W2141743314",
+      "title": "Mesons in a relativized quark model with chromodynamics",
+      "citations": 2781
+    },
+    {
+      "id": "W2041688602",
+      "title": "Presentation of search results: the<i>CL<sub>s</sub></i>technique",
+      "citations": 2546
+    },
+    {
+      "id": "W2169165406",
+      "title": "Experimental and theoretical challenges in the search for the quark–gluon plasma: The STAR Collaboration's critical assessment of the evidence from RHIC collisions",
+      "citations": 3240
+    },
+    {
+      "id": "W2181986281",
+      "title": "Formation of dense partonic matter in relativistic nucleus–nucleus collisions at RHIC: Experimental evaluation by the PHENIX Collaboration",
+      "citations": 2901
+    },
+    {
+      "id": "W2118488783",
+      "title": "Neutrino masses in SU(2) ⊗ U(1) theories",
+      "citations": 3093
+    },
+    {
+      "id": "W1991302676",
+      "title": "A New Method for Combining NLO QCD with Shower Monte Carlo Algorithms",
+      "citations": 2447
+    },
+    {
+      "id": "W2070903826",
+      "title": "The EvtGen particle decay simulation package",
+      "citations": 3356
+    },
+    {
+      "id": "W2136044884",
+      "title": "New parton distributions for collider physics",
+      "citations": 2048
+    },
+    {
+      "id": "W2045120204",
+      "title": "Broken Symmetry and the Mass of Gauge Vector Mesons",
+      "citations": 3739
+    },
+    {
+      "id": "W2016801295",
+      "title": "Event generation with SHERPA 1.1",
+      "citations": 1981
+    },
+    {
+      "id": "W4288079944",
+      "title": "<i>Planck</i> 2018 results",
+      "citations": 12547
+    },
+    {
+      "id": "W1996413343",
+      "title": "Broken Symmetries and the Masses of Gauge Bosons",
+      "citations": 4248
+    },
+    {
+      "id": "W2066711625",
+      "title": "Exclusive processes in perturbative quantum chromodynamics",
+      "citations": 2795
+    },
+    {
+      "id": "W4211046286",
+      "title": "The ATLAS Experiment at the CERN Large Hadron Collider",
+      "citations": 3910
+    },
+    {
+      "id": "W2124075924",
+      "title": "Theory and phenomenology of two-Higgs-doublet models",
+      "citations": 2450
+    },
+    {
+      "id": "W2025074645",
+      "title": "Weak decays beyond leading logarithms",
+      "citations": 2541
+    },
+    {
+      "id": "W2148539882",
+      "title": "Parton distributions for the LHC run II",
+      "citations": 2311
+    },
+    {
+      "id": "W2595129576",
+      "title": "On anomalous electroweak baryon-number non-conservation in the early universe",
+      "citations": 2757
+    },
+    {
+      "id": "W2110389632",
+      "title": "HERWIG 6: an event generator for hadron emission reactions with interfering gluons (including supersymmetric processes)",
+      "citations": 1965
+    },
+    {
+      "id": "W2163389141",
+      "title": "Averages of b-hadron, c-hadron, and $$\\tau $$ τ -lepton properties as of summer 2016",
+      "citations": 1372
+    },
+    {
+      "id": "W2059777410",
+      "title": "Remarks on the Unified Model of Elementary Particles",
+      "citations": 3075
+    },
+    {
+      "id": "W2155070207",
+      "title": "Symmetry Breaking through Bell-Jackiw Anomalies",
+      "citations": 3184
+    },
+    {
+      "id": "W4312108281",
+      "title": "50 Years of quantum chromodynamics",
+      "citations": 155
+    },
+    {
+      "id": "W2007746935",
+      "title": "Cosmology of the invisible axion",
+      "citations": 3081
+    },
+    {
+      "id": "W2155113454",
+      "title": "Herwig++ physics and manual",
+      "citations": 1890
+    },
+    {
+      "id": "W2103189471",
+      "title": "High-energy-physics event generation with PYTHIA 5.7 and JETSET 7.4",
+      "citations": 2483
+    },
+    {
+      "id": "W2160306805",
+      "title": "Radiative Corrections as the Origin of Spontaneous Symmetry Breaking",
+      "citations": 4037
+    },
+    {
+      "id": "W2000000424",
+      "title": "A simple solution to the strong CP problem with a harmless axion",
+      "citations": 2643
+    },
+    {
+      "id": "W1921254765",
+      "title": "A facility to search for hidden particles at the CERN SPS: the SHiP physics case",
+      "citations": 738
+    },
+    {
+      "id": "W2137478082",
+      "title": "Softly broken supersymmetry and SU(5)",
+      "citations": 2098
+    },
+    {
+      "id": "W2045884684",
+      "title": "Weak-Interaction Singlet and Strong<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi>CP</mml:mi></mml:math>Invariance",
+      "citations": 2519
+    },
+    {
+      "id": "W1997474154",
+      "title": "A cosmological bound on the invisible axion",
+      "citations": 2817
+    },
+    {
+      "id": "W2101073879",
+      "title": "Neutrino masses and mixings in gauge models with spontaneous parity violation",
+      "citations": 2288
+    },
+    {
+      "id": "W2022155795",
+      "title": "QCD and resonance physics. applications",
+      "citations": 2326
+    },
+    {
+      "id": "W1983987483",
+      "title": "Direct Evidence for Neutrino Flavor Transformation from Neutral-Current Interactions in the Sudbury Neutrino Observatory",
+      "citations": 2824
+    },
+    {
+      "id": "W2117836026",
+      "title": "Weak Interactions with Lepton-Hadron Symmetry",
+      "citations": 2857
+    },
+    {
+      "id": "W2223433365",
+      "title": "Broken symmetries, massless particles and gauge fields",
+      "citations": 2898
+    },
+    {
+      "id": "W2023609273",
+      "title": "Semihard processes in QCD",
+      "citations": 2377
+    },
+    {
+      "id": "W2022463172",
+      "title": "The not-so-harmless axion",
+      "citations": 2727
+    },
+    {
+      "id": "W2157014333",
+      "title": "Matching NLO QCD computations and parton shower simulations",
+      "citations": 1825
+    },
+    {
+      "id": "W2090940374",
+      "title": "The ATLAS Simulation Infrastructure",
+      "citations": 1492
+    },
+    {
+      "id": "W1980039675",
+      "title": "Dynamical breaking of supersymmetry",
+      "citations": 3620
+    },
+    {
+      "id": "W2116109970",
+      "title": "Final report of the E821 muon anomalous magnetic moment measurement at BNL",
+      "citations": 2426
+    },
+    {
+      "id": "W2041895108",
+      "title": "Constraints imposed by<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi>CP</mml:mi></mml:math>conservation in the presence of pseudoparticles",
+      "citations": 2944
+    },
+    {
+      "id": "W2111808546",
+      "title": "Estimation of oblique electroweak corrections",
+      "citations": 1992
+    },
+    {
+      "id": "W2129078609",
+      "title": "ALPGEN, a generator for hard multiparton processes in hadronic collisions",
+      "citations": 1921
+    },
+    {
+      "id": "W2081194465",
+      "title": "One-loop corrections for e+e− annihilation into μ+μ− in the Weinberg model",
+      "citations": 2387
+    },
+    {
+      "id": "W2297591535",
+      "title": "The PHOBOS perspective on discoveries at RHIC",
+      "citations": 2166
+    },
+    {
+      "id": "W2133238133",
+      "title": "Rigorous QCD analysis of inclusive annihilation and production of heavy quarkonium",
+      "citations": 2271
+    },
+    {
+      "id": "W2109394810",
+      "title": "J/ψ suppression by quark-gluon plasma formation",
+      "citations": 2736
+    },
+    {
+      "id": "W352262126",
+      "title": "Supercollider physics",
+      "citations": 1526
+    },
+    {
+      "id": "W4211094490",
+      "title": "Quark masses",
+      "citations": 1678
+    },
+    {
+      "id": "W1689327406",
+      "title": "Two U(1)'s and ϵ charge shifts",
+      "citations": 2303
+    },
+    {
+      "id": "W2075111311",
+      "title": "High-energy-physics event generation with Pythia 6.1",
+      "citations": 1973
+    },
+    {
+      "id": "W1748447111",
+      "title": "A PCAC puzzle: π0→γγ in the σ-model",
+      "citations": 3112
+    },
+    {
+      "id": "W4292998192",
+      "title": "Science Requirements and Detector Concepts for the Electron-Ion Collider",
+      "citations": 740
+    },
+    {
+      "id": "W2124590498",
+      "title": "A planar diagram theory for strong interactions",
+      "citations": 4254
+    },
+    {
+      "id": "W2596042100",
+      "title": "Review of particle physics. Particle Data Group",
+      "citations": 2310
+    },
+    {
+      "id": "W2159617645",
+      "title": "First Results from KamLAND: Evidence for Reactor Antineutrino Disappearance",
+      "citations": 2557
+    },
+    {
+      "id": "W2098554896",
+      "title": "Quark–gluon plasma and color glass condensate at RHIC? The perspective from the BRAHMS experiment",
+      "citations": 2167
+    },
+    {
+      "id": "W2172949211",
+      "title": "Confinement of quarks",
+      "citations": 4152
+    },
+    {
+      "id": "W1982379873",
+      "title": "Can confinement ensure natural CP invariance of strong interactions?",
+      "citations": 2275
+    },
+    {
+      "id": "W4292545695",
+      "title": "The anatomy of electroweak symmetry breaking",
+      "citations": 917
+    },
+    {
+      "id": "W1537538693",
+      "title": "Big Bang Nucleosynthesis (in \"The Review of Particle Properties\" 2004)",
+      "citations": 2217
+    },
+    {
+      "id": "W1975211291",
+      "title": "Effective lagrangian analysis of new interactions and flavour conservation",
+      "citations": 2111
+    },
+    {
+      "id": "W2101449797",
+      "title": "Highly relativistic nucleus-nucleus collisions: The central rapidity region",
+      "citations": 2636
+    },
+    {
+      "id": "W3037535525",
+      "title": "Hadronic molecules",
+      "citations": 1253
+    },
+    {
+      "id": "W2138291582",
+      "title": "Parton distributions with LHC data",
+      "citations": 1746
+    },
+    {
+      "id": "W2096475520",
+      "title": "Cosmic separation of phases",
+      "citations": 3256
+    },
+    {
+      "id": "W2084051200",
+      "title": "The bonn meson-exchange model for the nucleon—nucleon interaction",
+      "citations": 2363
+    },
+    {
+      "id": "W2133761278",
+      "title": "Implications of CTEQ global analysis for collider observables",
+      "citations": 1308
+    },
+    {
+      "id": "W2130455390",
+      "title": "CMS Physics Technical Design Report, Volume II: Physics Performance",
+      "citations": 901
+    },
+    {
+      "id": "W2098406858",
+      "title": "The ATLAS Experiment at the CERN Large Hadron Collider",
+      "citations": 2375
+    },
+    {
+      "id": "W1976339978",
+      "title": "Chiral quarks and the non-relativistic quark model",
+      "citations": 1816
+    },
+    {
+      "id": "W2000369662",
+      "title": "QCD phenomenology based on a chiral effective Lagrangian",
+      "citations": 1541
+    },
+    {
+      "id": "W1621550171",
+      "title": "The Higgs Hunter's Guide",
+      "citations": 1660
+    },
+    {
+      "id": "W2060452630",
+      "title": "Baryon- and Lepton-Nonconserving Processes",
+      "citations": 2072
+    },
+    {
+      "id": "W2802066523",
+      "title": "Dynamical Model of Elementary Particles Based on an Analogy with Superconductivity. II",
+      "citations": 2310
+    },
+    {
+      "id": "W1965461171",
+      "title": "Baryons in the expansion",
+      "citations": 2386
+    },
+    {
+      "id": "W2137284081",
+      "title": "Dimension-six terms in the Standard Model Lagrangian",
+      "citations": 2221
+    },
+    {
+      "id": "W2103819515",
+      "title": "The Physics of the B Factories",
+      "citations": 406
+    },
+    {
+      "id": "W2091605720",
+      "title": "The muon g−2",
+      "citations": 1089
+    },
+    {
+      "id": "W2090386790",
+      "title": "Particle creation by black holes",
+      "citations": 12010
+    },
+    {
+      "id": "W3108284800",
+      "title": "Review of Particle Physics",
+      "citations": 5073
+    },
+    {
+      "id": "W2012869970",
+      "title": "Cosmology for Grand Unified Theories with Radiatively Induced Symmetry Breaking",
+      "citations": 4737
+    },
+    {
+      "id": "W2173403199",
+      "title": "Search for the Standard Model Higgs boson at LEP",
+      "citations": 1670
+    },
+    {
+      "id": "W2153208487",
+      "title": "Cosmological parameters from CMB and other data: A Monte Carlo approach",
+      "citations": 3304
+    },
+    {
+      "id": "W2157155801",
+      "title": "Computing quark and gluon distribution functions for very large nuclei",
+      "citations": 1922
+    },
+    {
+      "id": "W2045720405",
+      "title": "Locally Supersymmetric Grand Unification",
+      "citations": 1517
+    },
+    {
+      "id": "W1993681677",
+      "title": "New constraint on a strongly interacting Higgs sector",
+      "citations": 1675
+    },
+    {
+      "id": "W2050773679",
+      "title": "Accurate nucleon-nucleon potential with charge-independence breaking",
+      "citations": 3035
+    },
+    {
+      "id": "W1975024736",
+      "title": "An effective field theory for collinear and soft gluons: Heavy to light decays",
+      "citations": 1548
+    },
+    {
+      "id": "W2096487969",
+      "title": "Modern theory of nuclear forces",
+      "citations": 1752
+    },
+    {
+      "id": "W2129076408",
+      "title": "Weak decays of heavy mesons in the static quark approximation",
+      "citations": 1765
+    },
+    {
+      "id": "W3049342414",
+      "title": "The anomalous magnetic moment of the muon in the Standard Model",
+      "citations": 1200
+    },
+    {
+      "id": "W2101447717",
+      "title": "The axial vector current in beta decay",
+      "citations": 2435
+    },
+    {
+      "id": "W2114987342",
+      "title": "Supersymmetric relics from the big bang",
+      "citations": 1464
+    },
+    {
+      "id": "W2161636255",
+      "title": "HDECAY: a program for Higgs boson decays in the Standard Model and its supersymmetric extension",
+      "citations": 1334
+    },
+    {
+      "id": "W2155591485",
+      "title": "MadGraph/MadEvent v4: the new web generation",
+      "citations": 1278
+    },
+    {
+      "id": "W2212901559",
+      "title": "Dispelling the <mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" altimg=\"si1.gif\" overflow=\"scroll\"><mml:msup><mml:mi>N</mml:mi><mml:mn>3</mml:mn></mml:msup></mml:math> myth for the <mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" altimg=\"si2.gif\" overflow=\"scroll\"><mml:msub><mml:mi>k</mml:mi><mml:mi>t</mml:mi></mml:msub></mml:math> jet-finder",
+      "citations": 1363
+    },
+    {
+      "id": "W4290041185",
+      "title": "Glueballs, hybrids, multiquarks",
+      "citations": 714
+    },
+    {
+      "id": "W1513532866",
+      "title": "The anatomy of electroweak symmetry breaking: Tome I: The Higgs boson in the Standard Model",
+      "citations": 564
+    },
+    {
+      "id": "W1974234687",
+      "title": "Hadron properties from QCD sum rules",
+      "citations": 1631
+    },
+    {
+      "id": "W2018074373",
+      "title": "Grand unified theories and proton decay",
+      "citations": 1249
+    },
+    {
+      "id": "W2159449603",
+      "title": "FeynRules  2.0 — A complete toolbox for tree-level phenomenology",
+      "citations": 2574
+    },
+    {
+      "id": "W2012218074",
+      "title": "Anomaly cancellations in supersymmetric D = 10 gauge theory and superstring theory",
+      "citations": 2695
+    },
+    {
+      "id": "W2227740876",
+      "title": "Behavior of Current Divergences under<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mrow><mml:msub><mml:mrow><mml:mi>SU</mml:mi></mml:mrow><mml:mrow><mml:mn>3</mml:mn></mml:mrow></mml:msub></mml:mrow><mml:mo>×</mml:mo><mml:mrow><mml:msub><mml:mrow><mml:mi>SU</mml:mi></mml:mrow><mml:mrow><mml:mn>3</mml:mn></mml:mrow></mml:msub></mml:mrow></mml:math>",
+      "citations": 2014
+    },
+    {
+      "id": "W2232221069",
+      "title": "Non-Lagrangian Models of Current Algebra",
+      "citations": 1974
+    },
+    {
+      "id": "W2092921030",
+      "title": "Light pseudoscalars, particle physics and cosmology",
+      "citations": 1079
+    },
+    {
+      "id": "W2294966860",
+      "title": "New parton distribution functions from a global analysis of quantum chromodynamics",
+      "citations": 1446
+    },
+    {
+      "id": "W2122765019",
+      "title": "A theory of dark matter",
+      "citations": 1580
+    },
+    {
+      "id": "W2162750483",
+      "title": "Theories with gauge-mediated supersymmetry breaking",
+      "citations": 1292
+    },
+    {
+      "id": "W2063121619",
+      "title": "Gauge models with spontaneously broken local supersymmetry",
+      "citations": 1330
+    },
+    {
+      "id": "W2101310208",
+      "title": "New extended model of hadrons",
+      "citations": 2541
+    },
+    {
+      "id": "W2603156218",
+      "title": "A schematic model of baryons and mesons",
+      "citations": 2737
+    },
+    {
+      "id": "W2042260934",
+      "title": "First Results from the LUX Dark Matter Experiment at the Sanford Underground Research Facility",
+      "citations": 1568
+    },
+    {
+      "id": "W2201035149",
+      "title": "PDF4LHC recommendations for LHC Run II",
+      "citations": 1317
+    },
+    {
+      "id": "W2108477648",
+      "title": "Supersymmetric dark matter",
+      "citations": 1009
+    },
+    {
+      "id": "W2174639164",
+      "title": "Exact left-right symmetry and spontaneous violation of parity",
+      "citations": 1676
+    },
+    {
+      "id": "W2121461231",
+      "title": "Hadron masses in a gauge theory",
+      "citations": 1695
+    },
+    {
+      "id": "W2018603564",
+      "title": "Consequences of anomalous ward identities",
+      "citations": 2731
+    },
+    {
+      "id": "W2170318505",
+      "title": "Observation of a Narrow Charmoniumlike State in Exclusive<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:msup><mml:mi>B</mml:mi><mml:mo>±</mml:mo></mml:msup><mml:mo>→</mml:mo><mml:msup><mml:mi>K</mml:mi><mml:mo>±</mml:mo></mml:msup><mml:msup><mml:mi>π</mml:mi><mml:mo>+</mml:mo></mml:msup><mml:msup><mml:mi>π</mml:mi><mml:mo>−</mml:mo></mml:msup><mml:mi>J</mml:mi><mml:mo>/</mml:mo><mml:mi>ψ</mml:mi></mml:math>Decays",
+      "citations": 1868
+    },
+    {
+      "id": "W1973565526",
+      "title": "Vacuum configurations for superstrings",
+      "citations": 2573
+    },
+    {
+      "id": "W2174024475",
+      "title": "hijing: A Monte Carlo model for multiple jet production in<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi>pp</mml:mi></mml:math>,<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi>pA</mml:mi></mml:math>, and<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi>AA</mml:mi></mml:math>collisions",
+      "citations": 1555
+    },
+    {
+      "id": "W1996579166",
+      "title": "Transverse momentum distribution in Drell-Yan pair and W and Z boson production",
+      "citations": 1319
+    },
+    {
+      "id": "W1782855883",
+      "title": "Heavy-flavour and quarkonium production in the LHC era: from proton–proton to heavy-ion collisions",
+      "citations": 595
+    },
+    {
+      "id": "W2122791239",
+      "title": "Soft-collinear factorization in effective field theory",
+      "citations": 1375
+    },
+    {
+      "id": "W1965854036",
+      "title": "Electroweak Higgs potential and vacuum stability",
+      "citations": 927
+    },
+    {
+      "id": "W2925082381",
+      "title": "Pentaquark and Tetraquark States",
+      "citations": 704
+    },
+    {
+      "id": "W2054086911",
+      "title": "Pion Scattering Lengths",
+      "citations": 1705
+    },
+    {
+      "id": "W2159705690",
+      "title": "Hierarchy of quark masses, cabibbo angles and CP violation",
+      "citations": 1704
+    },
+    {
+      "id": "W1990601322",
+      "title": "NJL-model analysis of dense quark matter",
+      "citations": 1388
+    },
+    {
+      "id": "W2097820102",
+      "title": "Dark Matter Results from 225 Live Days of XENON100 Data",
+      "citations": 1345
+    },
+    {
+      "id": "W1994413830",
+      "title": "Unified interactions of leptons and hadrons",
+      "citations": 1698
+    },
+    {
+      "id": "W2051460571",
+      "title": "Next-to-Next-to-Leading Order Higgs Production at Hadron Colliders",
+      "citations": 1053
+    },
+    {
+      "id": "W2015517540",
+      "title": "Theory of neutrinos: a white paper",
+      "citations": 477
+    },
+    {
+      "id": "W2097890668",
+      "title": "Flavor physics of leptons and dipole moments",
+      "citations": 364
+    },
+    {
+      "id": "W2137173946",
+      "title": "The role of resonances in chiral perturbation theory",
+      "citations": 1388
+    },
+    {
+      "id": "W2026957711",
+      "title": "Low-energy phenomenology of superstring-inspired E6 models",
+      "citations": 1070
+    },
+    {
+      "id": "W2115487809",
+      "title": "The three-loop splitting functions in QCD: the non-singlet case",
+      "citations": 1242
+    },
+    {
+      "id": "W1987435915",
+      "title": "DELPHES 3: a modular framework for fast simulation of a generic collider experiment",
+      "citations": 2836
+    },
+    {
+      "id": "W1796954972",
+      "title": "Electron-Ion Collider: The next QCD frontier",
+      "citations": 1380
+    },
+    {
+      "id": "W2107918562",
+      "title": "Observation of Electron-Antineutrino Disappearance at Daya Bay",
+      "citations": 2127
+    },
+    {
+      "id": "W3037524103",
+      "title": "Axion cosmology",
+      "citations": 1803
+    },
+    {
+      "id": "W2588986264",
+      "title": "Review of lattice results concerning low-energy particle physics",
+      "citations": 572
+    },
+    {
+      "id": "W2130776923",
+      "title": "The Nambu—Jona-Lasinio model of quantum chromodynamics",
+      "citations": 1727
+    },
+    {
+      "id": "W2108973526",
+      "title": "Phenomenology, astrophysics, and cosmology of theories with submillimeter dimensions and TeV scale quantum gravity",
+      "citations": 2220
+    },
+    {
+      "id": "W1978256560",
+      "title": "Higgs boson production at hadron colliders in NNLO QCD",
+      "citations": 992
+    },
+    {
+      "id": "W1839871769",
+      "title": "Total Top-Quark Pair-Production Cross Section at Hadron Colliders Through<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi mathvariant=\"script\">O</mml:mi><mml:mo stretchy=\"false\">(</mml:mo><mml:msubsup><mml:mi>α</mml:mi><mml:mi>S</mml:mi><mml:mn>4</mml:mn></mml:msubsup><mml:mo stretchy=\"false\">)</mml:mo></mml:math>",
+      "citations": 1273
+    },
+    {
+      "id": "W2039510627",
+      "title": "Back-to-back jets in QCD",
+      "citations": 1105
+    },
+    {
+      "id": "W2621084749",
+      "title": "Parton distributions from high-precision collider data",
+      "citations": 1442
+    },
+    {
+      "id": "W2041580046",
+      "title": "A measurement of the spin asymmetry and determination of the structure function g1 in deep inelastic muon-proton scattering",
+      "citations": 1551
+    },
+    {
+      "id": "W1966905614",
+      "title": "Natural conservation laws for neutral currents",
+      "citations": 1412
+    },
+    {
+      "id": "W1950779002",
+      "title": "Foundations of Perturbative QCD",
+      "citations": 974
+    },
+    {
+      "id": "W2089507017",
+      "title": "Proton lifetime and fermion masses in an SO(10) model",
+      "citations": 1483
+    },
+    {
+      "id": "W2110352019",
+      "title": "Dark Matter Candidates from Particle Physics and Methods of Detection",
+      "citations": 1323
+    },
+    {
+      "id": "W2109896109",
+      "title": "The LHCb Detector at the LHC",
+      "citations": 1937
+    },
+    {
+      "id": "W4225725984",
+      "title": "Various Phenomenological Aspects of the R-parity Violating MSSM",
+      "citations": 195
+    },
+    {
+      "id": "W2165907756",
+      "title": "Strong dynamics and electroweak symmetry breaking",
+      "citations": 869
+    },
+    {
+      "id": "W1985388980",
+      "title": "CP violation and the CKM matrix: assessing the impact of the asymmetric B factories",
+      "citations": 1173
+    },
+    {
+      "id": "W2025712550",
+      "title": "The effects of topological charge change in heavy ion collisions: “Event by event and violation”",
+      "citations": 1811
+    },
+    {
+      "id": "W2054843458",
+      "title": "Higgs bosons in supersymmetric models (I)",
+      "citations": 1074
+    },
+    {
+      "id": "W1993982013",
+      "title": "Gauge-Invariant Decomposition of Nucleon Spin",
+      "citations": 1682
+    },
+    {
+      "id": "W2284411320",
+      "title": "Multiquark hadrons. I. Phenomenology of<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mrow><mml:msup><mml:mrow><mml:mi>Q</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mover><mml:mrow><mml:mi>Q</mml:mi></mml:mrow><mml:mrow><mml:mi>¯</mml:mi></mml:mrow></mml:mover><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msup></mml:mrow></mml:math>mesons",
+      "citations": 1375
+    },
+    {
+      "id": "W2028315718",
+      "title": "The Hunt for New Physics at the Large Hadron Collider",
+      "citations": 145
+    },
+    {
+      "id": "W2170857891",
+      "title": "Tri-bimaximal mixing and the neutrino oscillation data",
+      "citations": 1389
+    },
+    {
+      "id": "W1999089379",
+      "title": "Gluon distribution functions for very large nuclei at small transverse momentum",
+      "citations": 1418
+    },
+    {
+      "id": "W2951057061",
+      "title": "Handbook of LHC Higgs Cross Sections: 3. Higgs Properties",
+      "citations": 507
+    },
+    {
+      "id": "W2027413505",
+      "title": "A possible new dimension at a few TeV",
+      "citations": 1834
+    },
+    {
+      "id": "W2101512932",
+      "title": "The order of the quantum chromodynamics transition predicted by the standard model of particle physics",
+      "citations": 1810
+    },
+    {
+      "id": "W2062014158",
+      "title": "Hierarchy of Interactions in Unified Gauge Theories",
+      "citations": 1522
+    },
+    {
+      "id": "W4309363551",
+      "title": "An updated review of the new hadron states",
+      "citations": 486
+    },
+    {
+      "id": "W3121796360",
+      "title": "A Large Hadron Electron Collider at CERN Report on the Physics and Design Concepts for Machine and Detector",
+      "citations": 614
+    },
+    {
+      "id": "W2415915461",
+      "title": "Measurements of the Higgs boson production and decay rates and constraints on its couplings from a combined ATLAS and CMS analysis of the LHC pp collision data at s = 7 $$ \\sqrt{s}=7 $$ and 8 TeV",
+      "citations": 1031
+    },
+    {
+      "id": "W2087588109",
+      "title": "Supersymmetry and Supergravity",
+      "citations": 2588
+    },
+    {
+      "id": "W2160923174",
+      "title": "Radiative corrections to the masses of supersymmetric Higgs bosons",
+      "citations": 1035
+    },
+    {
+      "id": "W2079200382",
+      "title": "Parametrization of the Kobayashi-Maskawa Matrix",
+      "citations": 1745
+    },
+    {
+      "id": "W2226963368",
+      "title": "Symmetries of Baryons and Mesons",
+      "citations": 2312
+    },
+    {
+      "id": "W2036502242",
+      "title": "Review of mathematics, numerical factors, and corrections for dark matter experiments based on elastic nuclear recoil",
+      "citations": 1270
+    },
+    {
+      "id": "W2104347824",
+      "title": "Observation of Reactor Electron Antineutrinos Disappearance in the RENO Experiment",
+      "citations": 1817
+    },
+    {
+      "id": "W2022778241",
+      "title": "Weak interactions at very high energies: The role of the Higgs-boson mass",
+      "citations": 1416
+    },
+    {
+      "id": "W2112867734",
+      "title": "Tuning Monte Carlo generators: The Perugia tunes",
+      "citations": 909
+    },
+    {
+      "id": "W2000037069",
+      "title": "Experimental Tests of the \"Invisible\" Axion",
+      "citations": 1644
+    },
+    {
+      "id": "W2033329289",
+      "title": "ALICE: Physics Performance Report, Volume II",
+      "citations": 523
+    },
+    {
+      "id": "W2148171417",
+      "title": "Cosmological Lower Bound on Heavy-Neutrino Masses",
+      "citations": 1379
+    },
+    {
+      "id": "W2123127993",
+      "title": "Color superconductivity in dense quark matter",
+      "citations": 1368
+    },
+    {
+      "id": "W2082513953",
+      "title": "Instantons in QCD",
+      "citations": 1275
+    },
+    {
+      "id": "W2144624554",
+      "title": "A SUPERSYMMETRY PRIMER",
+      "citations": 1811
+    },
+    {
+      "id": "W2063014277",
+      "title": "Weak transition form factors between heavy mesons",
+      "citations": 1231
+    },
+    {
+      "id": "W2102067129",
+      "title": "Phenomenology with massive neutrinos",
+      "citations": 713
+    },
+    {
+      "id": "W2167848120",
+      "title": "Discrete flavor symmetries and models of neutrino mixing",
+      "citations": 1004
+    },
+    {
+      "id": "W1513917182",
+      "title": "HERWIG 5.1 - a Monte Carlo event generator for simulating hadron emission reactions with interfering gluons",
+      "citations": 1240
+    },
+    {
+      "id": "W2147968749",
+      "title": "Glauber Modeling in High-Energy Nuclear Collisions",
+      "citations": 1443
+    },
+    {
+      "id": "W2115670636",
+      "title": "Flavor physics in the quark sector",
+      "citations": 237
+    },
+    {
+      "id": "W2131160516",
+      "title": "Multiphase transport model for relativistic heavy ion collisions",
+      "citations": 1285
+    },
+    {
+      "id": "W2067227175",
+      "title": "Can the mass of the lightest Higgs boson of the minimal supersymmetric model be larger than<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mrow><mml:msub><mml:mrow><mml:mi mathvariant=\"italic\">m</mml:mi></mml:mrow><mml:mrow><mml:mi mathvariant=\"italic\">Z</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:math>?",
+      "citations": 1055
+    },
+    {
+      "id": "W2153811626",
+      "title": "Cosmological parameters from SDSS and WMAP",
+      "citations": 3715
+    },
+    {
+      "id": "W2018548893",
+      "title": "The minimal composite Higgs model",
+      "citations": 1345
+    },
+    {
+      "id": "W2076975043",
+      "title": "Phenomenology of the production, decay, and detection of new hadronic states associated with supersymmetry",
+      "citations": 1211
+    },
+    {
+      "id": "W3104953676",
+      "title": "The Next-to-Minimal Supersymmetric Standard Model",
+      "citations": 621
+    },
+    {
+      "id": "W2088157505",
+      "title": "The anatomy of electroweak symmetry breaking Tome II: The Higgs bosons in the Minimal Supersymmetric Model",
+      "citations": 1189
+    },
+    {
+      "id": "W2051795315",
+      "title": "Comparison of grand unified theories with electroweak and strong coupling constants measured at LEP",
+      "citations": 1319
+    },
+    {
+      "id": "W2145184144",
+      "title": "Dynamics of spontaneous symmetry breaking in the Weinberg-Salam theory",
+      "citations": 1571
+    },
+    {
+      "id": "W4211038837",
+      "title": "Baryons in a relativized quark model with chromodynamics",
+      "citations": 1127
+    },
+    {
+      "id": "W1756775360",
+      "title": "The Meson Theory of Nuclear Forces and Nuclear Structure",
+      "citations": 1284
+    },
+    {
+      "id": "W1980573344",
+      "title": "Constraint on the Photino Mass from Cosmology",
+      "citations": 1122
+    },
+    {
+      "id": "W2140142256",
+      "title": "Scaling Laws at Large Transverse Momentum",
+      "citations": 1375
+    },
+    {
+      "id": "W2170114950",
+      "title": "QCD factorization for exclusive non-leptonic B-meson decays: general arguments and the case of heavy–light final states",
+      "citations": 1163
+    },
+    {
+      "id": "W2762585259",
+      "title": "Search for new physics with atoms and molecules",
+      "citations": 1436
+    },
+    {
+      "id": "W2140711491",
+      "title": "Microscopic models for ultrarelativistic heavy ion collisions",
+      "citations": 1944
+    },
+    {
+      "id": "W2202858735",
+      "title": "Three exceptions in the calculation of relic abundances",
+      "citations": 1287
+    },
+    {
+      "id": "W3154761772",
+      "title": "Averages of b-hadron, c-hadron, and $$\\tau $$-lepton properties as of 2018",
+      "citations": 392
+    },
+    {
+      "id": "W2005057817",
+      "title": "Gluon recombination and shadowing at small values of x",
+      "citations": 1247
+    },
+    {
+      "id": "W3006566086",
+      "title": "Flavor structures of charged fermions and massive neutrinos",
+      "citations": 268
+    },
+    {
+      "id": "W2188479714",
+      "title": "The physics of heavy<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:msup><mml:mi>Z</mml:mi><mml:mo>′</mml:mo></mml:msup></mml:math>gauge bosons",
+      "citations": 1089
+    },
+    {
+      "id": "W2091714703",
+      "title": "Static properties of nucleons in the Skyrme model",
+      "citations": 1844
+    },
+    {
+      "id": "W2128167784",
+      "title": "Chiral effective field theory and nuclear forces",
+      "citations": 1479
+    },
+    {
+      "id": "W2526963220",
+      "title": "A review of the open charm and open bottom systems",
+      "citations": 384
+    },
+    {
+      "id": "W2040711292",
+      "title": "Left-right gauge symmetry and an \"isoconjugate\" model of<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi>CP</mml:mi></mml:math>violation",
+      "citations": 1342
+    },
+    {
+      "id": "W2137199954",
+      "title": "Glueballs, Hybrids, Multiquarks. Experimental facts versus QCD inspired concepts",
+      "citations": 352
+    },
+    {
+      "id": "W3037896898",
+      "title": "String axiverse",
+      "citations": 1804
+    },
+    {
+      "id": "W2000608977",
+      "title": "A phenomenological profile of the Higgs boson",
+      "citations": 982
+    },
+    {
+      "id": "W1982283102",
+      "title": "Upper bounds on supersymmetric particle masses",
+      "citations": 1070
+    },
+    {
+      "id": "W2746843821",
+      "title": "Nonstandard heavy mesons and baryons: Experimental evidence",
+      "citations": 786
+    },
+    {
+      "id": "W2486837741",
+      "title": "Photon-hadron interactions",
+      "citations": 1337
+    },
+    {
+      "id": "W2048987940",
+      "title": "Longitudinally-invariant k⊥-clustering algorithms for hadron-hadron collisions",
+      "citations": 1098
+    },
+    {
+      "id": "W2142768579",
+      "title": "Topology of cosmic domains and strings",
+      "citations": 4318
+    },
+    {
+      "id": "W1958894153",
+      "title": "Chiral magnetic effect",
+      "citations": 1954
+    },
+    {
+      "id": "W2150205500",
+      "title": "Charmonium: Comparison with experiment",
+      "citations": 1217
+    },
+    {
+      "id": "W2140902438",
+      "title": "Top++: A program for the calculation of the top-pair cross-section at hadron colliders",
+      "citations": 1128
+    },
+    {
+      "id": "W2107320399",
+      "title": "Precision corrections in the minimal supersymmetric standard model",
+      "citations": 875
+    },
+    {
+      "id": "W3037016282",
+      "title": "Multiquark resonances",
+      "citations": 779
+    },
+    {
+      "id": "W2141208707",
+      "title": "Effects of Superheavy Quarks and Leptons in Low-Energy Weak Processes KL-&gt; Formula, K+-&gt; + Formula and K0 Formula0",
+      "citations": 1170
+    },
+    {
+      "id": "W2156664926",
+      "title": "New forms of QCD matter discovered at RHIC",
+      "citations": 1069
+    },
+    {
+      "id": "W2160517949",
+      "title": "Nonlinear realization and hidden local symmetries",
+      "citations": 1165
+    },
+    {
+      "id": "W2105683921",
+      "title": "SuSpect: A Fortran code for the Supersymmetric and Higgs particle spectrum in the MSSM",
+      "citations": 804
+    },
+    {
+      "id": "W2149577393",
+      "title": "Detectability of certain dark-matter candidates",
+      "citations": 1205
+    },
+    {
+      "id": "W2163749882",
+      "title": "Neutrino mass and baryon-number nonconservation in superstring models",
+      "citations": 1238
+    },
+    {
+      "id": "W2531534365",
+      "title": "Equations of state for supernovae and compact stars",
+      "citations": 1057
+    },
+    {
+      "id": "W2022301573",
+      "title": "The search for heavy Majorana neutrinos",
+      "citations": 798
+    },
+    {
+      "id": "W2110456642",
+      "title": "Physics interplay of the LHC and the ILC",
+      "citations": 395
+    },
+    {
+      "id": "W2064522037",
+      "title": "Commutator of the Quark Mass Matrices in the Standard Electroweak Model and a Measure of Maximal<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi>CP</mml:mi></mml:math>Nonconservation",
+      "citations": 1543
+    },
+    {
+      "id": "W2809036207",
+      "title": "Long-lived particles at the energy frontier: the MATHUSLA physics case",
+      "citations": 350
+    },
+    {
+      "id": "W2077688026",
+      "title": "A complete calculation of the order αs2 correction to the Drell-Yan K-factor",
+      "citations": 818
+    },
+    {
+      "id": "W2134777028",
+      "title": "Asymptotic behaviour of exclusive processes in QCD",
+      "citations": 1161
+    },
+    {
+      "id": "W1508439018",
+      "title": "Theory of the Fermi Interaction",
+      "citations": 2102
+    },
+    {
+      "id": "W2119763776",
+      "title": "Deep-inelastic scattering beyond the leading order in asymptotically free gauge theories",
+      "citations": 996
+    },
+    {
+      "id": "W2138874905",
+      "title": "Sterile neutrinos as dark matter",
+      "citations": 1325
+    },
+    {
+      "id": "W2061448382",
+      "title": "Supergravity as the messenger of supersymmetry breaking",
+      "citations": 1006
+    },
+    {
+      "id": "W2131715088",
+      "title": "Gaugino mass without singlets",
+      "citations": 1202
+    },
+    {
+      "id": "W2130862055",
+      "title": "Update on vector boson pair production at hadron colliders",
+      "citations": 987
+    },
+    {
+      "id": "W2079479731",
+      "title": "Precise determination of the mass of the Higgs boson and tests of compatibility of its couplings with the standard model predictions using proton collisions at 7 and 8 $$\\,\\text {TeV}$$ TeV",
+      "citations": 713
+    },
+    {
+      "id": "W2031026718",
+      "title": "Secluded WIMP dark matter",
+      "citations": 1076
+    },
+    {
+      "id": "W2163293517",
+      "title": "Physics at a future Neutrino Factory and super-beam facility",
+      "citations": 250
+    },
+    {
+      "id": "W2010448685",
+      "title": "Applications of the Chiral<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi>U</mml:mi><mml:mo>(</mml:mo><mml:mn>6</mml:mn><mml:mo>)</mml:mo><mml:mn/><mml:mo>⊗</mml:mo><mml:mi>U</mml:mi><mml:mo>(</mml:mo><mml:mn>6</mml:mn><mml:mo>)</mml:mo><mml:mn/></mml:math>Algebra of Current Densities",
+      "citations": 1375
+    },
+    {
+      "id": "W2151928103",
+      "title": "\"Natural\" left-right symmetry",
+      "citations": 1353
+    },
+    {
+      "id": "W2169315436",
+      "title": "The total cross section for the production of heavy quarks in hadronic collisions",
+      "citations": 936
+    },
+    {
+      "id": "W2019037825",
+      "title": "Production of Higgs bosons in proton colliders. QCD corrections",
+      "citations": 766
+    },
+    {
+      "id": "W2003750725",
+      "title": "Very High-Energy Collisions of Hadrons",
+      "citations": 1725
+    },
+    {
+      "id": "W2069044372",
+      "title": "Radiative corrections to Higgs boson production",
+      "citations": 739
+    },
+    {
+      "id": "W2951685917",
+      "title": "Oscillating neutrinos and μ→e,γ",
+      "citations": 1272
+    },
+    {
+      "id": "W325084174",
+      "title": "Next-to-Next-to-Leading-Order Subtraction Formalism in Hadron Collisions and its Application to Higgs-Boson Production at the Large Hadron Collider",
+      "citations": 867
+    },
+    {
+      "id": "W2111210166",
+      "title": "DarkSUSY: computing supersymmetric dark matter properties numerically",
+      "citations": 866
+    },
+    {
+      "id": "W2064649109",
+      "title": "Left-handed neutrino mass scale and spontaneously broken lepton number",
+      "citations": 1093
+    },
+    {
+      "id": "W2115891487",
+      "title": "Indication of Electron Neutrino Appearance from an Accelerator-Produced Off-Axis Muon Neutrino Beam",
+      "citations": 1299
+    },
+    {
+      "id": "W2049694288",
+      "title": "GALLEX solar neutrino observations: results for GALLEX IV",
+      "citations": 1238
+    },
+    {
+      "id": "W1694905212",
+      "title": "Combined Measurement of the Higgs Boson Mass in<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi>p</mml:mi><mml:mi>p</mml:mi></mml:math>Collisions at<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>7</mml:mn></mml:math>and 8 TeV with the ATLAS and CMS Experiments",
+      "citations": 1280
+    },
+    {
+      "id": "W4211185413",
+      "title": "Leptogenesis",
+      "citations": 973
+    },
+    {
+      "id": "W2020410627",
+      "title": "Pileup subtraction using jet areas",
+      "citations": 873
+    },
+    {
+      "id": "W2045756911",
+      "title": "Massive neutrinos and neutrino oscillations",
+      "citations": 712
+    },
+    {
+      "id": "W2123578256",
+      "title": "Verifiable radiative seesaw mechanism of neutrino mass and dark matter",
+      "citations": 1299
+    },
+    {
+      "id": "W1927325176",
+      "title": "Neutrino physics with JUNO",
+      "citations": 1112
+    },
+    {
+      "id": "W2157338954",
+      "title": "Question of Parity Conservation in Weak Interactions",
+      "citations": 2259
+    },
+    {
+      "id": "W4252958325",
+      "title": "Upper Bound of the Lightest Higgs Boson Mass in the Minimal Supersymmetric Standard Model",
+      "citations": 934
+    },
+    {
+      "id": "W2470904426",
+      "title": "Baryons as relativistic three-quark bound states",
+      "citations": 402
+    },
+    {
+      "id": "W2116290064",
+      "title": "The hadronic properties of the photon in high-energy interactions",
+      "citations": 733
+    },
+    {
+      "id": "W1813698688",
+      "title": "Observation of Top Quark Production in<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mrow><mml:mrow><mml:mover><mml:mrow><mml:mi mathvariant=\"italic\">p</mml:mi></mml:mrow><mml:mrow><mml:mi>¯</mml:mi></mml:mrow></mml:mover></mml:mrow></mml:mrow><mml:mi mathvariant=\"italic\">p</mml:mi></mml:math>Collisions with the Collider Detector at Fermilab",
+      "citations": 1401
+    },
+    {
+      "id": "W1983178859",
+      "title": "Astrophysical methods to constrain axions and other novel particle phenomena",
+      "citations": 678
+    },
+    {
+      "id": "W2148311865",
+      "title": "Physics at the $$e^+ e^-$$ e + e - linear collider",
+      "citations": 146
+    },
+    {
+      "id": "W2243341230",
+      "title": "Resonant amplification of ν oscillations in matter and solar-neutrino spectroscopy",
+      "citations": 1326
+    },
+    {
+      "id": "W2151266903",
+      "title": "Physics searches at the LHC",
+      "citations": 129
+    },
+    {
+      "id": "W1609173338",
+      "title": "Evolution of parton densities beyond leading order",
+      "citations": 872
+    },
+    {
+      "id": "W2008163166",
+      "title": "Aspects of the grand unification of strong, weak and electromagnetic interactions",
+      "citations": 1030
+    },
+    {
+      "id": "W2127669635",
+      "title": "FeynHiggs: a program for the calculation of the masses of the neutral -even Higgs bosons in the MSSM",
+      "citations": 994
+    },
+    {
+      "id": "W1979081013",
+      "title": "Factorization and asymptotic behaviour of pion form factor in QCD",
+      "citations": 992
+    },
+    {
+      "id": "W2064279266",
+      "title": "Minimal low-energy supergravity",
+      "citations": 868
+    },
+    {
+      "id": "W2534308951",
+      "title": "Results from a Search for Dark Matter in the Complete LUX Exposure",
+      "citations": 1547
+    },
+    {
+      "id": "W2115754103",
+      "title": "The Standard Model Higgs boson as the inflaton",
+      "citations": 1948
+    },
+    {
+      "id": "W2037751369",
+      "title": "A parton shower algorithm based on Catani-Seymour dipole factorisation",
+      "citations": 829
+    },
+    {
+      "id": "W1999557321",
+      "title": "Successive combination jet algorithm for hadron collisions",
+      "citations": 1006
+    },
+    {
+      "id": "W2170645680",
+      "title": "The Low-Energy Frontier of Particle Physics",
+      "citations": 948
+    },
+    {
+      "id": "W2049817464",
+      "title": "A new mechanism for baryogenesis",
+      "citations": 1243
+    },
+    {
+      "id": "W2050035023",
+      "title": "Quantum chromodynamics and other field theories on the light cone",
+      "citations": 1426
+    },
+    {
+      "id": "W1704006863",
+      "title": "Neutrinos and collider physics",
+      "citations": 485
+    },
+    {
+      "id": "W2044821416",
+      "title": "An investigation of the spin structure of the proton in deep inelastic scattering of polarised muons on polarised protons",
+      "citations": 1044
+    },
+    {
+      "id": "W2134657033",
+      "title": "Automatic Feynman Graph Generation",
+      "citations": 1265
+    },
+    {
+      "id": "W1984918569",
+      "title": "MadEvent: automatic event generation with MadGraph",
+      "citations": 924
+    },
+    {
+      "id": "W2079755804",
+      "title": "Observation of a new boson with mass near 125 GeV in pp collisions at $ \\sqrt{s}=7 $ and 8 TeV",
+      "citations": 666
+    },
+    {
+      "id": "W2136764900",
+      "title": "Asymptotically Free Gauge Theories. I",
+      "citations": 1360
+    },
+    {
+      "id": "W2002954796",
+      "title": "Neutrino mass and mixing with discrete symmetry",
+      "citations": 808
+    },
+    {
+      "id": "W2033339097",
+      "title": "Relativistic hadron-hadron collisions in the ultra-relativistic quantum molecular dynamics model",
+      "citations": 1618
+    },
+    {
+      "id": "W1997267689",
+      "title": "An effective field theory for heavy quarks at low energies",
+      "citations": 1128
+    },
+    {
+      "id": "W2005935750",
+      "title": "Field theories with « Superconductor » solutions",
+      "citations": 2424
+    },
+    {
+      "id": "W2016372743",
+      "title": "Exclusive semileptonic decays of heavy mesons",
+      "citations": 1098
+    },
+    {
+      "id": "W2118840025",
+      "title": "Charmonium: The model",
+      "citations": 1286
+    },
+    {
+      "id": "W1980416430",
+      "title": "Exclusive processes in quantum chromodynamics: Evolution equations for hadronic wavefunctions and the form factors of mesons",
+      "citations": 1085
+    },
+    {
+      "id": "W2107120226",
+      "title": "Remarks on the chiral phase transition in chromodynamics",
+      "citations": 1175
+    },
+    {
+      "id": "W2005354304",
+      "title": "Wave Functions, Evolution Equations and Evolution Kernels from Light-Ray Operators of QCD",
+      "citations": 1154
+    },
+    {
+      "id": "W1994101208",
+      "title": "Current algebra theorems for the U(1) “Goldstone boson”",
+      "citations": 1457
+    },
+    {
+      "id": "W2163985038",
+      "title": "Handbook of perturbative QCD",
+      "citations": 423
+    },
+    {
+      "id": "W2111880510",
+      "title": "Infrared singularities and massive fields",
+      "citations": 1375
+    },
+    {
+      "id": "W2152804990",
+      "title": "Massive Lepton-Pair Production in Hadron-Hadron Collisions at High Energies",
+      "citations": 1154
+    },
+    {
+      "id": "W4372328736",
+      "title": "Chiral perturbation theory for heavy hadrons and chiral effective field theory for heavy hadronic molecules",
+      "citations": 195
+    },
+    {
+      "id": "W1985232487",
+      "title": "Baryon chiral perturbation theory using a heavy fermion lagrangian",
+      "citations": 991
+    },
+    {
+      "id": "W2302365184",
+      "title": "Physics of leptoquarks in precision experiments and at particle colliders",
+      "citations": 594
+    },
+    {
+      "id": "W2051789635",
+      "title": "Dyson-Schwinger equations and their application to hadronic physics",
+      "citations": 1097
+    },
+    {
+      "id": "W1992077732",
+      "title": "Symmetry Breaking in Non-Abelian Gauge Theories",
+      "citations": 1285
+    },
+    {
+      "id": "W2032993839",
+      "title": "Scaling violations in inclusive<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mrow><mml:msup><mml:mrow><mml:mi>e</mml:mi></mml:mrow><mml:mrow><mml:mo>+</mml:mo></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>e</mml:mi></mml:mrow><mml:mrow><mml:mo>−</mml:mo></mml:mrow></mml:msup></mml:mrow></mml:math>annihilation spectra",
+      "citations": 1110
+    },
+    {
+      "id": "W2046400428",
+      "title": "Finite-Temperature Field Theory",
+      "citations": 1871
+    },
+    {
+      "id": "W2179921987",
+      "title": "Effective chiral lagrangians for nucleon-pion interactions and nuclear forces",
+      "citations": 1241
+    },
+    {
+      "id": "W2479910694",
+      "title": "Dynamical parton distributions of the proton and small-x physics",
+      "citations": 962
+    },
+    {
+      "id": "W1965888463",
+      "title": "LHAPDF6: parton density access in the LHC precision era",
+      "citations": 1573
+    },
+    {
+      "id": "W2032979794",
+      "title": "Photon-Hadron Interactions",
+      "citations": 1194
+    },
+    {
+      "id": "W4401586140",
+      "title": "The ALICE experiment: a journey through QCD",
+      "citations": 96
+    },
+    {
+      "id": "W2091486206",
+      "title": "QCD Factorization for<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi mathvariant=\"italic\">B</mml:mi><mml:mi/><mml:mo>→</mml:mo><mml:mi/><mml:mi mathvariant=\"italic\">π</mml:mi><mml:mi mathvariant=\"italic\">π</mml:mi></mml:math>Decays: Strong Phases and<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi mathvariant=\"italic\">CP</mml:mi></mml:math>Violation in the Heavy Quark Limit",
+      "citations": 1177
+    },
+    {
+      "id": "W2146002352",
+      "title": "Aspects of Grand Unified Models with Softly Broken Supersymmetry",
+      "citations": 822
+    },
+    {
+      "id": "W4389542468",
+      "title": "Feebly-interacting particles: FIPs 2022 Workshop Report",
+      "citations": 137
+    },
+    {
+      "id": "W2174087929",
+      "title": "Gauge singlet scalars as cold dark matter",
+      "citations": 925
+    },
+    {
+      "id": "W2039293890",
+      "title": "QCD at finite baryon density: nucleon droplets and color superconductivity",
+      "citations": 1131
+    },
+    {
+      "id": "W3020995000",
+      "title": "Jet Substructure as a New Higgs-Search Channel at the Large Hadron Collider",
+      "citations": 947
+    },
+    {
+      "id": "W2058793253",
+      "title": "Precise Relations between the Spectra of Vector and Axial-Vector Mesons",
+      "citations": 1229
+    },
+    {
+      "id": "W2022890198",
+      "title": "The phase diagram of dense QCD",
+      "citations": 898
+    },
+    {
+      "id": "W3122152336",
+      "title": "Handbook of LHC Higgs Cross Sections: 1. Inclusive Observables",
+      "citations": 366
+    },
+    {
+      "id": "W2051284488",
+      "title": "Is the neutrino a goldstone particle?",
+      "citations": 1313
+    },
+    {
+      "id": "W2155637048",
+      "title": "High-precision QCD at hadron colliders: Electroweak gauge boson rapidity distributions at next-to-next-to leading order",
+      "citations": 776
+    },
+    {
+      "id": "W1997514584",
+      "title": "Effective-field theories for heavy quarkonium",
+      "citations": 672
+    },
+    {
+      "id": "W2543917711",
+      "title": "A call for new physics: The muon anomalous magnetic moment and lepton flavor violation",
+      "citations": 460
+    },
+    {
+      "id": "W1973785489",
+      "title": "Exclusive non-leptonic decays ofD-,D s - andB-mesons",
+      "citations": 1075
+    },
+    {
+      "id": "W2023043929",
+      "title": "Radiative energy loss and p⊥-broadening of high energy partons in nuclei",
+      "citations": 1104
+    },
+    {
+      "id": "W2071775418",
+      "title": "Dark matter production in the early Universe: Beyond the thermal WIMP paradigm",
+      "citations": 340
+    },
+    {
+      "id": "W2097078822",
+      "title": "The ALICE experiment at the CERN LHC",
+      "citations": 1640
+    },
+    {
+      "id": "W2621009926",
+      "title": "Exotics: Heavy pentaquarks and tetraquarks",
+      "citations": 558
+    },
+    {
+      "id": "W2178313175",
+      "title": "New tools for low energy dynamical supersymmetry breaking",
+      "citations": 904
+    },
+    {
+      "id": "W1975741267",
+      "title": "Masses and other parameters of the light hadrons",
+      "citations": 1146
+    },
+    {
+      "id": "W2532129306",
+      "title": "Heavy-quark QCD exotica",
+      "citations": 716
+    },
+    {
+      "id": "W4232091795",
+      "title": "LHC Machine",
+      "citations": 1592
+    },
+    {
+      "id": "W2011734771",
+      "title": "Test of Lepton Universality Using<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:msup><mml:mi>B</mml:mi><mml:mo>+</mml:mo></mml:msup><mml:mo stretchy=\"false\">→</mml:mo><mml:msup><mml:mi>K</mml:mi><mml:mo>+</mml:mo></mml:msup><mml:msup><mml:mo>ℓ</mml:mo><mml:mo>+</mml:mo></mml:msup><mml:msup><mml:mo>ℓ</mml:mo><mml:mo>−</mml:mo></mml:msup></mml:math>Decays",
+      "citations": 921
+    },
+    {
+      "id": "W3100514957",
+      "title": "Nine-Year Wilkinson Microwave Anisotropy Probe (WMAP) Observations: Cosmological Parameter Results",
+      "citations": 2548
+    },
+    {
+      "id": "W2019008803",
+      "title": "High-precision, charge-dependent Bonn nucleon-nucleon potential",
+      "citations": 1722
+    },
+    {
+      "id": "W2083034637",
+      "title": "Observational Evidence for Self-Interacting Cold Dark Matter",
+      "citations": 1933
+    },
+    {
+      "id": "W2156379501",
+      "title": "Comparative study of various algorithms for the merging of parton showers and matrix elements in hadronic collisions",
+      "citations": 975
+    },
+    {
+      "id": "W2102225437",
+      "title": "Explicit R-parity breaking in supersymmetric models",
+      "citations": 826
+    },
+    {
+      "id": "W2144690984",
+      "title": "Determination of jet energy calibration and transverse momentum resolution in CMS",
+      "citations": 691
+    },
+    {
+      "id": "W1991806240",
+      "title": "Minimal dark matter",
+      "citations": 941
+    },
+    {
+      "id": "W1971705542",
+      "title": "Chiral perturbation theory",
+      "citations": 597
+    },
+    {
+      "id": "W2094188491",
+      "title": "Equation of state of nucleon matter and neutron star structure",
+      "citations": 2336
+    },
+    {
+      "id": "W2950173816",
+      "title": "B, D and K decays",
+      "citations": 162
+    },
+    {
+      "id": "W1615407490",
+      "title": "Electroweak measurements in electron–positron collisions at W-boson-pair energies at LEP",
+      "citations": 707
+    },
+    {
+      "id": "W2114958119",
+      "title": "Top quark mass in supersymmetric SO(10) unification",
+      "citations": 722
+    },
+    {
+      "id": "W1525067064",
+      "title": "Observation of the Top Quark",
+      "citations": 1293
+    },
+    {
+      "id": "W2612559938",
+      "title": "Dark matter self-interactions and small scale structure",
+      "citations": 936
+    },
+    {
+      "id": "W2069457914",
+      "title": "Low-energy hadron physics from effective chiral Lagrangians with vector mesons",
+      "citations": 766
+    },
+    {
+      "id": "W1964683291",
+      "title": "A unified field theory of mesons and baryons",
+      "citations": 2415
+    },
+    {
+      "id": "W1987659682",
+      "title": "THE PHENOMENOLOGY OF RIGHT HANDED NEUTRINOS",
+      "citations": 328
+    },
+    {
+      "id": "W2139844413",
+      "title": "Implications of precision electroweak experiments for<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mrow><mml:msub><mml:mrow><mml:mi>m</mml:mi></mml:mrow><mml:mrow><mml:mi>t</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:math>,<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mrow><mml:msub><mml:mrow><mml:mi>ρ</mml:mi></mml:mrow><mml:mrow><mml:mn>0</mml:mn></mml:mrow></mml:msub></mml:mrow></mml:math>,<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mrow><mml:msub><mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mrow><mml:mo>sin</mml:mo></mml:mrow></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msup></mml:mrow><mml:mi>θ</mml:mi></mml:mrow><mml:mrow><mml:mi>W</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:math>, and grand unification",
+      "citations": 838
+    },
+    {
+      "id": "W2008738123",
+      "title": "Partons in quantum chromodynamics",
+      "citations": 494
+    },
+    {
+      "id": "W3101379705",
+      "title": "Unraveling hadron structure with generalized parton distributions",
+      "citations": 417
+    },
+    {
+      "id": "W2129819598",
+      "title": "Study of constrained minimal supersymmetry",
+      "citations": 565
+    },
+    {
+      "id": "W1965420534",
+      "title": "Vector Boson Production at Hadron Colliders: A Fully Exclusive QCD Calculation at Next-to-Next-to-Leading Order",
+      "citations": 713
+    },
+    {
+      "id": "W2021404114",
+      "title": "Fusing gauge theory tree amplitudes into loop amplitudes",
+      "citations": 1063
+    },
+    {
+      "id": "W2953154703",
+      "title": "FCC Physics Opportunities",
+      "citations": 617
+    },
+    {
+      "id": "W2001474206",
+      "title": "Spontaneously broken supersymmetric theories of weak, electromagnetic and strong interactions",
+      "citations": 894
+    },
+    {
+      "id": "W1966902317",
+      "title": "Summing Sudakov logarithms in<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mrow><mml:mrow><mml:mover><mml:mrow><mml:mi>B</mml:mi></mml:mrow><mml:mrow><mml:mo>→</mml:mo></mml:mrow></mml:mover></mml:mrow></mml:mrow><mml:mrow><mml:msub><mml:mrow><mml:mi>X</mml:mi></mml:mrow><mml:mrow><mml:mi>s</mml:mi></mml:mrow></mml:msub></mml:mrow><mml:mi>γ</mml:mi></mml:math>in effective field theory",
+      "citations": 869
+    },
+    {
+      "id": "W2111341905",
+      "title": "Neutrino masses, mixings, and oscillations in SU(2)×U(1) models of electroweak interactions",
+      "citations": 1047
+    },
+    {
+      "id": "W1981058868",
+      "title": "The four-loop β-function in quantum chromodynamics",
+      "citations": 1034
+    },
+    {
+      "id": "W2146553833",
+      "title": "Chiral and deconfinement aspects of the QCD transition",
+      "citations": 1067
+    },
+    {
+      "id": "W2087970005",
+      "title": "The Nambu and Jona-Lasinio model: Its implications for Hadrons and Nuclei",
+      "citations": 919
+    },
+    {
+      "id": "W2082637753",
+      "title": "Non-baryonic dark matter: observational evidence and detection methods",
+      "citations": 874
+    },
+    {
+      "id": "W2002491768",
+      "title": "Effects of supergravity-induced electroweak breaking on rare b-decays and mixings",
+      "citations": 658
+    },
+    {
+      "id": "W2153322267",
+      "title": "Advantages of the color octet gluon picture",
+      "citations": 1250
+    },
+    {
+      "id": "W2562905916",
+      "title": "<i>Dynamics of the Standard Model</i>",
+      "citations": 779
+    },
+    {
+      "id": "W4231853527",
+      "title": "The three-loop splitting functions in QCD: the singlet case",
+      "citations": 787
+    },
+    {
+      "id": "W1981498814",
+      "title": "Fragmentation of transversely polarized quarks probed in transverse momentum distributions",
+      "citations": 933
+    },
+    {
+      "id": "W2001392205",
+      "title": "Current algebra, baryons, and quark confinement",
+      "citations": 1254
+    },
+    {
+      "id": "W2597602507",
+      "title": "The waning of the WIMP? A review of models, searches, and constraints",
+      "citations": 825
+    },
+    {
+      "id": "W2039302425",
+      "title": "Three-jet cross sections to next-to-leading order",
+      "citations": 809
+    },
+    {
+      "id": "W2178962940",
+      "title": "Implications of dynamical symmetry breaking",
+      "citations": 1109
+    },
+    {
+      "id": "W2075227120",
+      "title": "Color-flavor locking and chiral symmetry breaking in high density QCD",
+      "citations": 1150
+    },
+    {
+      "id": "W2039392906",
+      "title": "Effective lagrangians for bound state problems in QED, QCD, and other field theories",
+      "citations": 1123
+    },
+    {
+      "id": "W1990746964",
+      "title": "Parton distribution and decay functions",
+      "citations": 826
+    },
+    {
+      "id": "W3036996823",
+      "title": "Electroweak baryogenesis",
+      "citations": 779
+    },
+    {
+      "id": "W2132560647",
+      "title": "Implications of LHCb measurements and future prospects",
+      "citations": 290
+    },
+    {
+      "id": "W1979070091",
+      "title": "Wilson renormalization group for low<b><i>x</i></b>physics: Towards the high density regime",
+      "citations": 928
+    },
+    {
+      "id": "W2057750035",
+      "title": "Erratum: Rigorous QCD analysis of inclusive annihilation and production of heavy quarkonium [Phys. Rev. D<b>51</b>, 1125 (1995)]",
+      "citations": 1014
+    },
+    {
+      "id": "W1996985191",
+      "title": "The νMSM, dark matter and baryon asymmetry of the universe",
+      "citations": 927
+    },
+    {
+      "id": "W1967085484",
+      "title": "Are there real goldstone bosons associated with broken lepton number?",
+      "citations": 995
+    },
+    {
+      "id": "W1984478853",
+      "title": "Dynamical parton distributions revisited",
+      "citations": 927
+    },
+    {
+      "id": "W2091860414",
+      "title": "Asymptotic freedom in deep inelastic processes in the leading order and beyond",
+      "citations": 561
+    },
+    {
+      "id": "W2223807777",
+      "title": "φ-meson and unitary symmetry model",
+      "citations": 1178
+    },
+    {
+      "id": "W2109350291",
+      "title": "Low energy dynamical supersymmetry breaking simplified",
+      "citations": 861
+    },
+    {
+      "id": "W2151956784",
+      "title": "Multi-parton amplitudes in gauge theories",
+      "citations": 733
+    },
+    {
+      "id": "W2086499030",
+      "title": "Sigma-term update",
+      "citations": 758
+    },
+    {
+      "id": "W4242783256",
+      "title": "Strange matter",
+      "citations": 1339
+    },
+    {
+      "id": "W1820155865",
+      "title": "Hadronic and electromagnetic probes of hot and dense nuclear matter11Supported by BMBF, DFG, GSI Darmstadt and FZ Jülich.",
+      "citations": 643
+    },
+    {
+      "id": "W2080771061",
+      "title": "Quantum chromodynamics and the theory of superdense matter",
+      "citations": 1078
+    },
+    {
+      "id": "W1983129750",
+      "title": "Perturbative quantum chromodynamics",
+      "citations": 501
+    },
+    {
+      "id": "W2137594604",
+      "title": "<i>CP</i>-conserving two-Higgs-doublet model: The approach to the decoupling limit",
+      "citations": 851
+    },
+    {
+      "id": "W2731276465",
+      "title": "From the Trees to the Forest: A Review of Radiative Neutrino Mass Models",
+      "citations": 324
+    },
+    {
+      "id": "W2116792163",
+      "title": "Hard processes in quantum chromodynamics",
+      "citations": 665
+    },
+    {
+      "id": "W1982823307",
+      "title": "Accurate charge-dependent nucleon-nucleon potential at fourth order of chiral perturbation theory",
+      "citations": 1497
+    },
+    {
+      "id": "W2012499610",
+      "title": "Hard nuclear processes and microscopic nuclear structure",
+      "citations": 636
+    },
+    {
+      "id": "W2100585957",
+      "title": "Electroweak gauge boson production at hadron colliders through<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi mathvariant=\"script\">O</mml:mi><mml:mo stretchy=\"false\">(</mml:mo><mml:msubsup><mml:mi>α</mml:mi><mml:mi>s</mml:mi><mml:mn>2</mml:mn></mml:msubsup><mml:mo stretchy=\"false\">)</mml:mo></mml:math>",
+      "citations": 599
+    },
+    {
+      "id": "W1895226013",
+      "title": "Reactor antineutrino anomaly",
+      "citations": 1270
+    },
+    {
+      "id": "W4210979103",
+      "title": "Superstring theory",
+      "citations": 1086
+    },
+    {
+      "id": "W4308821586",
+      "title": "A comprehensive guide to the physics and usage of PYTHIA 8.3",
+      "citations": 669
+    },
+    {
+      "id": "W2125924511",
+      "title": "QCD Matrix Elements + Parton Showers",
+      "citations": 918
+    },
+    {
+      "id": "W1505073703",
+      "title": "Combined results of searches for the standard model Higgs boson in pp collisions at <mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" altimg=\"si1.gif\" overflow=\"scroll\"><mml:msqrt><mml:mi>s</mml:mi></mml:msqrt><mml:mo>=</mml:mo><mml:mn>7</mml:mn><mml:mtext> TeV</mml:mtext></mml:math>",
+      "citations": 664
+    },
+    {
+      "id": "W2911693790",
+      "title": "Physics beyond colliders at CERN: beyond the Standard Model working group report",
+      "citations": 453
+    },
+    {
+      "id": "W2137222925",
+      "title": "Diquark Bose Condensates in High Density Matter and Instantons",
+      "citations": 843
+    },
+    {
+      "id": "W2136821211",
+      "title": "Improved naturalness with a heavy Higgs boson: An alternative road to CERN LHC physics",
+      "citations": 832
+    },
+    {
+      "id": "W3098496183",
+      "title": "A Complete Analysis of FCNC and CP Constraints in General SUSY Extensions of the Standard Model",
+      "citations": 698
+    },
+    {
+      "id": "W4221140247",
+      "title": "A next-generation liquid xenon observatory for dark matter and neutrino physics",
+      "citations": 133
+    },
+    {
+      "id": "W2016663111",
+      "title": "Resummation of the QCD perturbative series for hard processes",
+      "citations": 732
+    },
+    {
+      "id": "W2049335485",
+      "title": "Charmonium and gluons",
+      "citations": 722
+    },
+    {
+      "id": "W3037323204",
+      "title": "Baryon spectroscopy",
+      "citations": 374
+    },
+    {
+      "id": "W2035928167",
+      "title": "U(1) without instantons",
+      "citations": 1231
+    },
+    {
+      "id": "W2101450001",
+      "title": "Bounds on universal extra dimensions",
+      "citations": 1129
+    },
+    {
+      "id": "W2157112185",
+      "title": "Neutrinos in cosmology",
+      "citations": 530
+    },
+    {
+      "id": "W2047184962",
+      "title": "Measurement of Day and Night Neutrino Energy Spectra at SNO and Constraints on Neutrino Mixing Parameters",
+      "citations": 926
+    },
+    {
+      "id": "W2102594531",
+      "title": "Four-dimensional string compactifications with D-branes, orientifolds and fluxes",
+      "citations": 808
+    },
+    {
+      "id": "W2567625836",
+      "title": "Nonlinear Realizations of Chiral Symmetry",
+      "citations": 1129
+    },
+    {
+      "id": "W2106653566",
+      "title": "Explanation and prediction of observables using continuum strong QCD",
+      "citations": 289
+    },
+    {
+      "id": "W2126934655",
+      "title": "Soft-gluon resummation for Higgs boson production at hadron colliders",
+      "citations": 542
+    },
+    {
+      "id": "W2123510857",
+      "title": "Improved parton distributions from global analysis of recent deep inelastic scattering and inclusive jet data",
+      "citations": 726
+    },
+    {
+      "id": "W1612099944",
+      "title": "Heterotic String",
+      "citations": 1551
+    },
+    {
+      "id": "W2150698091",
+      "title": "Measurement of Neutrino Oscillation with KamLAND: Evidence of Spectral Distortion",
+      "citations": 1068
+    },
+    {
+      "id": "W2142229096",
+      "title": "Nonperturbative QCD simulations with<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mrow><mml:mn>2</mml:mn><mml:mo>+</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math>flavors of improved staggered quarks",
+      "citations": 410
+    },
+    {
+      "id": "W3037249962",
+      "title": "Resonant leptogenesis",
+      "citations": 846
+    },
+    {
+      "id": "W2160230876",
+      "title": "Radiative corrections in the<mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mml:mi mathvariant=\"normal\">SU</mml:mi><mml:mrow><mml:msub><mml:mrow><mml:mn/><mml:mo>(</mml:mo><mml:mn>2</mml:mn><mml:mo>)</mml:mo><mml:mn/></mml:mrow><mml:mrow><mml:mi>L</mml:mi></mml:mrow></mml:msub></mml:mrow><mml:mo>×</mml:mo><mml:mi mathvariant=\"normal\">U</mml:mi><mml:mn/><mml:mo>(</mml:mo><mml:mn>1</mml:mn><mml:mo>)</mml:mo><mml:mn/></mml:math>theory: A simple renormalization framework",
+      "citations": 764
+    },
+    {
+      "id": "W3104012012",
+      "title": "From controversy to precision on the sigma meson: A review on the status of the non-ordinary <mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" altimg=\"si28.gif\" display=\"inline\" overflow=\"scroll\"><mml:msub><mml:mrow><mml:mi>f</mml:mi></mml:mrow><mml:mrow><mml:mn>0</mml:mn></mml:mrow></mml:msub><mml:mrow><mml:mo>(</mml:mo><mml:mn>500</mml:mn><mml:mo>)</mml:mo></mml:mrow></mml:math> resonance",
+      "citations": 356
+    },
+    {
+      "id": "W2114210704",
+      "title": "Renormalization group evolution of the Standard Model dimension six operators III: gauge coupling dependence and phenomenology",
+      "citations": 810
+    },
+    {
+      "id": "W2143656445",
+      "title": "Double beta decay, Majorana neutrinos, and neutrino mass",
+      "citations": 992
+    },
+    {
+      "id": "W1981841888",
+      "title": "Summation of large corrections to short-distance hadronic cross sections",
+      "citations": 769
+    },
+    {
+      "id": "W2152694171",
+      "title": "Naturalnes in supersymmetric GUTS",
+      "citations": 792
+    },
+    {
+      "id": "W2032730849",
+      "title": "Nucleons with chiral loops",
+      "citations": 812
+    },
+    {
+      "id": "W2089754319",
+      "title": "Neutrino mass problem and gauge hierarchy",
+      "citations": 1065
+    },
+    {
+      "id": "W2115613123",
+      "title": "Performance of CMS muon reconstruction in pp collision events at<b>√s = 7</b>TeV",
+      "citations": 625
+    },
+    {
+      "id": "W2917390809",
+      "title": "Dark Matter Results from 100 Live Days of XENON100 Data",
+      "citations": 769
+    },
+    {
+      "id": "W2124705870",
+      "title": "A saddle-point solution in the Weinberg-Salam theory",
+      "citations": 1142
+    }
+  ]
+}
