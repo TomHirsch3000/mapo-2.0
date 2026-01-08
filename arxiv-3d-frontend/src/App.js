@@ -36,7 +36,7 @@ const CFG = {
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const yZoomAlphaFromSep = (g) => clamp01(g);
 
-const jitterMaxLaneUnits = 0.35;
+const jitterMaxLaneUnits = 3.5;
 const hash32 = (s) => { 
   let h = 2166136261 >>> 0; 
   for (let i = 0; i < s.length; i++) { 
