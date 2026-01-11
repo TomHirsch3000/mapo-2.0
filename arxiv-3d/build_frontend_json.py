@@ -281,6 +281,7 @@ def build_nodes(
         SELECT
             paperId,
             title,
+            abstract,
             AI_summary,
             AI_primary_field,
             cited_by_count,
@@ -352,6 +353,7 @@ def build_nodes(
     for r in rows:
         paperId = r["paperId"]
         title = r["title"]
+        abstract = r["abstract"]
         ai_summary = r["AI_summary"]
         ai_primary_field = r["AI_primary_field"]
         cited_by_count = r["cited_by_count"]
@@ -375,6 +377,7 @@ def build_nodes(
             "id": paperId,
             "paperId": paperId,
             "title": title,
+            "abstract": abstract,
             "summary": ai_summary,
             "primaryField": ai_primary_field,
             "year": year,
@@ -422,15 +425,22 @@ def build_edges_enhanced(
         return []
 
     src_col, dst_col = colpair
-    print(f"[info] Using citation columns: {src_col} → {dst_col}")
+    print(f"[info] Using citation columns: {src_col} -> {dst_col}")
 
     edges: List[Dict[str, Any]] = []
+    
+    # Use cursor as iterator to avoid loading 12M+ rows into memory at once
     cur = conn.execute(f"SELECT {src_col}, {dst_col} FROM citations")
 
     total = 0
     kept = 0
-    for src, dst in cur.fetchall():
+    print("[info] processing citations stream...")
+    
+    for src, dst in cur:
         total += 1
+        if total % 1000000 == 0:
+            print(f"   ...processed {total} citation rows (kept {kept})...")
+
         if src in pid_set and dst in pid_set:
             src_node = node_map[src]
             dst_node = node_map[dst]
@@ -480,7 +490,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Build enhanced nodes/edges JSON with clustering and network metrics"
     )
-    parser.add_argument("--db", type=str, default="papers.db",
+    parser.add_argument("--db", type=str, default="papers_particle_physics_all.db",
                         help="Path to SQLite DB")
     parser.add_argument("--frontend-dir", type=str, default=None,
                         help="Optional: directory to copy JSON files into")

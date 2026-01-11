@@ -3296,14 +3296,6 @@
     "targetField": "Particle Physics"
   },
   {
-    "source": "W2124705870",
-    "target": "W2070151728",
-    "weight": 1.0,
-    "importance": 15.912355527632535,
-    "sourceField": "Electroweak physics",
-    "targetField": "Particle Physics"
-  },
-  {
     "source": "W3041586415",
     "target": "W2137478082",
     "weight": 1.0,
@@ -9504,14 +9496,6 @@
     "targetField": "Particle Physics"
   },
   {
-    "source": "W2124705870",
-    "target": "W2155070207",
-    "weight": 1.0,
-    "importance": 15.107619231801074,
-    "sourceField": "Electroweak physics",
-    "targetField": "Quantum Field Theory"
-  },
-  {
     "source": "W1965888463",
     "target": "W2148539882",
     "weight": 1.0,
@@ -15136,14 +15120,6 @@
     "targetField": "Particle Physics"
   },
   {
-    "source": "W1958894153",
-    "target": "W2124705870",
-    "weight": 1.0,
-    "importance": 14.619557136214276,
-    "sourceField": "High Energy Physics",
-    "targetField": "Electroweak physics"
-  },
-  {
     "source": "W4211185413",
     "target": "W2101073879",
     "weight": 1.0,
@@ -16126,14 +16102,6 @@
     "importance": 14.544262788422554,
     "sourceField": "Astroparticle physics",
     "targetField": "Neutrino physics"
-  },
-  {
-    "source": "W2025712550",
-    "target": "W2124705870",
-    "weight": 1.0,
-    "importance": 14.543598150397735,
-    "sourceField": "High energy nuclear physics",
-    "targetField": "Electroweak physics"
   },
   {
     "source": "W2169127494",
@@ -21080,14 +21048,6 @@
     "targetField": "Particle Physics"
   },
   {
-    "source": "W2082513953",
-    "target": "W2124705870",
-    "weight": 1.0,
-    "importance": 14.192897127699545,
-    "sourceField": "Quantum Chromodynamics (QCD)",
-    "targetField": "Electroweak physics"
-  },
-  {
     "source": "W2106653566",
     "target": "W1989494434",
     "weight": 1.0,
@@ -24752,6 +24712,14 @@
     "targetField": "Quantum Chromodynamics (QCD)"
   },
   {
+    "source": "W1982542131",
+    "target": "W1994101208",
+    "weight": 1.0,
+    "importance": 13.950504630351013,
+    "sourceField": "High Energy Physics",
+    "targetField": "Nuclear Physics"
+  },
+  {
     "source": "W2169127494",
     "target": "W1997514584",
     "weight": 1.0,
@@ -25134,14 +25102,6 @@
     "importance": 13.923000804135226,
     "sourceField": "Particle Physics",
     "targetField": "Particle Physics"
-  },
-  {
-    "source": "W4211185413",
-    "target": "W2124705870",
-    "weight": 1.0,
-    "importance": 13.922822967437344,
-    "sourceField": "Particle Physics",
-    "targetField": "Electroweak physics"
   },
   {
     "source": "W1820155865",
@@ -25790,14 +25750,6 @@
     "importance": 13.875259502369486,
     "sourceField": "High Energy Physics",
     "targetField": "High energy physics"
-  },
-  {
-    "source": "W1965854036",
-    "target": "W2124705870",
-    "weight": 1.0,
-    "importance": 13.874443396581011,
-    "sourceField": "Electroweak physics",
-    "targetField": "Electroweak physics"
   },
   {
     "source": "W4292545695",
@@ -27144,14 +27096,6 @@
     "targetField": "Supersymmetry"
   },
   {
-    "source": "W3037249962",
-    "target": "W2124705870",
-    "weight": 1.0,
-    "importance": 13.783112358446864,
-    "sourceField": "Particle Physics",
-    "targetField": "Electroweak physics"
-  },
-  {
     "source": "W2809036207",
     "target": "W2595129576",
     "weight": 1.0,
@@ -27174,6 +27118,14 @@
     "importance": 13.782532717467067,
     "sourceField": "High energy physics",
     "targetField": "Particle Physics"
+  },
+  {
+    "source": "W1982542131",
+    "target": "W2035928167",
+    "weight": 1.0,
+    "importance": 13.782077861875873,
+    "sourceField": "High Energy Physics",
+    "targetField": "Quantum Field Theory"
   },
   {
     "source": "W3121796360",
@@ -28216,22 +28168,6 @@
     "targetField": "High energy physics"
   },
   {
-    "source": "W2562905916",
-    "target": "W2124705870",
-    "weight": 1.0,
-    "importance": 13.700705583478449,
-    "sourceField": "Particle physics",
-    "targetField": "Electroweak physics"
-  },
-  {
-    "source": "W3036996823",
-    "target": "W2124705870",
-    "weight": 1.0,
-    "importance": 13.700705583478449,
-    "sourceField": "Particle Physics",
-    "targetField": "Electroweak physics"
-  },
-  {
     "source": "W2045756911",
     "target": "W2018074373",
     "weight": 1.0,
@@ -28982,6 +28918,14 @@
     "importance": 13.650437781939479,
     "sourceField": "Particle Physics",
     "targetField": "Electroweak interactions"
+  },
+  {
+    "source": "W2031026718",
+    "target": "W1982542131",
+    "weight": 1.0,
+    "importance": 13.647618394938796,
+    "sourceField": "Particle Physics",
+    "targetField": "High Energy Physics"
   },
   {
     "source": "W2130455390",
@@ -33672,6 +33616,14 @@
     "targetField": "Particle Physics"
   },
   {
+    "source": "W1921254765",
+    "target": "W1982542131",
+    "weight": 1.0,
+    "importance": 13.27098163873061,
+    "sourceField": "Particle Physics",
+    "targetField": "High Energy Physics"
+  },
+  {
     "source": "W1983129750",
     "target": "W2152804990",
     "weight": 1.0,
@@ -34654,14 +34606,6 @@
     "importance": 13.1775331485378,
     "sourceField": "Particle Physics",
     "targetField": "Particle Physics"
-  },
-  {
-    "source": "W2543917711",
-    "target": "W2124705870",
-    "weight": 1.0,
-    "importance": 13.174809706791459,
-    "sourceField": "Particle Physics",
-    "targetField": "Electroweak physics"
   },
   {
     "source": "W2103819515",
@@ -39472,6 +39416,14 @@
     "targetField": "Particle Physics"
   },
   {
+    "source": "W2809036207",
+    "target": "W1982542131",
+    "weight": 1.0,
+    "importance": 12.526469941248273,
+    "sourceField": "Particle Physics",
+    "targetField": "High Energy Physics"
+  },
+  {
     "source": "W4312108281",
     "target": "W2129076408",
     "weight": 1.0,
@@ -40326,6 +40278,14 @@
     "importance": 12.34872605575411,
     "sourceField": "High energy physics",
     "targetField": "Particle Physics"
+  },
+  {
+    "source": "W2132560647",
+    "target": "W1982542131",
+    "weight": 1.0,
+    "importance": 12.339006984953901,
+    "sourceField": "Particle Physics",
+    "targetField": "High Energy Physics"
   },
   {
     "source": "W3006566086",
@@ -41352,14 +41312,6 @@
     "targetField": "Particle Physics"
   },
   {
-    "source": "W4312108281",
-    "target": "W2124705870",
-    "weight": 1.0,
-    "importance": 12.091267671044347,
-    "sourceField": "Particle Physics",
-    "targetField": "Electroweak physics"
-  },
-  {
     "source": "W4389542468",
     "target": "W2202858735",
     "weight": 1.0,
@@ -42032,6 +41984,14 @@
     "targetField": "High Energy Physics"
   },
   {
+    "source": "W4225725984",
+    "target": "W1982542131",
+    "weight": 1.0,
+    "importance": 11.943798377012925,
+    "sourceField": "Particle Physics",
+    "targetField": "High Energy Physics"
+  },
+  {
     "source": "W4389542468",
     "target": "W1927325176",
     "weight": 1.0,
@@ -42142,14 +42102,6 @@
     "importance": 11.909188362313593,
     "sourceField": "Particle Physics",
     "targetField": "Particle Physics"
-  },
-  {
-    "source": "W2151266903",
-    "target": "W2124705870",
-    "weight": 1.0,
-    "importance": 11.908946114250393,
-    "sourceField": "Particle Physics",
-    "targetField": "Electroweak physics"
   },
   {
     "source": "W2148311865",
@@ -42896,6 +42848,14 @@
     "targetField": "Particle Physics"
   },
   {
+    "source": "W2028315718",
+    "target": "W1982542131",
+    "weight": 1.0,
+    "importance": 11.649290339490744,
+    "sourceField": "Particle Physics",
+    "targetField": "High Energy Physics"
+  },
+  {
     "source": "W4312108281",
     "target": "W2016663111",
     "weight": 1.0,
@@ -42960,14 +42920,6 @@
     "targetField": "Particle Physics"
   },
   {
-    "source": "W4401586140",
-    "target": "W2124705870",
-    "weight": 1.0,
-    "importance": 11.616122642298194,
-    "sourceField": "High energy physics",
-    "targetField": "Electroweak physics"
-  },
-  {
     "source": "W4221140247",
     "target": "W2597602507",
     "weight": 1.0,
@@ -43006,6 +42958,14 @@
     "importance": 11.604264132385616,
     "sourceField": "Chiral Perturbation Theory",
     "targetField": "Particle physics"
+  },
+  {
+    "source": "W4389542468",
+    "target": "W1982542131",
+    "weight": 1.0,
+    "importance": 11.592937402939613,
+    "sourceField": "Particle Physics",
+    "targetField": "High Energy Physics"
   },
   {
     "source": "W1987659682",
@@ -43110,6 +43070,14 @@
     "importance": 11.551145677789926,
     "sourceField": "Particle Physics",
     "targetField": "High energy physics"
+  },
+  {
+    "source": "W2151266903",
+    "target": "W1982542131",
+    "weight": 1.0,
+    "importance": 11.53321816823799,
+    "sourceField": "Particle Physics",
+    "targetField": "High Energy Physics"
   },
   {
     "source": "W2163293517",

@@ -16,7 +16,9 @@ cd C:\Users\TomHi\Documents\GitHub\mapo-2.0\arxiv-3d-frontend\src
 run the javascript app
 npm start
 
+-------------------------------------------------
 build ready for publishing
+-------------------------------------------------
 npm run build
 
 
@@ -123,7 +125,7 @@ python import_openalex.py ^
 :: 2020–2025 (or whatever current year)
 python import_openalex.py ^
   --topic-name "particle physics" ^
-  --db papers_particle_physics_all.db 
+  --db papers_particle_physics_all.db ^
   --from-year 2020 ^
   --to-year 2025 ^
   --sample 0 ^
@@ -168,8 +170,10 @@ python process_ai_metadata.py --db papers_particle_physics.db --only-unprocessed
 python process_ai_metadata.py --db papers_particle_physics.db --only-unprocessed 0 --title-contains Higgs
 python process_ai_metadata.py --db papers_particle_physics_all.db --limit 10
 python process_ai_metadata.py --db papers_particle_physics_all.db --only-unprocessed 0 --limit 10
-python process_ai_metadata.py --db papers_particle_physics_all.db --only-unprocessed 1 --limit 1000 --min-citations 1000
+python process_ai_metadata.py --db papers_particle_physics_all.db --only-unprocessed 1 --min-citations 600
 
+if I just want to process the papers in the node.json then use this
+python process_ai_for_landmarks.py --db papers_particle_physics_all.db --from-json nodes.json
 -------------------------------------------------
 Generate nodes.json + edges.json for the frontend
 -------------------------------------------------
@@ -182,10 +186,29 @@ python build_frontend_json.py --db papers_particle_physics.db --top-n 1000 --fro
 
 python build_frontend_json.py ^
     --db papers_particle_physics_all.db ^
-    --min-citations 2000 ^
+    --min-citations 600 ^
     --frontend-dir ../arxiv-3d-frontend/public
     --field "High energy physics" \
     --year-from 1990 --year-to 2020
+
+
+python build_frontend_json.py ^
+  --db papers_particle_physics_all.db ^
+  --use-landmarks ^
+  --landmark-count 500 ^
+  --compute-clusters ^
+  --cluster-threshold 3 ^
+  --min-citations 50 ^
+  --frontend-dir ../arxiv-3d-frontend/public
+
+
+-------------------------------------------------
+build for hosting
+-------------------------------------------------
+
+
+
+
 
 
 -------------------------------------------------

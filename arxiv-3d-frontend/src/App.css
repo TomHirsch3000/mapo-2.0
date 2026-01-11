@@ -1,5 +1,7 @@
 /* Fullscreen layout for 3D canvas */
-html, body, #root {
+html,
+body,
+#root {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -27,6 +29,7 @@ div[data-html] {
   line-height: 1.4em;
   color: #000;
 }
+
 .node-popup {
   background-color: white;
   padding: 16px;
@@ -70,6 +73,7 @@ div[data-html] {
   color: #666;
   margin: 4px 0;
 }
+
 .legend {
   position: absolute;
   top: 10px;
@@ -128,11 +132,22 @@ div[data-html] {
 }
 
 /* minimal additions */
-.chart-wrap { position: relative; height: 74vh; }
+.chart-wrap {
+  position: relative;
+  height: 74vh;
+}
+
 #hover-tooltip {
-  position: absolute; display: none; pointer-events: none;
-  background: rgba(20,20,20,0.9); color: #fff; padding: 8px 10px; border-radius: 6px;
-  font-size: 12px; max-width: 320px; line-height: 1.3;
+  position: absolute;
+  display: none;
+  pointer-events: none;
+  background: rgba(20, 20, 20, 0.9);
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  max-width: 320px;
+  line-height: 1.3;
 }
 
 .tooltip {
@@ -145,10 +160,11 @@ div[data-html] {
   font-size: 13px;
   color: #333;
   max-width: 300px;
-  box-shadow: 0 0 8px rgba(0,0,0,0.15);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   line-height: 1.5;
-  pointer-events: auto; /* This line is critical */
+  pointer-events: auto;
+  /* This line is critical */
 
 }
 
@@ -159,7 +175,8 @@ div[data-html] {
 .app-wrap {
   display: flex;
   flex-direction: column;
-  height: 100vh;           /* critical: gives canvas a real height */
+  height: 100vh;
+  /* critical: gives canvas a real height */
   width: 100vw;
   overflow: hidden;
 }
@@ -204,7 +221,8 @@ div[data-html] {
 /* Main area that flexes */
 .app-main {
   flex: 1;
-  min-height: 0;           /* so child can grow properly */
+  min-height: 0;
+  /* so child can grow properly */
 }
 
 /* Canvas container fills the remaining height */
@@ -212,7 +230,8 @@ div[data-html] {
   position: relative;
   width: 100%;
   height: 100%;
-  touch-action: none;   /* <- important: let D3 handle touch */
+  touch-action: none;
+  /* <- important: let D3 handle touch */
 }
 
 /* Let the SVG fill its container */
@@ -225,7 +244,8 @@ div[data-html] {
 /* Footer */
 .mobile-footer {
   flex-shrink: 0;
-  height: 180px;                /* more space for details */
+  height: 180px;
+  /* more space for details */
   background: #fdfdff;
   border-top: 1px solid #ccc;
   display: flex;
@@ -356,6 +376,50 @@ div[data-html] {
 }
 
 
+
+.footer-abstract-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  /* Take up available vertical space */
+  min-height: 0;
+  margin: 4px 0;
+  border-top: 1px solid #eee;
+  padding-top: 4px;
+}
+
+.footer-abstract-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: #5a6475;
+  text-transform: uppercase;
+}
+
+.footer-abstract-content {
+  font-size: 12px;
+  color: #333;
+  line-height: 1.4;
+  overflow-y: auto;
+  max-height: 80px;
+  /* Limit height */
+  padding-right: 4px;
+
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.footer-abstract-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.footer-abstract-content::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+
+
 /* Tweak on small screens */
 @media (max-width: 768px) {
   .search-input {
@@ -363,7 +427,19 @@ div[data-html] {
   }
 
   .mobile-footer {
-    height: 220px;
+    height: 35vh;
+    /* Increase height for mobile */
+    max-height: 300px;
+    padding: 10px;
+  }
+
+  /* When a selection is active, hide the hover panel on mobile to save space */
+  .footer-panels:has(.footer-panel:nth-child(2) .footer-card) {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-panels:has(.footer-panel:nth-child(2) .footer-card) .footer-panel:first-child {
+    display: none;
   }
 
   .footer-panels {
@@ -372,9 +448,22 @@ div[data-html] {
 }
 
 
-svg { contain: strict; }
-.edges path { shape-rendering: optimizeSpeed; }
+svg {
+  contain: strict;
+}
 
-svg { contain: strict; }
-.edges path { shape-rendering: optimizeSpeed; }
-.node .node-rect { transition: opacity 120ms linear; }
+.edges path {
+  shape-rendering: optimizeSpeed;
+}
+
+svg {
+  contain: strict;
+}
+
+.edges path {
+  shape-rendering: optimizeSpeed;
+}
+
+.node .node-rect {
+  transition: opacity 120ms linear;
+}

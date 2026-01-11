@@ -21,7 +21,7 @@ const CFG = {
   accelPow: 50,
   maxSepRadius: 40,
   autoReturn: { enabled: false, kHome: 1.0, epsilonK: 0.12, halfLifeMs: 700 },
-  
+
   // Edge visibility settings
   edges: {
     alwaysShowTopN: 200,
@@ -37,13 +37,13 @@ const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const yZoomAlphaFromSep = (g) => clamp01(g);
 
 const jitterMaxLaneUnits = 3.5;
-const hash32 = (s) => { 
-  let h = 2166136261 >>> 0; 
-  for (let i = 0; i < s.length; i++) { 
-    h ^= s.charCodeAt(i); 
-    h = Math.imul(h, 16777619); 
-  } 
-  return h >>> 0; 
+const hash32 = (s) => {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
 };
 const hashUnit = (s) => hash32(String(s)) / 4294967296;
 const jitterLane = (id) => (hashUnit(id) - 0.5) * 2 * jitterMaxLaneUnits;
@@ -109,14 +109,14 @@ export default function App() {
   /** Normalize nodes */
   const nodes = useMemo(() => {
     const ns = (rawNodes || []).map(d => {
-      const yr = d.year ?? d.publication_year ?? 
+      const yr = d.year ?? d.publication_year ??
         (d.publicationDate ? new Date(d.publicationDate).getFullYear() : undefined);
 
-      const field = d.primaryField || d.AI_primary_field || d.field || 
+      const field = d.primaryField || d.AI_primary_field || d.field ||
         d.primary_field || "Unassigned";
 
       const cites = d.citationCount ?? d.cited_by_count ?? 0;
-      const authors = d.allAuthors || d.firstAuthor || d.authors || 
+      const authors = d.allAuthors || d.firstAuthor || d.authors ||
         d.authors_text || d.author;
       const url = d.url || d.doi_url || d.openAlexUrl || d.s2Url;
 
@@ -129,6 +129,7 @@ export default function App() {
         authors,
         url,
         title: d.title || d.display_name || "Untitled",
+        abstract: d.abstract || "",
         clusterId: d.clusterId ?? -1,
       };
     });
@@ -155,15 +156,15 @@ export default function App() {
         });
       }
     }
-    
+
     out.sort((a, b) => (b.importance || 0) - (a.importance || 0));
-    
+
     console.log(`Processed ${out.length} edges`);
     if (out.length > 0) {
       console.log(`Top edge importance: ${out[0].importance.toFixed(2)}`);
       console.log(`${out.filter(e => e.isCrossField).length} cross-field connections`);
     }
-    
+
     return out;
   }, [rawEdges]);
 
@@ -215,8 +216,8 @@ export default function App() {
     }
   }, [nodes]);
 
-  useEffect(() => { 
-    lockedIdRef.current = selected?.id || null; 
+  useEffect(() => {
+    lockedIdRef.current = selected?.id || null;
   }, [selected]);
 
   /** MAIN D3 SCENE */
@@ -246,57 +247,57 @@ export default function App() {
     const gRoot = svg.append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
     const gPlot = gRoot.append("g").attr("class", "plot");
-    
+
     const x = d3.scaleLinear().domain(yearsDomain).range([0, width]);
     const yLane = d3.scaleLinear()
       .domain([0, Math.max(0, fields.length - 1)])
       .range([0, height]);
     const color = d3.scaleOrdinal(d3.schemeTableau10).domain(fields);
-    
+
     // Add defs AFTER color scale is defined
     const defs = svg.append("defs");
-    
+
     // Glow filter
     const filter = defs.append("filter").attr("id", "edge-glow");
     filter.append("feGaussianBlur").attr("stdDeviation", 2).attr("result", "coloredBlur");
     const feMerge = filter.append("feMerge");
     feMerge.append("feMergeNode").attr("in", "coloredBlur");
     feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-    
+
     // Create gradient definitions for flowing edges - MORE DRAMATIC
     const createFlowGradient = (id, startColor, endColor) => {
       const grad = defs.append("linearGradient")
         .attr("id", id)
         .attr("gradientUnits", "userSpaceOnUse");
-      
+
       // Much more dramatic gradient: 
       // Bright and solid at start, fade quickly to nearly invisible
       grad.append("stop")
         .attr("offset", "0%")
         .attr("stop-color", startColor)
         .attr("stop-opacity", 1.0);
-      
+
       grad.append("stop")
         .attr("offset", "15%")
         .attr("stop-color", startColor)
         .attr("stop-opacity", 0.95);
-      
+
       grad.append("stop")
         .attr("offset", "60%")
         .attr("stop-color", endColor)
         .attr("stop-opacity", 0.25);
-        
+
       grad.append("stop")
         .attr("offset", "100%")
         .attr("stop-color", endColor)
         .attr("stop-opacity", 0.05);
     };
-    
+
     // Helper to create valid CSS ID from field name
     const fieldToId = (field) => {
       return field.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-');
     };
-    
+
     // Create flow gradients for each field
     fields.forEach(field => {
       const fieldId = fieldToId(field);
@@ -305,7 +306,7 @@ export default function App() {
     });
     createFlowGradient('flow-default', '#5b6573', '#5b6573');
     createFlowGradient('flow-highlight', '#1f2937', '#6b7280');
-    
+
     // Arrow markers - MUCH MORE VISIBLE
     const createArrowMarker = (id, fillColor, size = 5) => {
       defs.append("marker")
@@ -321,7 +322,7 @@ export default function App() {
         .attr("fill", fillColor)
         .attr("opacity", 1.0);  // Fully opaque arrows
     };
-    
+
     fields.forEach(field => {
       const fieldId = fieldToId(field);
       createArrowMarker(`arrow-${fieldId}`, color(field), 7);  // Bigger arrows
@@ -677,7 +678,7 @@ export default function App() {
       highlightSetRef.current = null;
       highlightRootRef.current = null;
       trailModeRef.current = false;
-      trailMetadataRef.current = null; 
+      trailMetadataRef.current = null;
     }
 
     function highlightNeighborhood(id, { raise = false } = {}) {
@@ -704,14 +705,14 @@ export default function App() {
         nodesSelLocal.filter(d => d.id === id).raise();
       }
     }
-    
+
     function highlightCitationTrail(id, depth = 1, { raise = false } = {}) {
       if (!id) {
         resetHighlight();
         trailMetadataRef.current = null;
         return;
       }
-      
+
       if (depth === 1) {
         // Depth 1: Just immediate neighbors (same as single click)
         highlightNeighborhood(id, { raise });
@@ -719,16 +720,16 @@ export default function App() {
         trailMetadataRef.current = null;
         return;
       }
-      
+
       // Depth 2: Information flow through time
       // Track which direction each paper is from root
-      
+
       const rootEdges = edgesByNode.get(id) || [];
-      
+
       // First hop: separate into "past" (cited by root) and "future" (citing root)
       const pastPapers = new Set();      // Papers root cited (older)
       const futurePapers = new Set();    // Papers citing root (newer)
-      
+
       rootEdges.forEach(i => {
         const e = edges[i];
         if (e.source === id) {
@@ -739,9 +740,9 @@ export default function App() {
           futurePapers.add(e.source);
         }
       });
-      
+
       console.log(`[trail] Past: ${pastPapers.size}, Future: ${futurePapers.size}`);
-      
+
       // Second hop:
       // For PAST papers: find papers THEY cited (going further back)
       const deepPastPapers = new Set();
@@ -755,7 +756,7 @@ export default function App() {
           }
         });
       });
-      
+
       // For FUTURE papers: find papers that cite THEM (going further forward)
       const deepFuturePapers = new Set();
       futurePapers.forEach(paperId => {
@@ -768,9 +769,9 @@ export default function App() {
           }
         });
       });
-      
+
       console.log(`[trail] Deep past: ${deepPastPapers.size}, Deep future: ${deepFuturePapers.size}`);
-      
+
       // Store metadata about trail structure
       trailMetadataRef.current = {
         root: id,
@@ -779,7 +780,7 @@ export default function App() {
         deepPast: deepPastPapers,
         deepFuture: deepFuturePapers
       };
-      
+
       // Combine all into trail set
       const trailSet = new Set([
         id,
@@ -788,11 +789,11 @@ export default function App() {
         ...deepPastPapers,
         ...deepFuturePapers
       ]);
-      
+
       // Limit if too large
       if (trailSet.size > 50) {
         console.log(`[trail] Trail too large (${trailSet.size}), limiting...`);
-        
+
         const sortByCitations = (set) => {
           return Array.from(set).sort((a, b) => {
             const aNode = nodeByIdRef.current.get(a);
@@ -800,19 +801,19 @@ export default function App() {
             return (bNode?.citationCount || 0) - (aNode?.citationCount || 0);
           });
         };
-        
+
         const topPast = sortByCitations(pastPapers).slice(0, 6);
         const topFuture = sortByCitations(futurePapers).slice(0, 6);
         const topDeepPast = sortByCitations(deepPastPapers).slice(0, 4);
         const topDeepFuture = sortByCitations(deepFuturePapers).slice(0, 4);
-        
+
         trailSet.clear();
         trailSet.add(id);
         topPast.forEach(p => trailSet.add(p));
         topFuture.forEach(p => trailSet.add(p));
         topDeepPast.forEach(p => trailSet.add(p));
         topDeepFuture.forEach(p => trailSet.add(p));
-        
+
         // Update metadata with limited sets
         trailMetadataRef.current = {
           root: id,
@@ -822,13 +823,13 @@ export default function App() {
           deepFuture: new Set(topDeepFuture)
         };
       }
-      
+
       console.log(`[trail] Final trail size: ${trailSet.size} papers`);
-      
+
       highlightSetRef.current = trailSet;
       highlightRootRef.current = id;
       trailModeRef.current = true;
-      
+
       if (raise) {
         const nodesSelLocal = d3.select(gPlot.node()).selectAll("g.node");
         nodesSelLocal.filter(d => trailSet.has(d.id)).raise();
@@ -876,34 +877,34 @@ export default function App() {
 
       const showAllEdges = k >= CFG.edges.showAllUnderZoom;
       const inHighlight = !!highlightSetRef.current;
-      
+
       let visibleEdges = [];
       if (inHighlight) {
         if (trailModeRef.current && trailMetadataRef.current) {
           // TRAIL MODE: Only show edges that follow the directional flow
           const meta = trailMetadataRef.current;
           const rootId = meta.root;
-          
+
           visibleEdges = edges.filter(e => {
             const src = e.source;
             const tgt = e.target;
-            
+
             // Rule 1: Root → Past papers (root cites them)
             if (src === rootId && meta.past.has(tgt)) return true;
-            
+
             // Rule 2: Future papers → Root (they cite root)
             if (tgt === rootId && meta.future.has(src)) return true;
-            
+
             // Rule 3: Past papers → Deep past (past papers cite deeper past)
             if (meta.past.has(src) && meta.deepPast.has(tgt)) return true;
-            
+
             // Rule 4: Deep future → Future papers (deep future cites future)
             if (meta.deepFuture.has(src) && meta.future.has(tgt)) return true;
-            
+
             // Don't show any other edges
             return false;
           });
-          
+
           console.log(`[trail] Showing ${visibleEdges.length} directional edges`);
         } else if (trailModeRef.current) {
           // Trail mode but no metadata (depth 1)
@@ -913,6 +914,19 @@ export default function App() {
           // NORMAL HIGHLIGHT: Just edges connected to root
           const idxs = edgesByNode.get(highlightRootRef.current) || [];
           visibleEdges = idxs.map(i => edges[i]);
+        }
+
+        // Ensure all edges connected to the selected node are visible
+        if (highlightRootRef.current) {
+          const rootEdgesMap = edgesByNode.get(highlightRootRef.current) || [];
+          const rootEdges = rootEdgesMap.map(i => edges[i]);
+          // Merge enabling edges connected to root are always available even in trail mode
+          // This might duplicate but d3 data key handles it or we can dedup if needed.
+          // Actually, let's just make sure we don't miss them.
+          const existing = new Set(visibleEdges);
+          rootEdges.forEach(e => {
+            if (!existing.has(e)) visibleEdges.push(e);
+          });
         }
       } else if (showAllEdges) {
         visibleEdges = edges;
@@ -955,8 +969,8 @@ export default function App() {
           .attr("height", tile.h)
           .attr("rx", tile.rx)
           .attr("ry", tile.rx)
-          .attr("fill", inHighlight ? 
-            (isHighlighted ? color(d.field) : GREY_FILL) : 
+          .attr("fill", inHighlight ?
+            (isHighlighted ? color(d.field) : GREY_FILL) :
             color(d.field))
           .attr("opacity", inHighlight ?
             (isHighlighted ? 0.95 : 0.55) :
@@ -1018,58 +1032,59 @@ export default function App() {
       edgesSel = edgesEnter.merge(edgesSel);
 
       edgesSel
-        .each(function(e) {
+        .each(function (e) {
           const sC = centerOf(e.source);
           const tC = centerOf(e.target);
           if (!sC || !tC) return;
-          
+
           // Update gradient to match actual line position
           const fieldId = fieldToId(e.sourceField);
           const gradId = inHighlight && highlightSetRef.current.has(e.source) ?
             (trailModeRef.current ? 'flow-highlight' : `flow-${fieldId}`) :
             'flow-default';
-          
+
           const grad = svg.select(`#${gradId}`);
           if (!grad.empty()) {
             grad.attr("x1", sC.x).attr("y1", sC.y)
-               .attr("x2", tC.x).attr("y2", tC.y);
+              .attr("x2", tC.x).attr("y2", tC.y);
           }
         })
         .attr("d", e => {
           const sC = centerOf(e.source);
           const tC = centerOf(e.target);
           if (!sC || !tC) return null;
-          
+
           const dx = tC.x - sC.x;
           const dy = tC.y - sC.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          
+
           // Flowing curve with directional bias
           const curveFactor = inHighlight ? 0.3 : 0.25;
           const dr = dist * curveFactor;
-          
+
           // Control point for smooth flow
           const mx = sC.x + dx * 0.5;
           const my = sC.y + dy * 0.5;
-          
+
           // Perpendicular offset
           const offsetX = -dy / dist * dr;
           const offsetY = dx / dist * dr;
-          
+
           return `M${sC.x},${sC.y} Q${mx + offsetX},${my + offsetY} ${tC.x},${tC.y}`;
         })
         .attr("stroke", e => {
           if (inHighlight) {
             const isSource = highlightSetRef.current.has(e.source);
             const isTarget = highlightSetRef.current.has(e.target);
-            
+
             if (trailModeRef.current) {
               // In trail mode, show all edges with gradient
               if (isSource && isTarget) {
                 const fieldId = fieldToId(e.sourceField);
                 return `url(#flow-${fieldId})`;
               }
-              return GREY_STROKE;
+              // Trail connections (second step) should be grey
+              return "#d1d5db";
             } else {
               // Normal highlight mode - only edges FROM root
               if (isSource) {
@@ -1111,10 +1126,10 @@ export default function App() {
         .attr("stroke-linecap", "round")
         .attr("stroke-dasharray", e => {
           if (!inHighlight) return null;
-          
+
           const sourceNode = nodeByIdRef.current.get(e.source);
           const targetNode = nodeByIdRef.current.get(e.target);
-          
+
           // Subtle dash for reverse-time citations (unusual case)
           if (sourceNode?.year && targetNode?.year) {
             return sourceNode.year < targetNode.year ? "5 4" : null;
@@ -1140,7 +1155,7 @@ export default function App() {
         });
 
       edgesSel
-        .filter(function() { return !this.classList.contains('entering'); })
+        .filter(function () { return !this.classList.contains('entering'); })
         .attr("stroke-opacity", e => {
           if (inHighlight) return CFG.edges.highlightOpacity;
           return e.importance > CFG.edges.importanceThreshold ?
@@ -1205,9 +1220,27 @@ export default function App() {
 
         renderWithTransform(d3.zoomTransform(svg.node()));
       })
+      .on("touchstart", function (event, d) {
+        // Mobile touch support for selection
+        if (inCooldown()) return;
+        // event.stopPropagation(); // let it bubble to zoom if needed, but we want to select
+
+        if (lockedIdRef.current === d.id) {
+          lockedIdRef.current = null;
+          focusLockRef.current = null;
+          setSelected(null);
+          resetHighlight();
+        } else {
+          lockedIdRef.current = d.id;
+          focusLockRef.current = d.id;
+          setSelected(d);
+          highlightNeighborhood(d.id, { raise: true });
+        }
+        renderWithTransform(d3.zoomTransform(svg.node()));
+      })
       .on("dblclick", function (event, d) {
         event.stopPropagation();
-        
+
         if (lockedIdRef.current === d.id && trailModeRef.current && trailDepthRef.current === 2) {
           // Third click: back to single click mode
           lockedIdRef.current = d.id;
@@ -1225,7 +1258,7 @@ export default function App() {
           focusLockRef.current = d.id;
           setSelected(d);
         }
-        
+
         highlightCitationTrail(d.id, trailDepthRef.current, { raise: true });
         renderWithTransform(d3.zoomTransform(svg.node()));
       });
@@ -1277,6 +1310,14 @@ export default function App() {
         {node.authors && (
           <div className="footer-authors">{node.authors}</div>
         )}
+
+        <div className="footer-abstract-section">
+          <div className="footer-abstract-header">Abstract</div>
+          <div className="footer-abstract-content">
+            {node.abstract || "No abstract available."}
+          </div>
+        </div>
+
         <div className="footer-meta-grid">
           {metaItems.map(item => (
             <div className="footer-meta-item" key={item.label}>
