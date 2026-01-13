@@ -1,0 +1,356 @@
+/* Galaxy.css - Premium Light Mode Theme */
+
+/* General container for the Galaxy View */
+.galaxy-container,
+.galaxy-theme {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #ffffff 0%, #f0f4f8 100%);
+    pointer-events: all;
+    display: flex;
+    flex-direction: column;
+    color: #1e293b;
+}
+
+.galaxy-canvas {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.galaxy-header {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    pointer-events: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.galaxy-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 1.2rem;
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.6);
+    padding: 8px 20px;
+    border-radius: 30px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Control UI Styling */
+.galaxy-select {
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: 'Inter', sans-serif;
+    color: #334155;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    outline: none;
+    transition: all 0.2s;
+}
+
+.galaxy-select:hover {
+    border-color: #94a3b8;
+    background: #fff;
+}
+
+.toggle-group {
+    display: flex;
+    background: rgba(226, 232, 240, 0.6);
+    border-radius: 8px;
+    padding: 2px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    pointer-events: auto;
+}
+
+.toggle-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggle-btn.active {
+    background: #fff;
+    color: #334155;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.toggle-btn:hover:not(.active) {
+    color: #475569;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Field Node (The Big "Stars") in Light Mode */
+.field-node {
+    position: absolute;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+    color: #1e293b;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    user-select: none;
+}
+
+.field-node:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+/* Label inside the field node */
+.field-label {
+    pointer-events: none;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 14px;
+    padding: 10px;
+    color: #0f172a;
+}
+
+.field-count {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-top: 4px;
+    color: #475569;
+}
+
+/* Back button to return to Galaxy View - IMPROVED VISIBILITY */
+.back-to-galaxy {
+    position: static;
+    /* Overridden in inline style, but set default */
+    padding: 8px 20px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+    color: #ffffff;
+    border-radius: 8px;
+    /* Square-ish for better fit in toolbar */
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    font-family: 'Inter', sans-serif;
+    height: 36px;
+}
+
+.back-to-galaxy:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+}
+
+.back-to-galaxy:active {
+    transform: translateY(0px);
+    box-shadow: 0 1px 4px rgba(99, 102, 241, 0.3);
+}
+
+/* Animations - Subtle Pulse for Light Mode */
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.2);
+    }
+
+    70% {
+        box-shadow: 0 0 0 15px rgba(99, 102, 241, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+    }
+}
+
+.field-node.pulsing {
+    animation: pulse-glow 3s infinite;
+}
+
+/* Footer / Detail Panel - Light Glass */
+.galaxy-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    color: #1e293b;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    max-height: 40vh;
+    overflow-y: auto;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.galaxy-footer h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #0f172a;
+}
+
+.footer-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 12px;
+}
+
+.footer-abstract {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.footer-abstract strong {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.footer-abstract p {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #334155;
+    margin: 0;
+}
+
+/* Two-Panel Layout for Selected + Hovered */
+.footer-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+}
+
+.footer-panel {
+    background: rgba(248, 250, 252, 0.6);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.footer-panel h4 {
+    margin: 0 0 4px 0;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.footer-panel h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.footer-panel .footer-meta {
+    margin-bottom: 8px;
+}
+
+.footer-panel .footer-abstract {
+    margin-top: 12px;
+    padding-top: 12px;
+}
+
+.footer-panel .footer-abstract p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* Compact hover panel (when both are shown) */
+.footer-panel.hover-panel .footer-abstract {
+    display: none;
+    /* Hide abstract in hover panel to save space */
+}
+
+/* Scrollbar styling for light mode */
+.galaxy-footer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.galaxy-footer::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+}
+
+.galaxy-footer::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.galaxy-footer::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .footer-panels {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-panel.hover-panel {
+        display: none;
+        /* Hide hover panel on mobile when selected exists */
+    }
+
+    .galaxy-title {
+        font-size: 1rem;
+        letter-spacing: 2px;
+        padding: 6px 16px;
+    }
+
+    .back-to-galaxy {
+        padding: 10px 20px;
+        font-size: 0.85rem;
+    }
+}
