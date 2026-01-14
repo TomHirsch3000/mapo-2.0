@@ -28,6 +28,7 @@ export default function App() {
   const nodeByIdRef = useRef(new Map());
   const simulationRef = useRef(null);
   const groupPositionsMatch = useRef(new Map());
+  const isTransitioning = useRef(false);
 
   /** Load data */
   useEffect(() => {
@@ -184,6 +185,9 @@ export default function App() {
 
   // --- RENDER EFFECT ---
   useEffect(() => {
+    // Reset transition lock on each render
+    isTransitioning.current = false;
+
     if (!svgRef.current || !wrapRef.current) return;
 
     const width = wrapRef.current.clientWidth;
@@ -199,54 +203,60 @@ export default function App() {
     if (gMain.empty()) {
       const gRoot = svg.append("g");
       gMain = gRoot.append("g").attr("class", "g-main");
+    }
 
-      const zoom = d3.zoom()
-        .scaleExtent([0.1, 8])
-        .on("zoom", (event) => {
-          gMain.attr("transform", event.transform);
+    // Zoom Behavior - Defined every render to access current state (closures)
+    const zoom = d3.zoom()
+      .scaleExtent([0.1, 8])
+      .on("zoom", (event) => {
+        gMain.attr("transform", event.transform);
 
-          // --- SEMANTIC ZOOM LOGIC ---
-          const k = event.transform.k;
+        if (isTransitioning.current) return;
 
-          // 1. Zooming IN (Galaxy -> Field)
-          if (viewMode === 'GALAXY' && k > 2.5) {
-            const cx = (width / 2 - event.transform.x) / k;
-            const cy = (height / 2 - event.transform.y) / k;
+        // --- SEMANTIC ZOOM LOGIC ---
+        const k = event.transform.k;
 
-            // Find closest group node in the underlying data
-            // We can access the currently rendered nodes via D3 selection IF we trust the DOM, 
-            // but better to access the data we have in scope.
-            let closest = null;
-            let minD = Infinity;
+        // 1. Zooming IN (Galaxy -> Field)
+        if (viewMode === 'GALAXY' && k > 1.8) {
+          const cx = (width / 2 - event.transform.x) / k;
+          const cy = (height / 2 - event.transform.y) / k;
 
-            // Note: galaxyNodes here refers to the memoized array. 
-            // We need the *latest simulation positions* which are mutated onto the objects in galaxyNodes.
-            // Since galaxyNodes objects are stable references (mostly), this works.
-            galaxyNodes.forEach(n => {
-              const dx = n.x - cx;
-              const dy = n.y - cy;
-              const d = Math.sqrt(dx * dx + dy * dy);
-              if (d < minD) { minD = d; closest = n; }
-            });
+          let closest = null;
+          let minD = Infinity;
 
-            // Threshold: if within visual radius of node (plus buffer)
-            if (closest && minD < (closest.val * 2.5 + 40)) {
-              handleGroupClick(closest.name);
-              // Reset zoom slightly to prevent immediate confusion? 
-              // Actually relying on the component re-render to reset zoom state in next effect run
-              // (BackToGalaxy usually resets, but Entering Field might want specific zoom)
-              // For now, standard behavior is fine.
-              svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8));
-            }
+          galaxyNodes.forEach(n => {
+            const dx = n.x - cx;
+            const dy = n.y - cy;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < minD) { minD = d; closest = n; }
+          });
+
+          // Threshold: expanded for easier navigation
+          if (closest && minD < (closest.val * 2.5 + 100)) {
+            isTransitioning.current = true;
+            handleGroupClick(closest.name);
+            // Smooth transition: zoom to 0.8 scale of the field view
+            svg.transition().duration(750)
+              .call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8))
+              .on("end", () => { isTransitioning.current = false; });
           }
+        }
 
-          // 2. Zooming OUT (Field -> Galaxy)
-          if ((viewMode === 'FIELD' || viewMode === 'DETAIL') && k < 0.25) {
-            handleBackToGalaxy();
-            svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8));
-          }
-        });
-      svg.call(zoom).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(viewMode === 'GALAXY' ? 0.8 : 0.4));
+        // 2. Zooming OUT (Field -> Galaxy)
+        if ((viewMode === 'FIELD' || viewMode === 'DETAIL') && k < 0.45) {
+          isTransitioning.current = true;
+          handleBackToGalaxy();
+          svg.transition().duration(750)
+            .call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8))
+            .on("end", () => { isTransitioning.current = false; });
+        }
+      });
+
+    // Attach zoom behavior
+    svg.call(zoom);
+    // Initialize zoom position ONLY if it's the first time
+    if (svg.select(".g-main").attr("transform") === null) {
+      svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8));
     }
 
     // Determine current dataset
@@ -264,7 +274,28 @@ export default function App() {
       }));
     } else {
       currentNodes = nodes.filter(n => n.group === activeGroup);
-      currentEdges = edges.filter(e => currentNodes.find(n => n.id === e.source) && currentNodes.find(n => n.id === e.target));
+
+      // Initialize positions depending on origin
+      // If nodes have no x/y (newly mounted), set them to the group's last known position or center
+      if (currentNodes.length > 0 && (currentNodes[0].x === undefined || currentNodes[0].x === 0)) {
+        const groupPos = groupPositionsMatch.current.get(activeGroup);
+        // If we don't have a group position, use slight random around 0,0
+        const startX = groupPos ? groupPos.x : 0;
+        const startY = groupPos ? groupPos.y : 0;
+
+        currentNodes.forEach(n => {
+          if (n.x === undefined) {
+            // Initialize to center but with slight spread to help force layout
+            n.x = startX + (Math.random() - 0.5) * 50;
+            n.y = startY + (Math.random() - 0.5) * 50;
+          }
+        });
+      }
+      currentEdges = edges.filter(e => {
+        const s = typeof e.source === 'object' ? e.source.id : e.source;
+        const t = typeof e.target === 'object' ? e.target.id : e.target;
+        return currentNodes.find(n => n.id === s) && currentNodes.find(n => n.id === t);
+      });
 
       const maxCites = d3.max(currentNodes, d => d.citationCount) || 1;
       const sizeScale = d3.scaleSqrt().domain([0, maxCites]).range([0.8, 2.5]);
@@ -277,8 +308,10 @@ export default function App() {
     // --- D3 JOIN PATTERN (Smooth Transitions) ---
 
     // Edges
+    const getId = (d) => typeof d === 'object' ? (d.id || d.name) : d;
     const linkJoin = gMain.selectAll(".d3-link")
-      .data(currentEdges, d => isGalaxy ? (d.source.name || d.source) + "|" + (d.target.name || d.target) : d.source + "|" + d.target);
+      // Fix key generation to handle object references or string IDs correctly
+      .data(currentEdges, d => getId(d.source) + "|" + getId(d.target));
 
     linkJoin.exit().transition().duration(500).attr("stroke-opacity", 0).remove();
 
@@ -297,7 +330,12 @@ export default function App() {
     const nodeJoin = gMain.selectAll(".d3-node")
       .data(currentNodes, d => d.id || d.name);
 
-    nodeJoin.exit().transition().duration(500).style("opacity", 0).remove();
+    // Immediate removal of 'wrong' nodes if we switched views to prevent lingering ghost nodes
+    nodeJoin.exit()
+      .transition().duration(viewMode === 'FIELD' && !isGalaxy ? 200 : 500)
+      .style("opacity", 0)
+      .attr("transform", d => `translate(${d.x}, ${d.y}) scale(0.1)`)
+      .remove();
 
     const nodesEntry = nodeJoin.enter().append("g")
       .attr("class", "d3-node")
@@ -376,9 +414,9 @@ export default function App() {
       .force("collide", d3.forceCollide().radius(d => isGalaxy ? (d.val * 2 + 50) : (d._w * 0.6)));
 
     if (isGalaxy) {
-      // Only link if central
-      if (layoutMode === 'CENTRAL') {
-        sim.force("link", d3.forceLink(currentEdges).id(d => d.name).distance(200).strength(0.05));
+      // Only link if central or timeline (to show connections)
+      if (layoutMode === 'CENTRAL' || layoutMode === 'TIMELINE') {
+        sim.force("link", d3.forceLink(currentEdges).id(d => d.name).distance(200).strength(layoutMode === 'TIMELINE' ? 0.01 : 0.05));
       }
     } else {
       sim.force("link", d3.forceLink(currentEdges).id(d => d.id).distance(150));
@@ -395,6 +433,7 @@ export default function App() {
       const xScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 0.4, width * 0.4]);
 
       sim.force("x", d3.forceX(d => xScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
+      // Relax Y constraint slightly to allow stacking/edge visibility
       sim.force("y", d3.forceY(0).strength(0.2));
 
       // Remove radial
@@ -534,9 +573,10 @@ export default function App() {
 
       <svg ref={svgRef} className="galaxy-canvas" />
 
-      {(selected || hovered) && (
-        <div className="galaxy-footer">
-          <div className="footer-panels">
+      {/* Persistent Footer Panel */}
+      <div className="galaxy-footer" style={{ transform: (selected || hovered) ? 'translateY(0)' : 'translateY(0)', opacity: 1, pointerEvents: 'none' }}>
+        {(selected || hovered) ? (
+          <div className="footer-panels" style={{ pointerEvents: 'auto' }}>
             {selected && (
               <div className="footer-panel selected-panel">
                 <h4>Selected</h4>
@@ -563,8 +603,12 @@ export default function App() {
               </div>
             )}
           </div>
-        </div>
-      )}
-    </div>
+        ) : (
+          <div className="footer-empty" style={{ textAlign: 'center', color: '#94a3b8', padding: '10px' }}>
+            Hover or select a node to view details
+          </div>
+        )}
+      </div>
+    </div >
   );
 }
