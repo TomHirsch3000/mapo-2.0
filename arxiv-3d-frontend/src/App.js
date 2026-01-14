@@ -28,7 +28,10 @@ export default function App() {
   const nodeByIdRef = useRef(new Map());
   const simulationRef = useRef(null);
   const groupPositionsMatch = useRef(new Map());
+  const nodePositionsCache = useRef(new Map()); // Store all node positions
   const isTransitioning = useRef(false);
+  const prevViewMode = useRef(viewMode);
+  const prevLayoutMode = useRef(layoutMode);
 
   /** Load data */
   useEffect(() => {
@@ -283,13 +286,25 @@ export default function App() {
         const startX = groupPos ? groupPos.x : 0;
         const startY = groupPos ? groupPos.y : 0;
 
+        // Check Cache first
+        let hasCachedPositions = false;
         currentNodes.forEach(n => {
-          if (n.x === undefined) {
-            // Initialize to center but with slight spread to help force layout
-            n.x = startX + (Math.random() - 0.5) * 50;
-            n.y = startY + (Math.random() - 0.5) * 50;
+          const cached = nodePositionsCache.current.get(n.id);
+          if (cached) {
+            n.x = cached.x;
+            n.y = cached.y;
+            hasCachedPositions = true;
           }
         });
+
+        if (!hasCachedPositions) {
+          currentNodes.forEach(n => {
+            if (n.x === undefined) {
+              n.x = startX + (Math.random() - 0.5) * 10;
+              n.y = startY + (Math.random() - 0.5) * 10;
+            }
+          });
+        }
       }
       currentEdges = edges.filter(e => {
         const s = typeof e.source === 'object' ? e.source.id : e.source;
@@ -309,38 +324,66 @@ export default function App() {
 
     // Edges
     const getId = (d) => typeof d === 'object' ? (d.id || d.name) : d;
+    // --- EXPLICIT CLEANUP (LINKS) ---
+    // If we are in Galaxy, kill paper links. If in Field, kill galaxy links.
+    // Also remove generic .d3-link if they don't match current expected class (legacy cleanup)
+    gMain.selectAll(isGalaxy ? ".type-paper-link" : ".type-galaxy-link").remove();
+    // Safety: Remove any link that doesn't have the correct class for current view
+    // (This prevents "plain" links from sticking around)
+    gMain.selectAll(".d3-link").filter(function () {
+      const cl = d3.select(this).attr("class");
+      return !cl.includes(isGalaxy ? 'type-galaxy-link' : 'type-paper-link');
+    }).remove();
+
     const linkJoin = gMain.selectAll(".d3-link")
-      // Fix key generation to handle object references or string IDs correctly
-      .data(currentEdges, d => getId(d.source) + "|" + getId(d.target));
+      // Namespace key by view type to force full replacement on view switch
+      .data(currentEdges, d => (isGalaxy ? "G" : "P") + "|" + getId(d.source) + "|" + getId(d.target));
 
     linkJoin.exit().transition().duration(500).attr("stroke-opacity", 0).remove();
 
     const linksEntry = linkJoin.enter().append("line")
-      .attr("class", "d3-link")
+      .attr("class", `d3-link ${isGalaxy ? 'type-galaxy-link' : 'type-paper-link'}`)
       .attr("stroke", "#94a3b8")
       .attr("stroke-opacity", 0);
 
     // Update both new and existing
+    // Update both new and existing
     const links = linksEntry.merge(linkJoin)
+      .attr("class", `d3-link ${isGalaxy ? 'type-galaxy-link' : 'type-paper-link'}`) // Ensure class is correct on update
       .attr("stroke-width", d => isGalaxy ? Math.sqrt(d.weight || 1) : 2.5)
       .transition().duration(1000)
       .attr("stroke-opacity", 0.4);
 
     // Nodes
+    // Use a generic selection to ensure we catch ALL nodes (Galaxy or Field)
+    // This guarantees the 'exit' selection contains any node that shouldn't be here.
     const nodeJoin = gMain.selectAll(".d3-node")
-      .data(currentNodes, d => d.id || d.name);
+      .data(currentNodes, d => d.id);
 
-    // Immediate removal of 'wrong' nodes if we switched views to prevent lingering ghost nodes
+    // EXIT
     nodeJoin.exit()
-      .transition().duration(viewMode === 'FIELD' && !isGalaxy ? 200 : 500)
-      .style("opacity", 0)
-      .attr("transform", d => `translate(${d.x}, ${d.y}) scale(0.1)`)
-      .remove();
+      .each(function (d) {
+        // Check if this node is "incompatible" with current view
+        // e.g. We are in FIELD mode, but this is a Group node
+        const isGroupNode = d.id.startsWith("group-");
+        const isWrongType = (isGalaxy && !isGroupNode) || (!isGalaxy && isGroupNode);
 
+        const el = d3.select(this);
+
+        if (isWrongType) {
+          // INSTANT REMOVAL - Garbage collect immediately to prevent ghosts
+          el.remove();
+        } else {
+          // Smooth fade out for normal data updates
+          el.transition().duration(400).style("opacity", 0).remove();
+        }
+      });
+
+    // ENTER
     const nodesEntry = nodeJoin.enter().append("g")
-      .attr("class", "d3-node")
+      .attr("class", d => `d3-node ${isGalaxy ? 'type-group' : 'type-paper'}`)
       .attr("cursor", "pointer")
-      .style("opacity", 0)
+      .style("opacity", 0) // Start invisible
       .on("click", (e, d) => {
         e.stopPropagation();
         if (isGalaxy) handleGroupClick(d.name);
@@ -348,12 +391,16 @@ export default function App() {
       })
       .on("mouseover", (e, d) => setHovered(isGalaxy ? {
         title: d.name,
-        year: `First Paper: ${d.minYear}`,
+        year: `Est. ${d.minYear}`,
         citationCount: d.data.totalCitations,
-        authors: `${d.data.count} papers`,
-        abstract: `Group initialized approx. ${d.minYear}`
+        field: "Galaxy Group",
+        abstract: `${d.data.count} papers in this cluster. Combined citation impact of ${d.data.totalCitations}.`
       } : d))
       .on("mouseout", () => setHovered(null));
+
+    // Semantic Fade In
+    // We will handle opacity in the simulation tick for better control vs pre-calculation
+    nodesEntry.transition().duration(600).ease(d3.easeQuadOut).style("opacity", 1);
 
     // Construct Node content based on type
     if (isGalaxy) {
@@ -369,7 +416,7 @@ export default function App() {
       nodesEntry.append("foreignObject").attr("class", "fo-content").style("pointer-events", "none").append("xhtml:div").attr("class", "node-fo");
     }
 
-    nodesEntry.transition().duration(800).style("opacity", 1);
+    nodesEntry.transition().duration(600).style("opacity", 1);
 
     // Merge for updates
     const allNodes = nodesEntry.merge(nodeJoin);
@@ -473,10 +520,49 @@ export default function App() {
       }
     }
 
+    // PRE-CALCULATION (Instant Load)
+    // Only pre-tick if we changed VIEW MODE (e.g. Galaxy -> Topic)
+    // If we just toggled Layout (Central <-> Timeline), we WANT to see the animation.
+    const viewChanged = prevViewMode.current !== viewMode;
+    const layoutChanged = prevLayoutMode.current !== layoutMode;
+
+    if (viewChanged && layoutMode !== 'TIMELINE') {
+      sim.tick(300);
+      // Sync DOM immediately so they appear in correct place
+      gMain.selectAll(".d3-node").attr("transform", d => `translate(${d.x}, ${d.y})`);
+      gMain.selectAll(".d3-link")
+        .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+
+      // Lower alpha so it doesn't move much more
+      sim.alpha(0.02);
+    } else if (layoutChanged) {
+      // If we just changed layout, re-heat the simulation so they move visibly
+      sim.alpha(1).restart();
+    }
+
+    // Timeline Slow Transition
+    if (layoutMode === 'TIMELINE') {
+      sim.velocityDecay(0.6); // Slower movement
+      sim.alphaDecay(0.02); // Slower cooling
+    }
+
+    // Update refs
+    prevViewMode.current = viewMode;
+    prevLayoutMode.current = layoutMode;
+
+    // Timeline Slow Transition
+    if (layoutMode === 'TIMELINE') {
+      sim.velocityDecay(0.6); // Slower movement
+      sim.alphaDecay(0.02); // Slower cooling
+    }
+
     sim.on("tick", () => {
-      // Save positions for Galaxy stability
+      // Save positions for Stability
       if (isGalaxy) {
         currentNodes.forEach(n => groupPositionsMatch.current.set(n.name, { x: n.x, y: n.y }));
+      } else {
+        currentNodes.forEach(n => nodePositionsCache.current.set(n.id, { x: n.x, y: n.y }));
       }
 
       // Update Links

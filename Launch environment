@@ -261,7 +261,12 @@ separation experience solve
 it didn't work. the nodes are separating at the same rate regardless of sepgain. I think there is some confusion when I talk about separation because I want the zoom to behave in a very specific way. nodes should not move much while they are small and the rate they move should be defined by sepgain, they should only really grow in size. then when they reach a certain size defined by accelfromwidth they should start to move away from the mouse pointer at the rate defined by accelpow. I also want to control the rate that they grow [DONE]
  
 
+ when the graph loads I want the nodes to fade in already in positon, right now they are loading visibly moving and creating the graph in a chaotic way. They should load into position first and then shown and stay still to avioid this loading jumble.
+ when I transition to the topic view the galaxy view should disappear, I should only see nodes from within that topic. 
 
+ when I toggle between timeline view and central view the nodes should visibly move a bit slower to their new location, they should not appear to load again.  
+ In galaxy view, the bottom pannel should show summary details of the galaxy nodes. 
+ I want to rememer the node position, so that if I return to the same view the nodes are in the same place as they were. Right now they are always finding a new position but I want their position to be deterministic. this applies to galaxy nodes and topic nodes 
 
 
 

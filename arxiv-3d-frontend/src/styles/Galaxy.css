@@ -217,7 +217,8 @@
     color: #1e293b;
     box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.05);
     z-index: 1000;
-    max-height: 35vh;
+    max-height: 33vh;
+    min-height: 15vh;
     overflow-y: auto;
     transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
