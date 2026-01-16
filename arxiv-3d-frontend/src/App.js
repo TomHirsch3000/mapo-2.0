@@ -33,6 +33,15 @@ export default function App() {
   const prevViewMode = useRef(viewMode);
   const prevLayoutMode = useRef(layoutMode);
 
+  const EDGE_COLORS = {
+    citation: "#f59e0b",
+    reference: "#3b82f6",
+    default: "#94a3b8"
+  };
+
+  const sanitizeId = (value) => String(value).replace(/[^a-zA-Z0-9_-]/g, "_");
+  const getEdgeId = (d) => (typeof d === "object" ? (d.id || d.name) : d);
+
   /** Load data */
   useEffect(() => {
     Promise.all([
@@ -111,7 +120,7 @@ export default function App() {
       const targetGroup = nodeIdToGroup.get(String(e.target));
 
       if (sourceGroup && targetGroup && sourceGroup !== targetGroup && validGroups.has(sourceGroup) && validGroups.has(targetGroup)) {
-        const key = [sourceGroup, targetGroup].sort().join("|");
+        const key = `${sourceGroup}|${targetGroup}`;
         groupEdgeMap.set(key, (groupEdgeMap.get(key) || 0) + 1);
       }
     });
@@ -138,7 +147,7 @@ export default function App() {
         target: String(e.target),
         importance: e.importance ?? 1
       }))
-      .filter(e => m.has(e.source) && m.has(e.target));
+      .filter(e => m.has(e.source) && m.has(e.target) && e.source !== e.target);
   }, [rawEdges, rawNodes]);
 
   const colorScale = useMemo(() => d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueGroups), [uniqueGroups]);
@@ -323,7 +332,44 @@ export default function App() {
     // --- D3 JOIN PATTERN (Smooth Transitions) ---
 
     // Edges
-    const getId = (d) => typeof d === 'object' ? (d.id || d.name) : d;
+    const getEdgeKey = (d) => `${isGalaxy ? "G" : "P"}|${getEdgeId(d.source)}|${getEdgeId(d.target)}`;
+    const getGradientId = (d) => {
+      const id = `link-gradient-${sanitizeId(getEdgeKey(d))}`;
+      d._gradId = id;
+      return id;
+    };
+    const getEdgeSourceName = (d) => {
+      const source = typeof d.source === "object" ? (d.source.name || d.source.group || d.source.id) : d.source;
+      return source;
+    };
+    const getBaseEdgeColor = (d) => (isGalaxy ? colorScale(getEdgeSourceName(d)) : EDGE_COLORS.default);
+    const setGradientStops = (selection, color) => {
+      selection.select(".grad-stop-start").attr("stop-color", color).attr("stop-opacity", 0.0);
+      selection.select(".grad-stop-mid").attr("stop-color", color).attr("stop-opacity", 0.25);
+      selection.select(".grad-stop-end").attr("stop-color", color).attr("stop-opacity", 0.85);
+    };
+
+    const defs = svg.select("defs").empty() ? svg.append("defs") : svg.select("defs");
+    const gradientJoin = defs.selectAll(".link-gradient")
+      .data(currentEdges, getEdgeKey);
+
+    gradientJoin.exit().remove();
+
+    const gradientEnter = gradientJoin.enter().append("linearGradient")
+      .attr("class", "link-gradient")
+      .attr("gradientUnits", "userSpaceOnUse")
+      .attr("id", d => getGradientId(d));
+
+    gradientEnter.append("stop").attr("class", "grad-stop-start").attr("offset", "0%");
+    gradientEnter.append("stop").attr("class", "grad-stop-mid").attr("offset", "60%");
+    gradientEnter.append("stop").attr("class", "grad-stop-end").attr("offset", "100%");
+
+    const gradients = gradientEnter.merge(gradientJoin)
+      .attr("id", d => getGradientId(d));
+
+    gradients.each(function (d) {
+      setGradientStops(d3.select(this), getBaseEdgeColor(d));
+    });
     // --- EXPLICIT CLEANUP (LINKS) ---
     // If we are in Galaxy, kill paper links. If in Field, kill galaxy links.
     // Also remove generic .d3-link if they don't match current expected class (legacy cleanup)
@@ -337,22 +383,23 @@ export default function App() {
 
     const linkJoin = gMain.selectAll(".d3-link")
       // Namespace key by view type to force full replacement on view switch
-      .data(currentEdges, d => (isGalaxy ? "G" : "P") + "|" + getId(d.source) + "|" + getId(d.target));
+      .data(currentEdges, getEdgeKey);
 
     linkJoin.exit().transition().duration(500).attr("stroke-opacity", 0).remove();
 
-    const linksEntry = linkJoin.enter().append("line")
+    const linksEntry = linkJoin.enter().append("path")
       .attr("class", `d3-link ${isGalaxy ? 'type-galaxy-link' : 'type-paper-link'}`)
-      .attr("stroke", "#94a3b8")
+      .attr("fill", "none")
+      .attr("stroke-linecap", "round")
       .attr("stroke-opacity", 0);
 
     // Update both new and existing
-    // Update both new and existing
     const links = linksEntry.merge(linkJoin)
       .attr("class", `d3-link ${isGalaxy ? 'type-galaxy-link' : 'type-paper-link'}`) // Ensure class is correct on update
-      .attr("stroke-width", d => isGalaxy ? Math.sqrt(d.weight || 1) : 2.5)
+      .attr("stroke-width", d => isGalaxy ? Math.max(1.6, Math.sqrt(d.weight || 1) + 0.8) : 2.6)
+      .attr("stroke", d => `url(#${getGradientId(d)})`)
       .transition().duration(1000)
-      .attr("stroke-opacity", 0.4);
+      .attr("stroke-opacity", isGalaxy ? 0.55 : 0.5);
 
     // Nodes
     // Use a generic selection to ensure we catch ALL nodes (Galaxy or Field)
@@ -520,6 +567,33 @@ export default function App() {
       }
     }
 
+    const getLinkPath = (d) => {
+      const s = d.source;
+      const t = d.target;
+      const sx = (s && typeof s.x === "number") ? s.x : 0;
+      const sy = (s && typeof s.y === "number") ? s.y : 0;
+      const tx = (t && typeof t.x === "number") ? t.x : 0;
+      const ty = (t && typeof t.y === "number") ? t.y : 0;
+      const dx = tx - sx;
+      const dy = ty - sy;
+      const dr = Math.sqrt(dx * dx + dy * dy) || 1;
+      const curve = Math.min(80, dr * 0.3);
+      const nx = -dy / dr;
+      const ny = dx / dr;
+      const cx = (sx + tx) / 2 + nx * curve;
+      const cy = (sy + ty) / 2 + ny * curve;
+      return `M${sx},${sy} Q${cx},${cy} ${tx},${ty}`;
+    };
+
+    const updateLinkPositions = () => {
+      gMain.selectAll(".d3-link").attr("d", d => getLinkPath(d));
+      svg.select("defs").selectAll(".link-gradient")
+        .attr("x1", d => (d.source && typeof d.source.x === "number") ? d.source.x : 0)
+        .attr("y1", d => (d.source && typeof d.source.y === "number") ? d.source.y : 0)
+        .attr("x2", d => (d.target && typeof d.target.x === "number") ? d.target.x : 0)
+        .attr("y2", d => (d.target && typeof d.target.y === "number") ? d.target.y : 0);
+    };
+
     // PRE-CALCULATION (Instant Load)
     // Only pre-tick if we changed VIEW MODE (e.g. Galaxy -> Topic)
     // If we just toggled Layout (Central <-> Timeline), we WANT to see the animation.
@@ -530,9 +604,7 @@ export default function App() {
       sim.tick(300);
       // Sync DOM immediately so they appear in correct place
       gMain.selectAll(".d3-node").attr("transform", d => `translate(${d.x}, ${d.y})`);
-      gMain.selectAll(".d3-link")
-        .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+      updateLinkPositions();
 
       // Lower alpha so it doesn't move much more
       sim.alpha(0.02);
@@ -566,9 +638,7 @@ export default function App() {
       }
 
       // Update Links
-      gMain.selectAll(".d3-link")
-        .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+      updateLinkPositions();
 
       // Update Nodes
       gMain.selectAll(".d3-node")
@@ -589,20 +659,22 @@ export default function App() {
     if (viewMode !== 'FIELD') {
       // Reset styles for Galaxy
       d3.select(svgRef.current).selectAll(".d3-node").style("opacity", 1);
-      d3.select(svgRef.current).selectAll(".d3-link").attr("stroke-opacity", 0.4);
+      d3.select(svgRef.current).selectAll(".d3-link").attr("stroke-opacity", 0.55);
       return;
     }
 
     const svg = d3.select(svgRef.current);
     const node = svg.selectAll(".d3-node");
     const link = svg.selectAll(".d3-link");
+    const gradients = svg.select("defs").selectAll(".link-gradient");
     const rect = svg.selectAll(".node-rect");
 
     if (selected) {
       const connectedIds = new Set([selected.id]);
-      edges.forEach(e => {
-        const sourceId = typeof e.source === 'object' ? e.source.id : e.source;
-        const targetId = typeof e.target === 'object' ? e.target.id : e.target;
+      const visibleLinks = link.data();
+      visibleLinks.forEach(e => {
+        const sourceId = getEdgeId(e.source);
+        const targetId = getEdgeId(e.target);
         if (sourceId === selected.id) connectedIds.add(targetId);
         if (targetId === selected.id) connectedIds.add(sourceId);
       });
@@ -611,25 +683,36 @@ export default function App() {
 
       link.transition().duration(200)
         .attr("stroke-opacity", d => {
-          const s = typeof d.source === 'object' ? d.source.id : d.source;
-          const t = typeof d.target === 'object' ? d.target.id : d.target;
-          return (connectedIds.has(s) && connectedIds.has(t)) ? 0.9 : 0.05;
-        })
-        .attr("stroke", d => {
-          const s = typeof d.source === 'object' ? d.source.id : d.source;
-          const t = typeof d.target === 'object' ? d.target.id : d.target;
-          if (s === selected.id) return "#10b981";
-          if (t === selected.id) return "#f43f5e";
-          return "#94a3b8";
+          const s = getEdgeId(d.source);
+          const t = getEdgeId(d.target);
+          return (s === selected.id || t === selected.id) ? 0.9 : 0.05;
         });
+
+      gradients.each(function (d) {
+        const s = getEdgeId(d.source);
+        const t = getEdgeId(d.target);
+        const isConnected = s === selected.id || t === selected.id;
+        const color = s === selected.id ? EDGE_COLORS.reference : (t === selected.id ? EDGE_COLORS.citation : EDGE_COLORS.default);
+        const opacityScale = isConnected ? 1 : 0.15;
+        const sel = d3.select(this);
+        sel.select(".grad-stop-start").attr("stop-color", color).attr("stop-opacity", 0.0);
+        sel.select(".grad-stop-mid").attr("stop-color", color).attr("stop-opacity", 0.25 * opacityScale);
+        sel.select(".grad-stop-end").attr("stop-color", color).attr("stop-opacity", 0.85 * opacityScale);
+      });
 
       rect.transition().duration(200).attr("stroke", d => d.id === selected.id ? "#0f172a" : "#fff").attr("stroke-width", d => d.id === selected.id ? 4 : 2);
     } else {
       node.transition().duration(200).style("opacity", 1);
-      link.transition().duration(200).attr("stroke-opacity", 0.4).attr("stroke", "#94a3b8");
+      link.transition().duration(200).attr("stroke-opacity", 0.5);
+      gradients.each(function (d) {
+        const sel = d3.select(this);
+        sel.select(".grad-stop-start").attr("stop-color", EDGE_COLORS.default).attr("stop-opacity", 0.0);
+        sel.select(".grad-stop-mid").attr("stop-color", EDGE_COLORS.default).attr("stop-opacity", 0.25);
+        sel.select(".grad-stop-end").attr("stop-color", EDGE_COLORS.default).attr("stop-opacity", 0.85);
+      });
       rect.transition().duration(200).attr("stroke", "#fff").attr("stroke-width", 2);
     }
-  }, [selected, viewMode, edges]);
+  }, [selected, viewMode]);
 
   return (
     <div className="App galaxy-theme" ref={wrapRef}>
