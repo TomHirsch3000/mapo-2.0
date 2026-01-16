@@ -32,11 +32,33 @@ export default function App() {
   const isTransitioning = useRef(false);
   const prevViewMode = useRef(viewMode);
   const prevLayoutMode = useRef(layoutMode);
+  const layoutSignatureRef = useRef("");
 
   const EDGE_COLORS = {
     citation: "#f59e0b",
     reference: "#3b82f6",
     default: "#94a3b8"
+  };
+
+  const hashString = (value) => {
+    let hash = 0;
+    const str = String(value);
+    for (let i = 0; i < str.length; i += 1) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash);
+  };
+
+  const getDeterministicPoint = (key, radius) => {
+    const base = hashString(key);
+    const angle = ((base % 360) * Math.PI) / 180;
+    const spread = (hashString(`${key}-spread`) % 1000) / 1000;
+    const r = Math.max(40, spread * radius);
+    return {
+      x: Math.cos(angle) * r,
+      y: Math.sin(angle) * r
+    };
   };
 
   const sanitizeId = (value) => String(value).replace(/[^a-zA-Z0-9_-]/g, "_");
@@ -161,6 +183,7 @@ export default function App() {
 
       const val = Math.sqrt(f.totalCitations) * 0.25;
 
+      const fallbackPos = getDeterministicPoint(f.name, 450);
       const node = {
         id: `group-${f.name}`,
         type: 'group',
@@ -169,8 +192,8 @@ export default function App() {
         minYear: f.minYear, // Use minYear
         data: f,
         // Init positions (D3 will update)
-        x: existing ? existing.x : (Math.random() - 0.5) * 500,
-        y: existing ? existing.y : (Math.random() - 0.5) * 500,
+        x: existing ? existing.x : fallbackPos.x,
+        y: existing ? existing.y : fallbackPos.y,
       };
 
       return node;
@@ -287,34 +310,7 @@ export default function App() {
     } else {
       currentNodes = nodes.filter(n => n.group === activeGroup);
 
-      // Initialize positions depending on origin
-      // If nodes have no x/y (newly mounted), set them to the group's last known position or center
-      if (currentNodes.length > 0 && (currentNodes[0].x === undefined || currentNodes[0].x === 0)) {
-        const groupPos = groupPositionsMatch.current.get(activeGroup);
-        // If we don't have a group position, use slight random around 0,0
-        const startX = groupPos ? groupPos.x : 0;
-        const startY = groupPos ? groupPos.y : 0;
-
-        // Check Cache first
-        let hasCachedPositions = false;
-        currentNodes.forEach(n => {
-          const cached = nodePositionsCache.current.get(n.id);
-          if (cached) {
-            n.x = cached.x;
-            n.y = cached.y;
-            hasCachedPositions = true;
-          }
-        });
-
-        if (!hasCachedPositions) {
-          currentNodes.forEach(n => {
-            if (n.x === undefined) {
-              n.x = startX + (Math.random() - 0.5) * 10;
-              n.y = startY + (Math.random() - 0.5) * 10;
-            }
-          });
-        }
-      }
+      // Positions are initialized deterministically before simulation.
       currentEdges = edges.filter(e => {
         const s = typeof e.source === 'object' ? e.source.id : e.source;
         const t = typeof e.target === 'object' ? e.target.id : e.target;
@@ -437,17 +433,19 @@ export default function App() {
         else handlePaperClick(d);
       })
       .on("mouseover", (e, d) => setHovered(isGalaxy ? {
+        id: d.id,
         title: d.name,
         year: `Est. ${d.minYear}`,
         citationCount: d.data.totalCitations,
+        groupCount: d.data.count,
+        minYear: d.minYear,
         field: "Galaxy Group",
         abstract: `${d.data.count} papers in this cluster. Combined citation impact of ${d.data.totalCitations}.`
       } : d))
       .on("mouseout", () => setHovered(null));
 
-    // Semantic Fade In
-    // We will handle opacity in the simulation tick for better control vs pre-calculation
-    nodesEntry.transition().duration(600).ease(d3.easeQuadOut).style("opacity", 1);
+    // Keep new nodes hidden until we pre-calc positions (no movement on appearance)
+    nodesEntry.style("opacity", 0);
 
     // Construct Node content based on type
     if (isGalaxy) {
@@ -463,7 +461,7 @@ export default function App() {
       nodesEntry.append("foreignObject").attr("class", "fo-content").style("pointer-events", "none").append("xhtml:div").attr("class", "node-fo");
     }
 
-    nodesEntry.transition().duration(600).style("opacity", 1);
+    nodesEntry.style("opacity", 0);
 
     // Merge for updates
     const allNodes = nodesEntry.merge(nodeJoin);
@@ -500,73 +498,6 @@ export default function App() {
       allNodes.select("text").remove();
     }
 
-    // --- FORCES & SIMULATION ---
-    if (simulationRef.current) simulationRef.current.stop();
-
-    const sim = d3.forceSimulation(currentNodes)
-      .force("charge", d3.forceManyBody().strength(isGalaxy ? -400 : -600))
-      .force("collide", d3.forceCollide().radius(d => isGalaxy ? (d.val * 2 + 50) : (d._w * 0.6)));
-
-    if (isGalaxy) {
-      // Only link if central or timeline (to show connections)
-      if (layoutMode === 'CENTRAL' || layoutMode === 'TIMELINE') {
-        sim.force("link", d3.forceLink(currentEdges).id(d => d.name).distance(200).strength(layoutMode === 'TIMELINE' ? 0.01 : 0.05));
-      }
-    } else {
-      sim.force("link", d3.forceLink(currentEdges).id(d => d.id).distance(150));
-    }
-
-    // LAYOUT FORCES & AXIS
-    // Remove previous timeline axis if exists
-    gMain.select(".timeline-axis").remove();
-
-    if (layoutMode === 'TIMELINE') {
-      const years = currentNodes.map(d => isGalaxy ? d.minYear : d.year);
-      const minYear = d3.min(years) || 1990;
-      const maxYear = d3.max(years) || 2025;
-      const xScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 0.4, width * 0.4]);
-
-      sim.force("x", d3.forceX(d => xScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
-      // Relax Y constraint slightly to allow stacking/edge visibility
-      sim.force("y", d3.forceY(0).strength(0.2));
-
-      // Remove radial
-      sim.force("center", null);
-      sim.force("radial", null);
-
-      // Draw Axis
-      const axisGroup = gMain.insert("g", ":first-child").attr("class", "timeline-axis").attr("transform", `translate(0, ${height * 0.3})`);
-
-      axisGroup.append("line")
-        .attr("x1", xScale(minYear) - 50).attr("x2", xScale(maxYear) + 50).attr("y1", 0).attr("y2", 0)
-        .attr("stroke", "#94a3b8").attr("stroke-width", 2).attr("opacity", 0.5);
-
-      // Decade markers
-      const startDecade = Math.floor(minYear / 10) * 10;
-      const endDecade = Math.ceil(maxYear / 10) * 10;
-      for (let y = startDecade; y <= endDecade; y += 10) {
-        if (y >= minYear - 5 && y <= maxYear + 5) {
-          const x = xScale(y);
-          axisGroup.append("line").attr("x1", x).attr("x2", x).attr("y1", -10).attr("y2", 10).attr("stroke", "#64748b").attr("stroke-width", 2);
-          axisGroup.append("text").attr("x", x).attr("y", 30).attr("text-anchor", "middle")
-            .style("fill", "#64748b").style("font-size", "14px").style("font-weight", "600").text(y);
-        }
-      }
-    } else {
-      // CENTRAL
-      sim.force("x", null);
-      sim.force("y", null);
-      sim.force("center", d3.forceCenter(0, 0));
-
-      if (isGalaxy) {
-        const maxVal = d3.max(currentNodes, n => n.val) || 1;
-        sim.force("radial", d3.forceRadial(d => (1 - d.val / maxVal) * 400, 0, 0).strength(0.15));
-      } else {
-        const maxCites = d3.max(currentNodes, n => n.citationCount) || 1;
-        sim.force("radial", d3.forceRadial(d => (1 - d.citationCount / maxCites) * 300, 0, 0).strength(0.25));
-      }
-    }
-
     const getLinkPath = (d) => {
       const s = d.source;
       const t = d.target;
@@ -593,59 +524,175 @@ export default function App() {
         .attr("x2", d => (d.target && typeof d.target.x === "number") ? d.target.x : 0)
         .attr("y2", d => (d.target && typeof d.target.y === "number") ? d.target.y : 0);
     };
-
-    // PRE-CALCULATION (Instant Load)
-    // Only pre-tick if we changed VIEW MODE (e.g. Galaxy -> Topic)
-    // If we just toggled Layout (Central <-> Timeline), we WANT to see the animation.
+    const layoutSignature = `${viewMode}|${layoutMode}|${activeGroup || ""}|${groupingMode}`;
+    const signatureChanged = layoutSignatureRef.current !== layoutSignature;
     const viewChanged = prevViewMode.current !== viewMode;
     const layoutChanged = prevLayoutMode.current !== layoutMode;
+    const shouldAnimateLayout = layoutChanged && !viewChanged;
+    const shouldPrecompute = signatureChanged && !shouldAnimateLayout;
+    const shouldIntro = shouldPrecompute;
 
-    if (viewChanged && layoutMode !== 'TIMELINE') {
-      sim.tick(300);
-      // Sync DOM immediately so they appear in correct place
-      gMain.selectAll(".d3-node").attr("transform", d => `translate(${d.x}, ${d.y})`);
+    const seededRandom = d3.randomLcg(0.42);
+
+    const applyInitialPositions = () => {
+      if (isGalaxy) {
+        currentNodes.forEach(n => {
+          const cached = groupPositionsMatch.current.get(n.name);
+          if (cached) {
+            n.x = cached.x;
+            n.y = cached.y;
+            return;
+          }
+          const pos = getDeterministicPoint(n.name, 450);
+          n.x = pos.x;
+          n.y = pos.y;
+        });
+      } else {
+        const groupAnchor = groupPositionsMatch.current.get(activeGroup) || getDeterministicPoint(activeGroup || "group", 120);
+        currentNodes.forEach(n => {
+          const cached = nodePositionsCache.current.get(n.id);
+          if (cached) {
+            n.x = cached.x;
+            n.y = cached.y;
+            return;
+          }
+          const offset = getDeterministicPoint(n.id, 60);
+          n.x = groupAnchor.x + offset.x + (seededRandom() - 0.5) * 8;
+          n.y = groupAnchor.y + offset.y + (seededRandom() - 0.5) * 8;
+        });
+      }
+    };
+
+    applyInitialPositions();
+
+    // --- FORCES & SIMULATION ---
+    if (simulationRef.current) simulationRef.current.stop();
+
+    const sim = d3.forceSimulation(currentNodes)
+      .randomSource(seededRandom)
+      .force("charge", d3.forceManyBody().strength(isGalaxy ? -400 : -600))
+      .force("collide", d3.forceCollide().radius(d => isGalaxy ? (d.val * 2 + 50) : (d._w * 0.6)));
+
+    if (isGalaxy) {
+      if (layoutMode === 'CENTRAL' || layoutMode === 'TIMELINE') {
+        sim.force("link", d3.forceLink(currentEdges).id(d => d.name).distance(200).strength(layoutMode === 'TIMELINE' ? 0.01 : 0.05));
+      }
+    } else {
+      sim.force("link", d3.forceLink(currentEdges).id(d => d.id).distance(150));
+    }
+
+    // LAYOUT FORCES & AXIS
+    gMain.select(".timeline-axis").remove();
+
+    if (layoutMode === 'TIMELINE') {
+      const years = currentNodes.map(d => isGalaxy ? d.minYear : d.year);
+      const minYear = d3.min(years) || 1990;
+      const maxYear = d3.max(years) || 2025;
+      const xScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 0.4, width * 0.4]);
+
+      sim.force("x", d3.forceX(d => xScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
+      sim.force("y", d3.forceY(0).strength(0.2));
+      sim.force("center", null);
+      sim.force("radial", null);
+
+      const axisGroup = gMain.insert("g", ":first-child").attr("class", "timeline-axis").attr("transform", `translate(0, ${height * 0.3})`);
+      axisGroup.append("line")
+        .attr("x1", xScale(minYear) - 50).attr("x2", xScale(maxYear) + 50).attr("y1", 0).attr("y2", 0)
+        .attr("stroke", "#94a3b8").attr("stroke-width", 2).attr("opacity", 0.5);
+
+      const startDecade = Math.floor(minYear / 10) * 10;
+      const endDecade = Math.ceil(maxYear / 10) * 10;
+      for (let y = startDecade; y <= endDecade; y += 10) {
+        if (y >= minYear - 5 && y <= maxYear + 5) {
+          const x = xScale(y);
+          axisGroup.append("line").attr("x1", x).attr("x2", x).attr("y1", -10).attr("y2", 10).attr("stroke", "#64748b").attr("stroke-width", 2);
+          axisGroup.append("text").attr("x", x).attr("y", 30).attr("text-anchor", "middle")
+            .style("fill", "#64748b").style("font-size", "14px").style("font-weight", "600").text(y);
+        }
+      }
+    } else {
+      sim.force("x", null);
+      sim.force("y", null);
+      sim.force("center", d3.forceCenter(0, 0));
+
+      if (isGalaxy) {
+        const maxVal = d3.max(currentNodes, n => n.val) || 1;
+        sim.force("radial", d3.forceRadial(d => (1 - d.val / maxVal) * 400, 0, 0).strength(0.15));
+      } else {
+        const maxCites = d3.max(currentNodes, n => n.citationCount) || 1;
+        sim.force("radial", d3.forceRadial(d => (1 - d.citationCount / maxCites) * 300, 0, 0).strength(0.25));
+      }
+    }
+
+    const syncPositions = (scale = 1) => {
+      gMain.selectAll(".d3-node")
+        .attr("transform", d => `translate(${d.x}, ${d.y}) scale(${scale})`);
       updateLinkPositions();
+    };
 
-      // Lower alpha so it doesn't move much more
-      sim.alpha(0.02);
-    } else if (layoutChanged) {
-      // If we just changed layout, re-heat the simulation so they move visibly
-      sim.alpha(1).restart();
-    }
-
-    // Timeline Slow Transition
-    if (layoutMode === 'TIMELINE') {
-      sim.velocityDecay(0.6); // Slower movement
-      sim.alphaDecay(0.02); // Slower cooling
-    }
-
-    // Update refs
-    prevViewMode.current = viewMode;
-    prevLayoutMode.current = layoutMode;
-
-    // Timeline Slow Transition
-    if (layoutMode === 'TIMELINE') {
-      sim.velocityDecay(0.6); // Slower movement
-      sim.alphaDecay(0.02); // Slower cooling
-    }
-
-    sim.on("tick", () => {
-      // Save positions for Stability
+    if (shouldPrecompute) {
+      sim.stop();
+      for (let i = 0; i < 280; i += 1) sim.tick();
       if (isGalaxy) {
         currentNodes.forEach(n => groupPositionsMatch.current.set(n.name, { x: n.x, y: n.y }));
       } else {
         currentNodes.forEach(n => nodePositionsCache.current.set(n.id, { x: n.x, y: n.y }));
       }
 
-      // Update Links
-      updateLinkPositions();
+      gMain.selectAll(".d3-node").style("opacity", 0);
+      gMain.selectAll(".d3-link").attr("stroke-opacity", 0);
+      syncPositions(0.1);
 
-      // Update Nodes
-      gMain.selectAll(".d3-node")
-        .attr("transform", d => `translate(${d.x}, ${d.y})`);
-    });
+      if (shouldIntro) {
+        gMain.selectAll(".d3-node")
+          .transition().duration(650).ease(d3.easeQuadOut)
+          .style("opacity", 1)
+          .attr("transform", d => `translate(${d.x}, ${d.y}) scale(1)`);
+        gMain.selectAll(".d3-link")
+          .transition().duration(650).ease(d3.easeQuadOut)
+          .attr("stroke-opacity", isGalaxy ? 0.55 : 0.5);
+      } else {
+        gMain.selectAll(".d3-node").style("opacity", 1);
+        gMain.selectAll(".d3-link").attr("stroke-opacity", isGalaxy ? 0.55 : 0.5);
+        syncPositions(1);
+      }
+    } else {
+      gMain.selectAll(".d3-node").style("opacity", 1);
+      gMain.selectAll(".d3-link").attr("stroke-opacity", isGalaxy ? 0.55 : 0.5);
+      syncPositions(1);
+    }
+
+    if (shouldAnimateLayout) {
+      sim.velocityDecay(0.6);
+      sim.alphaDecay(0.05);
+      sim.on("tick", () => {
+        if (isGalaxy) {
+          currentNodes.forEach(n => groupPositionsMatch.current.set(n.name, { x: n.x, y: n.y }));
+        } else {
+          currentNodes.forEach(n => nodePositionsCache.current.set(n.id, { x: n.x, y: n.y }));
+        }
+        syncPositions(1);
+      });
+      sim.alpha(1).restart();
+      const stopTimer = d3.timeout(() => sim.stop(), 650);
+      simulationRef.current = sim;
+      prevViewMode.current = viewMode;
+      prevLayoutMode.current = layoutMode;
+      layoutSignatureRef.current = layoutSignature;
+
+      return () => {
+        stopTimer.stop();
+        sim.stop();
+      };
+    }
 
     simulationRef.current = sim;
+    sim.stop();
+
+    // Update refs
+    prevViewMode.current = viewMode;
+    prevLayoutMode.current = layoutMode;
+    layoutSignatureRef.current = layoutSignature;
 
     return () => {
       sim.stop();
@@ -767,6 +814,7 @@ export default function App() {
                 <div className="footer-meta">
                   {hovered.year && <span>{hovered.year} • </span>}
                   <span>{hovered.citationCount} Citations</span>
+                  {hovered.groupCount !== undefined && <span> • {hovered.groupCount} Papers</span>}
                 </div>
                 {hovered.authors && <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '5px' }}>{hovered.authors}</div>}
               </div>
