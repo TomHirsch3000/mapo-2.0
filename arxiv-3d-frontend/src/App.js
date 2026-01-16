@@ -23,6 +23,7 @@ export default function App() {
   const [viewMode, setViewMode] = useState('GALAXY'); // 'GALAXY' | 'FIELD' | 'DETAIL'
   const [groupingMode, setGroupingMode] = useState('FIELD'); // 'FIELD' | 'AUTHOR' | 'INSTITUTION'
   const [layoutMode, setLayoutMode] = useState('CENTRAL'); // 'CENTRAL' | 'TIMELINE'
+  const [yGroupingMode, setYGroupingMode] = useState('NONE'); // 'NONE' | 'FIELD' | 'AUTHOR' | 'INSTITUTION'
   const [activeGroup, setActiveGroup] = useState(null);
 
   const nodeByIdRef = useRef(new Map());
@@ -35,6 +36,10 @@ export default function App() {
   const prevLayoutMode = useRef(layoutMode);
   const layoutSignatureRef = useRef("");
   const lastActiveGroupRef = useRef(null);
+  const prevGroupingModeRef = useRef(groupingMode);
+  const edgeRevealTimeoutRef = useRef(null);
+  const edgeRevealPendingRef = useRef(false);
+  const firstDataRenderRef = useRef(true);
 
   const EDGE_COLORS = {
     citation: "#f59e0b",
@@ -80,16 +85,23 @@ export default function App() {
   }, []);
 
   /* Data Processing */
-  const { nodes, groupStats, uniqueGroups, groupEdges } = useMemo(() => {
-    if (!rawNodes || rawNodes.length === 0) return { nodes: [], groupStats: [], uniqueGroups: [], groupEdges: [] };
+  const { nodes, groupStats, uniqueGroups, groupEdges, yGroups } = useMemo(() => {
+    if (!rawNodes || rawNodes.length === 0) return { nodes: [], groupStats: [], uniqueGroups: [], groupEdges: [], yGroups: [] };
 
     const gMap = new Map();
     const nodeIdToGroup = new Map();
+    const yGroupSet = new Set();
 
     // Helper to extract group key
     const getGroupKey = (d) => {
       if (groupingMode === 'AUTHOR') return d.firstAuthor || "Unknown";
       if (groupingMode === 'INSTITUTION') return (d.institutions ? d.institutions.split(';')[0].trim() : "Unknown");
+      return d.primaryField || d.AI_primary_field || "Unassigned";
+    };
+    const getYAxisKey = (d) => {
+      if (yGroupingMode === 'NONE') return null;
+      if (yGroupingMode === 'AUTHOR') return d.firstAuthor || "Unknown";
+      if (yGroupingMode === 'INSTITUTION') return (d.institutions ? d.institutions.split(';')[0].trim() : "Unknown");
       return d.primaryField || d.AI_primary_field || "Unassigned";
     };
 
@@ -98,6 +110,7 @@ export default function App() {
       const yr = d.year ?? d.publication_year ?? (d.publicationDate ? new Date(d.publicationDate).getFullYear() : 2000);
       const group = getGroupKey(d);
       const cites = d.citationCount ?? d.cited_by_count ?? 0;
+      const yGroup = getYAxisKey(d);
 
       const n = {
         id: String(d.id || d.paperId),
@@ -105,6 +118,7 @@ export default function App() {
         year: yr,
         citationCount: cites,
         group: group, // Dynamic grouping
+        yGroup,
         field: d.primaryField,
         abstract: d.abstract || d.AI_summary || "No abstract available.",
         authors: d.allAuthors || d.firstAuthor || "Unknown",
@@ -114,12 +128,16 @@ export default function App() {
       nodeIdToGroup.set(n.id, group);
 
       if (!gMap.has(group)) {
-        gMap.set(group, { name: group, count: 0, totalCitations: 0, minYear: Infinity });
+        gMap.set(group, { name: group, count: 0, totalCitations: 0, minYear: Infinity, yGroupCounts: new Map() });
       }
       const g = gMap.get(group);
       g.count += 1;
       g.totalCitations += cites;
       g.minYear = Math.min(g.minYear, yr);
+      if (yGroup) {
+        g.yGroupCounts.set(yGroup, (g.yGroupCounts.get(yGroup) || 0) + 1);
+        yGroupSet.add(yGroup);
+      }
 
       return n;
     });
@@ -127,10 +145,21 @@ export default function App() {
     nodeByIdRef.current = new Map(ns.map(n => [n.id, n]));
 
     // Calculate Stats and Sort
-    const gStats = Array.from(gMap.values()).map(g => ({
-      ...g,
-      minYear: g.minYear === Infinity ? 2000 : g.minYear
-    })).sort((a, b) => b.totalCitations - a.totalCitations);
+    const gStats = Array.from(gMap.values()).map(g => {
+      let yGroup = null;
+      let bestCount = -1;
+      g.yGroupCounts.forEach((count, key) => {
+        if (count > bestCount) {
+          bestCount = count;
+          yGroup = key;
+        }
+      });
+      return {
+        ...g,
+        minYear: g.minYear === Infinity ? 2000 : g.minYear,
+        yGroup
+      };
+    }).sort((a, b) => b.totalCitations - a.totalCitations);
 
     // Limit groups for performance in Galaxy view if high cardinality
     const finalGroupStats = (groupingMode === 'FIELD') ? gStats : gStats.slice(0, 150);
@@ -158,9 +187,10 @@ export default function App() {
       nodes: ns,
       groupStats: finalGroupStats,
       uniqueGroups: finalGroupStats.map(f => f.name),
-      groupEdges: calculatedGroupEdges
+      groupEdges: calculatedGroupEdges,
+      yGroups: Array.from(yGroupSet.values())
     };
-  }, [rawNodes, rawEdges, groupingMode]);
+  }, [rawNodes, rawEdges, groupingMode, yGroupingMode]);
 
   /** Edges */
   const edges = useMemo(() => {
@@ -192,6 +222,7 @@ export default function App() {
         name: f.name,
         val: Math.max(val, 5),
         minYear: f.minYear, // Use minYear
+        yGroup: f.yGroup,
         data: f,
         // Init positions (D3 will update)
         x: existing ? existing.x : fallbackPos.x,
@@ -241,6 +272,14 @@ export default function App() {
     if (gMain.empty()) {
       const gRoot = svg.append("g");
       gMain = gRoot.append("g").attr("class", "g-main");
+    }
+    let gLinks = gMain.select(".g-links");
+    if (gLinks.empty()) {
+      gLinks = gMain.append("g").attr("class", "g-links");
+    }
+    let gNodes = gMain.select(".g-nodes");
+    if (gNodes.empty()) {
+      gNodes = gMain.append("g").attr("class", "g-nodes");
     }
 
     // Zoom Behavior - Defined every render to access current state (closures)
@@ -317,10 +356,12 @@ export default function App() {
 
     if (isGalaxy) {
       currentNodes = galaxyNodes;
+      const hoveredGroupName = hovered?.title;
+      const galaxyEdges = hoveredGroupName
+        ? groupEdges.filter(e => e.source === hoveredGroupName || e.target === hoveredGroupName)
+        : groupEdges.filter(e => (e.weight || 0) > 3);
       // Deep clone edges to avoid mutation key issues in D3
-      currentEdges = groupEdges
-        .filter(e => (e.weight || 0) > 3)
-        .map(e => ({
+      currentEdges = galaxyEdges.map(e => ({
         source: typeof e.source === 'object' ? e.source.name : e.source,
         target: typeof e.target === 'object' ? e.target.name : e.target,
         weight: e.weight
@@ -364,6 +405,10 @@ export default function App() {
     };
 
     const defs = svg.select("defs").empty() ? svg.append("defs") : svg.select("defs");
+    if (isGalaxy && prevGroupingModeRef.current !== groupingMode) {
+      gLinks.selectAll(".d3-link").remove();
+      defs.selectAll(".link-gradient").remove();
+    }
     const gradientJoin = defs.selectAll(".link-gradient")
       .data(currentEdges, getEdgeKey);
 
@@ -387,15 +432,15 @@ export default function App() {
     // --- EXPLICIT CLEANUP (LINKS) ---
     // If we are in Galaxy, kill paper links. If in Field, kill galaxy links.
     // Also remove generic .d3-link if they don't match current expected class (legacy cleanup)
-    gMain.selectAll(isGalaxy ? ".type-paper-link" : ".type-galaxy-link").remove();
+    gLinks.selectAll(isGalaxy ? ".type-paper-link" : ".type-galaxy-link").remove();
     // Safety: Remove any link that doesn't have the correct class for current view
     // (This prevents "plain" links from sticking around)
-    gMain.selectAll(".d3-link").filter(function () {
+    gLinks.selectAll(".d3-link").filter(function () {
       const cl = d3.select(this).attr("class");
       return !cl.includes(isGalaxy ? 'type-galaxy-link' : 'type-paper-link');
     }).remove();
 
-    const linkJoin = gMain.selectAll(".d3-link")
+    const linkJoin = gLinks.selectAll(".d3-link")
       // Namespace key by view type to force full replacement on view switch
       .data(currentEdges, getEdgeKey);
 
@@ -410,15 +455,15 @@ export default function App() {
     // Update both new and existing
     const links = linksEntry.merge(linkJoin)
       .attr("class", `d3-link ${isGalaxy ? 'type-galaxy-link' : 'type-paper-link'}`) // Ensure class is correct on update
-      .attr("stroke-width", d => isGalaxy ? Math.max(1.6, Math.sqrt(d.weight || 1) + 0.8) : 2.6)
+      .attr("stroke-width", d => isGalaxy ? Math.max(1.6, Math.sqrt(d.weight || 1) + 0.8) : 6)
       .attr("stroke", d => `url(#${getGradientId(d)})`)
-      .transition().duration(1000)
-      .attr("stroke-opacity", isGalaxy ? 0.55 : 0.5);
+      .attr("opacity", 0)
+      .attr("stroke-opacity", 0);
 
     // Nodes
     // Use a generic selection to ensure we catch ALL nodes (Galaxy or Field)
     // This guarantees the 'exit' selection contains any node that shouldn't be here.
-    const nodeJoin = gMain.selectAll(".d3-node")
+    const nodeJoin = gNodes.selectAll(".d3-node")
       .data(currentNodes, d => d.id);
 
     // EXIT
@@ -535,7 +580,7 @@ export default function App() {
     };
 
     const updateLinkPositions = () => {
-      gMain.selectAll(".d3-link").attr("d", d => getLinkPath(d));
+      gLinks.selectAll(".d3-link").attr("d", d => getLinkPath(d));
       svg.select("defs").selectAll(".link-gradient")
         .attr("x1", d => (d.source && typeof d.source.x === "number") ? d.source.x : 0)
         .attr("y1", d => (d.source && typeof d.source.y === "number") ? d.source.y : 0)
@@ -548,7 +593,8 @@ export default function App() {
     const layoutChanged = prevLayoutMode.current !== layoutMode;
     const shouldAnimateLayout = layoutChanged && !viewChanged;
     const hasRenderableNodes = currentNodes.length > 0;
-    const shouldPrecompute = signatureChanged && !shouldAnimateLayout && hasRenderableNodes;
+    const shouldPrecompute = (signatureChanged && !shouldAnimateLayout && hasRenderableNodes)
+      || (hasRenderableNodes && firstDataRenderRef.current);
     const shouldIntro = shouldPrecompute;
     const introScale = isGalaxy ? 0.2 : 1;
 
@@ -608,6 +654,12 @@ export default function App() {
     // LAYOUT FORCES & AXIS
     gMain.select(".timeline-axis").remove();
 
+    const graphCenterY = -height * 0.1;
+    const sortedYGroups = yGroups.slice().sort((a, b) => a.localeCompare(b));
+    const yScale = (yGroupingMode !== 'NONE' && isGalaxy && sortedYGroups.length > 0)
+      ? d3.scalePoint().domain(sortedYGroups).range([graphCenterY - height * 0.35, graphCenterY + height * 0.35]).padding(0.6)
+      : null;
+
     if (layoutMode === 'TIMELINE') {
       const years = currentNodes.map(d => isGalaxy ? d.minYear : d.year);
       const minYear = d3.min(years) || 1990;
@@ -615,11 +667,15 @@ export default function App() {
       const xScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 0.4, width * 0.4]);
 
       sim.force("x", d3.forceX(d => xScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
-      sim.force("y", d3.forceY(0).strength(0.2));
+      if (yScale) {
+        sim.force("y", d3.forceY(d => yScale(d.yGroup) ?? graphCenterY).strength(0.9));
+      } else {
+        sim.force("y", d3.forceY(graphCenterY).strength(0.2));
+      }
       sim.force("center", null);
       sim.force("radial", null);
 
-      const axisGroup = gMain.insert("g", ":first-child").attr("class", "timeline-axis").attr("transform", `translate(0, ${height * 0.3})`);
+      const axisGroup = gMain.insert("g", ":first-child").attr("class", "timeline-axis").attr("transform", `translate(0, ${graphCenterY + height * 0.3})`);
       axisGroup.append("line")
         .attr("x1", xScale(minYear) - 50).attr("x2", xScale(maxYear) + 50).attr("y1", 0).attr("y2", 0)
         .attr("stroke", "#94a3b8").attr("stroke-width", 2).attr("opacity", 0.5);
@@ -649,7 +705,7 @@ export default function App() {
           return pos ? pos.y : 0;
         }).strength(0.7));
       } else {
-        sim.force("center", d3.forceCenter(0, 0));
+        sim.force("center", d3.forceCenter(0, graphCenterY));
         if (isGalaxy) {
           const maxVal = d3.max(currentNodes, n => n.val) || 1;
           sim.force("radial", d3.forceRadial(d => (1 - d.val / maxVal) * 400, 0, 0).strength(0.15));
@@ -658,15 +714,40 @@ export default function App() {
           sim.force("radial", d3.forceRadial(d => (1 - d.citationCount / maxCites) * 300, 0, 0).strength(0.25));
         }
       }
+      if (yScale && isGalaxy) {
+        sim.force("y-band", d3.forceY(d => yScale(d.yGroup) ?? graphCenterY).strength(0.9));
+      } else {
+        sim.force("y-band", null);
+      }
     }
 
     const syncPositions = (scale = 1) => {
-      gMain.selectAll(".d3-node")
+      gNodes.selectAll(".d3-node")
         .attr("transform", d => `translate(${d.x}, ${d.y}) scale(${scale})`);
       updateLinkPositions();
     };
 
+    const scheduleEdgeReveal = (delayMs, targetOpacity) => {
+      edgeRevealPendingRef.current = true;
+      gLinks.selectAll(".d3-link").attr("opacity", 0).attr("stroke-opacity", 0);
+      if (edgeRevealTimeoutRef.current) {
+        edgeRevealTimeoutRef.current.stop();
+      }
+      edgeRevealTimeoutRef.current = d3.timeout(() => {
+        gLinks.selectAll(".d3-link")
+          .transition().duration(900).ease(d3.easeQuadOut)
+          .attr("opacity", 1)
+          .attr("stroke-opacity", targetOpacity);
+        edgeRevealPendingRef.current = false;
+      }, delayMs);
+    };
+
     if (shouldPrecompute) {
+      if (shouldIntro) {
+        edgeRevealPendingRef.current = true;
+        gLinks.selectAll(".d3-link").interrupt().attr("opacity", 0).attr("stroke-opacity", 0);
+      }
+      firstDataRenderRef.current = false;
       sim.stop();
       sim.alpha(1);
       sim.alphaDecay(0.03);
@@ -691,12 +772,12 @@ export default function App() {
         currentNodes.forEach(n => cache.set(n.id, { x: n.x, y: n.y }));
       }
 
-      gMain.selectAll(".d3-node").style("opacity", 0);
-      gMain.selectAll(".d3-link").attr("stroke-opacity", 0);
+      gNodes.selectAll(".d3-node").style("opacity", 0);
+      gLinks.selectAll(".d3-link").attr("stroke-opacity", 0);
       syncPositions(introScale);
 
       if (shouldIntro) {
-        const introNodes = gMain.selectAll(".d3-node");
+        const introNodes = gNodes.selectAll(".d3-node");
         if (isGalaxy) {
           introNodes
             .transition().duration(900).ease(d3.easeQuadOut)
@@ -708,17 +789,19 @@ export default function App() {
             .style("opacity", 1)
             .attr("transform", d => `translate(${d.x}, ${d.y}) scale(1)`);
         }
-        gMain.selectAll(".d3-link")
-          .transition().duration(900).ease(d3.easeQuadOut)
-          .attr("stroke-opacity", isGalaxy ? 0.55 : 0.5);
+        scheduleEdgeReveal(2000, isGalaxy ? 0.55 : 0.9);
       } else {
-        gMain.selectAll(".d3-node").style("opacity", 1);
-        gMain.selectAll(".d3-link").attr("stroke-opacity", isGalaxy ? 0.55 : 0.5);
+        gNodes.selectAll(".d3-node").style("opacity", 1);
+        if (!edgeRevealPendingRef.current) {
+          gLinks.selectAll(".d3-link").attr("opacity", 1).attr("stroke-opacity", isGalaxy ? 0.55 : 0.9);
+        }
         syncPositions(1);
       }
     } else {
-      gMain.selectAll(".d3-node").style("opacity", 1);
-      gMain.selectAll(".d3-link").attr("stroke-opacity", isGalaxy ? 0.55 : 0.5);
+      gNodes.selectAll(".d3-node").style("opacity", 1);
+      if (!edgeRevealPendingRef.current) {
+        gLinks.selectAll(".d3-link").attr("opacity", 1).attr("stroke-opacity", isGalaxy ? 0.55 : 0.9);
+      }
       syncPositions(1);
     }
 
@@ -769,15 +852,12 @@ export default function App() {
       sim.stop();
     };
 
-  }, [viewMode, groupingMode, layoutMode, activeGroup, galaxyNodes, nodes, edges, groupEdges, colorScale]);
+  }, [viewMode, groupingMode, yGroupingMode, layoutMode, activeGroup, galaxyNodes, nodes, edges, groupEdges, yGroups, colorScale]);
 
   // HIGHLIGHTING EFFECT
   useEffect(() => {
     if (!svgRef.current) return;
-    if (viewMode !== 'FIELD') {
-      // Reset styles for Galaxy
-      d3.select(svgRef.current).selectAll(".d3-node").style("opacity", 1);
-      d3.select(svgRef.current).selectAll(".d3-link").attr("stroke-opacity", 0.55);
+    if (edgeRevealPendingRef.current) {
       return;
     }
 
@@ -786,6 +866,56 @@ export default function App() {
     const link = svg.selectAll(".d3-link");
     const gradients = svg.select("defs").selectAll(".link-gradient");
     const rect = svg.selectAll(".node-rect");
+
+    if (viewMode === 'GALAXY') {
+      const hoveredGroupName = hovered?.title;
+      const getGalaxyEdgeColor = (d) => {
+        const sourceName = typeof d.source === 'object' ? (d.source.name || d.source.group || d.source.id) : d.source;
+        return colorScale(sourceName);
+      };
+      if (!hoveredGroupName) {
+        node.transition().duration(200).style("opacity", 1);
+        link.transition().duration(200).attr("stroke-opacity", 0.55);
+        gradients.each(function (d) {
+          const color = getGalaxyEdgeColor(d);
+          const sel = d3.select(this);
+          sel.select(".grad-stop-start").attr("stop-color", color).attr("stop-opacity", 0.0);
+          sel.select(".grad-stop-mid").attr("stop-color", color).attr("stop-opacity", 0.25);
+          sel.select(".grad-stop-end").attr("stop-color", color).attr("stop-opacity", 0.85);
+        });
+        prevGroupingModeRef.current = groupingMode;
+        return;
+      }
+
+      link.transition().duration(200)
+        .attr("stroke-opacity", d => {
+          const s = typeof d.source === 'object' ? d.source.name : d.source;
+          const t = typeof d.target === 'object' ? d.target.name : d.target;
+          return (s === hoveredGroupName || t === hoveredGroupName) ? 0.9 : 0.15;
+        });
+
+      gradients.each(function (d) {
+        const s = typeof d.source === 'object' ? d.source.name : d.source;
+        const t = typeof d.target === 'object' ? d.target.name : d.target;
+        const isConnected = s === hoveredGroupName || t === hoveredGroupName;
+        const color = isConnected ? getGalaxyEdgeColor(d) : "#94a3b8";
+        const opacityScale = isConnected ? 1 : 0.3;
+        const sel = d3.select(this);
+        sel.select(".grad-stop-start").attr("stop-color", color).attr("stop-opacity", 0.0);
+        sel.select(".grad-stop-mid").attr("stop-color", color).attr("stop-opacity", 0.2 * opacityScale);
+        sel.select(".grad-stop-end").attr("stop-color", color).attr("stop-opacity", 0.7 * opacityScale);
+      });
+
+      prevGroupingModeRef.current = groupingMode;
+      return;
+    }
+
+    if (viewMode !== 'FIELD') {
+      node.style("opacity", 1);
+      link.attr("stroke-opacity", 0.55);
+      prevGroupingModeRef.current = groupingMode;
+      return;
+    }
 
     if (selected) {
       const connectedIds = new Set([selected.id]);
@@ -803,7 +933,7 @@ export default function App() {
         .attr("stroke-opacity", d => {
           const s = getEdgeId(d.source);
           const t = getEdgeId(d.target);
-          return (s === selected.id || t === selected.id) ? 0.9 : 0.05;
+          return (s === selected.id || t === selected.id) ? 1 : 0.05;
         });
 
       gradients.each(function (d) {
@@ -821,7 +951,7 @@ export default function App() {
       rect.transition().duration(200).attr("stroke", d => d.id === selected.id ? "#0f172a" : "#fff").attr("stroke-width", d => d.id === selected.id ? 4 : 2);
     } else {
       node.transition().duration(200).style("opacity", 1);
-      link.transition().duration(200).attr("stroke-opacity", 0.5);
+      link.transition().duration(200).attr("stroke-opacity", 0.9);
       gradients.each(function (d) {
         const sel = d3.select(this);
         sel.select(".grad-stop-start").attr("stop-color", EDGE_COLORS.default).attr("stop-opacity", 0.0);
@@ -830,7 +960,7 @@ export default function App() {
       });
       rect.transition().duration(200).attr("stroke", "#fff").attr("stroke-width", 2);
     }
-  }, [selected, viewMode]);
+  }, [selected, hovered, viewMode, groupingMode]);
 
   return (
     <div className="App galaxy-theme" ref={wrapRef}>
@@ -841,6 +971,16 @@ export default function App() {
           <div className="control-group">
             <strong style={{ color: '#64748b', fontSize: '0.85rem', marginRight: '5px' }}>GROUP BY</strong>
             <select className="galaxy-select" value={groupingMode} onChange={e => setGroupingMode(e.target.value)} disabled={viewMode !== 'GALAXY'}>
+              <option value="FIELD">Field</option>
+              <option value="AUTHOR">Author</option>
+              <option value="INSTITUTION">Institution</option>
+            </select>
+          </div>
+
+          <div className="control-group">
+            <strong style={{ color: '#64748b', fontSize: '0.85rem', marginRight: '5px' }}>Y-AXIS</strong>
+            <select className="galaxy-select" value={yGroupingMode} onChange={e => setYGroupingMode(e.target.value)} disabled={viewMode !== 'GALAXY'}>
+              <option value="NONE">None</option>
               <option value="FIELD">Field</option>
               <option value="AUTHOR">Author</option>
               <option value="INSTITUTION">Institution</option>
