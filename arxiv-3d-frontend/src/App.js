@@ -21,11 +21,11 @@ export default function App() {
 
   // View State
   const [viewMode, setViewMode] = useState('GALAXY'); // 'GALAXY' | 'FIELD' | 'DETAIL'
-  const [xAxisMode, setXAxisMode] = useState('FIELD'); // 'FIELD' | 'AUTHOR' | 'INSTITUTION' | 'TIMELINE'
-  const [yGroupingMode, setYGroupingMode] = useState('NONE'); // 'NONE' | 'FIELD' | 'AUTHOR' | 'INSTITUTION'
+  const [xAxisMode, setXAxisMode] = useState('NONE'); // 'NONE' | 'FIELD' | 'AUTHOR' | 'INSTITUTION' | 'TIMELINE'
+  const [yGroupingMode, setYGroupingMode] = useState('NONE'); // 'NONE' | 'FIELD' | 'AUTHOR' | 'INSTITUTION' | 'TIMELINE'
   const [activeGroup, setActiveGroup] = useState(null);
 
-  const groupingMode = xAxisMode === 'TIMELINE' ? 'FIELD' : xAxisMode;
+  const groupingMode = (xAxisMode === 'TIMELINE' || xAxisMode === 'NONE') ? 'FIELD' : xAxisMode;
   const layoutMode = xAxisMode === 'TIMELINE' ? 'TIMELINE' : 'CENTRAL';
 
   const nodeByIdRef = useRef(new Map());
@@ -102,7 +102,7 @@ export default function App() {
       return d.primaryField || d.AI_primary_field || "Unassigned";
     };
     const getYAxisKey = (d) => {
-      if (yGroupingMode === 'NONE') return null;
+      if (yGroupingMode === 'NONE' || yGroupingMode === 'TIMELINE') return null;
       if (yGroupingMode === 'AUTHOR') return d.firstAuthor || "Unknown";
       if (yGroupingMode === 'INSTITUTION') return (d.institutions ? d.institutions.split(';')[0].trim() : "Unknown");
       return d.primaryField || d.AI_primary_field || "Unassigned";
@@ -114,8 +114,9 @@ export default function App() {
       const xGroup = getXAxisKey(d);
       const cites = d.citationCount ?? d.cited_by_count ?? 0;
       const yGroup = getYAxisKey(d);
-      const groupKey = yGroupingMode === 'NONE' ? xGroup : `${xGroup}|||${yGroup}`;
-      const displayName = yGroupingMode === 'NONE' ? xGroup : `${xGroup} / ${yGroup}`;
+      const shouldAggregateByY = yGroupingMode !== 'NONE' && yGroupingMode !== 'TIMELINE';
+      const groupKey = shouldAggregateByY ? `${xGroup}|||${yGroup}` : xGroup;
+      const displayName = shouldAggregateByY ? `${xGroup} / ${yGroup}` : xGroup;
 
       const n = {
         id: String(d.id || d.paperId),
@@ -609,7 +610,7 @@ export default function App() {
         .attr("x2", d => (d.target && typeof d.target.x === "number") ? d.target.x : 0)
         .attr("y2", d => (d.target && typeof d.target.y === "number") ? d.target.y : 0);
     };
-    const dataSignature = `${viewMode}|${layoutMode}|${activeGroup || ""}|${groupingMode}|${yGroupingMode}|${rawNodes.length}|${rawEdges.length}`;
+    const dataSignature = `${viewMode}|${layoutMode}|${activeGroup || ""}|${groupingMode}|${xAxisMode}|${yGroupingMode}|${rawNodes.length}|${rawEdges.length}`;
     const signatureChanged = layoutSignatureRef.current !== dataSignature;
     const viewChanged = prevViewMode.current !== viewMode;
     const layoutChanged = prevLayoutMode.current !== layoutMode;
@@ -669,7 +670,7 @@ export default function App() {
       sim.force("link", d3.forceLink(currentEdges).id(d => d.id).distance(150));
     }
 
-    const getLayoutCacheKey = (mode) => `${viewMode}|${activeGroup || ""}|${groupingMode}|${yGroupingMode}|${mode}`;
+    const getLayoutCacheKey = (mode) => `${viewMode}|${activeGroup || ""}|${groupingMode}|${xAxisMode}|${yGroupingMode}|${mode}`;
     const cachedTargets = layoutPositionCacheRef.current.get(getLayoutCacheKey(layoutMode));
     const hasCachedTargets = cachedTargets && cachedTargets.size > 0;
 
@@ -681,7 +682,7 @@ export default function App() {
     const graphCenterY = -height * 0.1;
     const sortedYGroups = yGroups.slice().sort((a, b) => a.localeCompare(b));
     const yScale = (() => {
-      if (yGroupingMode === 'NONE' || !isGalaxy || sortedYGroups.length === 0) return null;
+      if (yGroupingMode === 'NONE' || yGroupingMode === 'TIMELINE' || !isGalaxy || sortedYGroups.length === 0) return null;
       const yPadding = 0.4;
       const yGroupCount = sortedYGroups.length;
       const baseGap = Math.max(60, height * 0.05);
@@ -694,7 +695,7 @@ export default function App() {
 
     const sortedXGroups = isGalaxy ? xGroups.slice().sort((a, b) => a.localeCompare(b)) : [];
     const xGroupScale = (() => {
-      if (xAxisMode === 'TIMELINE' || !isGalaxy || sortedXGroups.length === 0) return null;
+      if (xAxisMode === 'NONE' || xAxisMode === 'TIMELINE' || !isGalaxy || sortedXGroups.length === 0) return null;
       const xPadding = 0.35;
       const xGroupCount = sortedXGroups.length;
       const baseGap = Math.max(80, width * 0.06);
@@ -703,6 +704,14 @@ export default function App() {
       const span = Math.max(minSpan, minGap * (Math.max(1, xGroupCount - 1) + 2 * xPadding));
       const range = [-span / 2, span / 2];
       return d3.scalePoint().domain(sortedXGroups).range(range).padding(xPadding);
+    })();
+
+    const yTimelineScale = (() => {
+      if (yGroupingMode !== 'TIMELINE' || !isGalaxy) return null;
+      const years = currentNodes.map(d => isGalaxy ? d.minYear : d.year);
+      const minYear = d3.min(years) || 1990;
+      const maxYear = d3.max(years) || 2025;
+      return d3.scaleLinear().domain([minYear, maxYear]).range([graphCenterY - height * 0.45, graphCenterY + height * 0.45]);
     })();
 
     if (yScale) {
@@ -752,6 +761,54 @@ export default function App() {
         .style("font-size", "12px")
         .style("font-weight", "700")
         .text(yGroupingMode);
+    }
+
+    if (yTimelineScale) {
+      const axisX = -width * 0.46;
+      const axisGroup = gMain.insert("g", ":first-child")
+        .attr("class", "y-axis")
+        .attr("transform", `translate(${axisX}, 0)`);
+
+      const axisRange = yTimelineScale.range();
+      const yMin = Math.min(axisRange[0], axisRange[1]);
+      const yMax = Math.max(axisRange[0], axisRange[1]);
+
+      axisGroup.append("line")
+        .attr("x1", 0).attr("x2", 0)
+        .attr("y1", yMin - 20).attr("y2", yMax + 20)
+        .attr("stroke", "#94a3b8")
+        .attr("stroke-width", 2)
+        .attr("opacity", 0.6);
+
+      const minYear = Math.floor(yTimelineScale.domain()[0] / 10) * 10;
+      const maxYear = Math.ceil(yTimelineScale.domain()[1] / 10) * 10;
+      for (let y = minYear; y <= maxYear; y += 10) {
+        if (y >= yTimelineScale.domain()[0] - 5 && y <= yTimelineScale.domain()[1] + 5) {
+          const yy = yTimelineScale(y);
+          axisGroup.append("line")
+            .attr("x1", -6).attr("x2", 6)
+            .attr("y1", yy).attr("y2", yy)
+            .attr("stroke", "#64748b")
+            .attr("stroke-width", 1.5);
+          axisGroup.append("text")
+            .attr("x", -12)
+            .attr("y", yy + 4)
+            .attr("text-anchor", "end")
+            .style("fill", "#64748b")
+            .style("font-size", "12px")
+            .style("font-weight", "600")
+            .text(y);
+        }
+      }
+
+      axisGroup.append("text")
+        .attr("x", 0)
+        .attr("y", yMin - 36)
+        .attr("text-anchor", "middle")
+        .style("fill", "#475569")
+        .style("font-size", "12px")
+        .style("font-weight", "700")
+        .text("TIMELINE");
     }
 
     if (xGroupScale) {
@@ -811,7 +868,9 @@ export default function App() {
 
       sim.force("x", d3.forceX(d => timelineXScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
       sim.force("x-band", null);
-      if (yScale) {
+      if (yTimelineScale) {
+        sim.force("y", d3.forceY(d => yTimelineScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
+      } else if (yScale) {
         sim.force("y", d3.forceY(d => yScale(d.yGroup) ?? graphCenterY).strength(0.9));
       } else {
         sim.force("y", d3.forceY(graphCenterY).strength(0.2));
@@ -858,7 +917,9 @@ export default function App() {
           sim.force("radial", d3.forceRadial(d => (1 - d.citationCount / maxCites) * 300, 0, 0).strength(0.25));
         }
       }
-      if (yScale && isGalaxy) {
+      if (yTimelineScale && isGalaxy) {
+        sim.force("y-band", d3.forceY(d => yTimelineScale(d.minYear)).strength(0.9));
+      } else if (yScale && isGalaxy) {
         sim.force("y-band", d3.forceY(d => yScale(d.yGroup) ?? graphCenterY).strength(0.9));
       } else {
         sim.force("y-band", null);
@@ -1126,6 +1187,7 @@ export default function App() {
           <div className="control-group">
             <strong style={{ color: '#64748b', fontSize: '0.85rem', marginRight: '5px' }}>X-AXIS</strong>
             <select className="galaxy-select" value={xAxisMode} onChange={e => setXAxisMode(e.target.value)} disabled={viewMode !== 'GALAXY'}>
+              <option value="NONE">None</option>
               <option value="FIELD">Field</option>
               <option value="AUTHOR">Author</option>
               <option value="INSTITUTION">Institution</option>
@@ -1140,6 +1202,7 @@ export default function App() {
               <option value="FIELD">Field</option>
               <option value="AUTHOR">Author</option>
               <option value="INSTITUTION">Institution</option>
+              <option value="TIMELINE">Timeline</option>
             </select>
           </div>
 
