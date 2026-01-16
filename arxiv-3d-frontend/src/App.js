@@ -21,10 +21,12 @@ export default function App() {
 
   // View State
   const [viewMode, setViewMode] = useState('GALAXY'); // 'GALAXY' | 'FIELD' | 'DETAIL'
-  const [groupingMode, setGroupingMode] = useState('FIELD'); // 'FIELD' | 'AUTHOR' | 'INSTITUTION'
-  const [layoutMode, setLayoutMode] = useState('CENTRAL'); // 'CENTRAL' | 'TIMELINE'
+  const [xAxisMode, setXAxisMode] = useState('FIELD'); // 'FIELD' | 'AUTHOR' | 'INSTITUTION' | 'TIMELINE'
   const [yGroupingMode, setYGroupingMode] = useState('NONE'); // 'NONE' | 'FIELD' | 'AUTHOR' | 'INSTITUTION'
   const [activeGroup, setActiveGroup] = useState(null);
+
+  const groupingMode = xAxisMode === 'TIMELINE' ? 'FIELD' : xAxisMode;
+  const layoutMode = xAxisMode === 'TIMELINE' ? 'TIMELINE' : 'CENTRAL';
 
   const nodeByIdRef = useRef(new Map());
   const simulationRef = useRef(null);
@@ -37,6 +39,8 @@ export default function App() {
   const layoutSignatureRef = useRef("");
   const lastActiveGroupRef = useRef(null);
   const prevGroupingModeRef = useRef(groupingMode);
+  const prevYAxisModeRef = useRef(yGroupingMode);
+  const prevXAxisModeRef = useRef(xAxisMode);
   const edgeRevealTimeoutRef = useRef(null);
   const edgeRevealPendingRef = useRef(false);
   const firstDataRenderRef = useRef(true);
@@ -85,15 +89,14 @@ export default function App() {
   }, []);
 
   /* Data Processing */
-  const { nodes, groupStats, uniqueGroups, groupEdges, yGroups } = useMemo(() => {
-    if (!rawNodes || rawNodes.length === 0) return { nodes: [], groupStats: [], uniqueGroups: [], groupEdges: [], yGroups: [] };
+  const { nodes, groupStats, xGroups, groupEdges, yGroups } = useMemo(() => {
+    if (!rawNodes || rawNodes.length === 0) return { nodes: [], groupStats: [], xGroups: [], groupEdges: [], yGroups: [] };
 
     const gMap = new Map();
     const nodeIdToGroup = new Map();
-    const yGroupSet = new Set();
 
     // Helper to extract group key
-    const getGroupKey = (d) => {
+    const getXAxisKey = (d) => {
       if (groupingMode === 'AUTHOR') return d.firstAuthor || "Unknown";
       if (groupingMode === 'INSTITUTION') return (d.institutions ? d.institutions.split(';')[0].trim() : "Unknown");
       return d.primaryField || d.AI_primary_field || "Unassigned";
@@ -108,16 +111,19 @@ export default function App() {
     // 1. Process Nodes & Build Group Map
     const ns = rawNodes.map(d => {
       const yr = d.year ?? d.publication_year ?? (d.publicationDate ? new Date(d.publicationDate).getFullYear() : 2000);
-      const group = getGroupKey(d);
+      const xGroup = getXAxisKey(d);
       const cites = d.citationCount ?? d.cited_by_count ?? 0;
       const yGroup = getYAxisKey(d);
+      const groupKey = yGroupingMode === 'NONE' ? xGroup : `${xGroup}|||${yGroup}`;
+      const displayName = yGroupingMode === 'NONE' ? xGroup : `${xGroup} / ${yGroup}`;
 
       const n = {
         id: String(d.id || d.paperId),
         title: d.title,
         year: yr,
         citationCount: cites,
-        group: group, // Dynamic grouping
+        group: groupKey, // Dynamic grouping (x/y aggregation)
+        xGroup,
         yGroup,
         field: d.primaryField,
         abstract: d.abstract || d.AI_summary || "No abstract available.",
@@ -125,19 +131,15 @@ export default function App() {
         institutions: d.institutions
       };
 
-      nodeIdToGroup.set(n.id, group);
+      nodeIdToGroup.set(n.id, groupKey);
 
-      if (!gMap.has(group)) {
-        gMap.set(group, { name: group, count: 0, totalCitations: 0, minYear: Infinity, yGroupCounts: new Map() });
+      if (!gMap.has(groupKey)) {
+        gMap.set(groupKey, { key: groupKey, name: displayName, xGroup, yGroup, count: 0, totalCitations: 0, minYear: Infinity });
       }
-      const g = gMap.get(group);
+      const g = gMap.get(groupKey);
       g.count += 1;
       g.totalCitations += cites;
       g.minYear = Math.min(g.minYear, yr);
-      if (yGroup) {
-        g.yGroupCounts.set(yGroup, (g.yGroupCounts.get(yGroup) || 0) + 1);
-        yGroupSet.add(yGroup);
-      }
 
       return n;
     });
@@ -145,50 +147,53 @@ export default function App() {
     nodeByIdRef.current = new Map(ns.map(n => [n.id, n]));
 
     // Calculate Stats and Sort
-    const gStats = Array.from(gMap.values()).map(g => {
-      let yGroup = null;
-      let bestCount = -1;
-      g.yGroupCounts.forEach((count, key) => {
-        if (count > bestCount) {
-          bestCount = count;
-          yGroup = key;
-        }
-      });
-      return {
-        ...g,
-        minYear: g.minYear === Infinity ? 2000 : g.minYear,
-        yGroup
-      };
-    }).sort((a, b) => b.totalCitations - a.totalCitations);
+    const gStats = Array.from(gMap.values()).map(g => ({
+      ...g,
+      minYear: g.minYear === Infinity ? 2000 : g.minYear
+    })).sort((a, b) => b.totalCitations - a.totalCitations);
 
     // Limit groups for performance in Galaxy view if high cardinality
     const finalGroupStats = (groupingMode === 'FIELD') ? gStats : gStats.slice(0, 150);
-    const validGroups = new Set(finalGroupStats.map(g => g.name));
+    const validGroups = new Set(finalGroupStats.map(g => g.key));
+    const finalXGroups = Array.from(new Set(finalGroupStats.map(g => g.xGroup)));
+    const finalYGroups = Array.from(new Set(finalGroupStats.map(g => g.yGroup).filter(Boolean)));
 
     // 2. Process Edges & Build Group Connections
     const groupEdgeMap = new Map();
+
+    const encodeEdgeKey = (sourceGroup, targetGroup) => `${sourceGroup.length}::${sourceGroup}${targetGroup}`;
+    const decodeEdgeKey = (key) => {
+      const splitIdx = key.indexOf("::");
+      if (splitIdx === -1) return { source: key, target: "" };
+      const len = Number(key.slice(0, splitIdx));
+      const rest = key.slice(splitIdx + 2);
+      return {
+        source: rest.slice(0, len),
+        target: rest.slice(len)
+      };
+    };
 
     rawEdges.forEach(e => {
       const sourceGroup = nodeIdToGroup.get(String(e.source));
       const targetGroup = nodeIdToGroup.get(String(e.target));
 
       if (sourceGroup && targetGroup && sourceGroup !== targetGroup && validGroups.has(sourceGroup) && validGroups.has(targetGroup)) {
-        const key = `${sourceGroup}|${targetGroup}`;
-        groupEdgeMap.set(key, (groupEdgeMap.get(key) || 0) + 1);
+        const edgeKey = encodeEdgeKey(sourceGroup, targetGroup);
+        groupEdgeMap.set(edgeKey, (groupEdgeMap.get(edgeKey) || 0) + 1);
       }
     });
 
     const calculatedGroupEdges = Array.from(groupEdgeMap.entries()).map(([key, count]) => {
-      const [source, target] = key.split("|");
+      const { source, target } = decodeEdgeKey(key);
       return { source, target, weight: count };
     });
 
     return {
       nodes: ns,
       groupStats: finalGroupStats,
-      uniqueGroups: finalGroupStats.map(f => f.name),
+      xGroups: finalXGroups,
       groupEdges: calculatedGroupEdges,
-      yGroups: Array.from(yGroupSet.values())
+      yGroups: finalYGroups
     };
   }, [rawNodes, rawEdges, groupingMode, yGroupingMode]);
 
@@ -204,25 +209,29 @@ export default function App() {
       .filter(e => m.has(e.source) && m.has(e.target) && e.source !== e.target);
   }, [rawEdges, rawNodes]);
 
-  const colorScale = useMemo(() => d3.scaleOrdinal(d3.schemeTableau10).domain(uniqueGroups), [uniqueGroups]);
+  const colorScale = useMemo(() => d3.scaleOrdinal(d3.schemeTableau10).domain(xGroups), [xGroups]);
+  const groupLabelByKey = useMemo(() => new Map(groupStats.map(g => [g.key, g.name])), [groupStats]);
+  const groupXByKey = useMemo(() => new Map(groupStats.map(g => [g.key, g.xGroup])), [groupStats]);
 
   // Galaxy View Data (Group Nodes)
   const galaxyNodes = useMemo(() => {
     if (viewMode !== 'GALAXY') return [];
 
     return groupStats.map((f) => {
-      const existing = groupPositionsMatch.current.get(f.name);
+      const existing = groupPositionsMatch.current.get(f.key);
 
       const val = Math.sqrt(f.totalCitations) * 0.25;
 
-      const fallbackPos = getDeterministicPoint(f.name, 450);
+      const fallbackPos = getDeterministicPoint(f.key, 450);
       const node = {
-        id: `group-${f.name}`,
+        id: `group-${f.key}`,
+        key: f.key,
         type: 'group',
         name: f.name,
+        xGroup: f.xGroup,
+        yGroup: f.yGroup,
         val: Math.max(val, 5),
         minYear: f.minYear, // Use minYear
-        yGroup: f.yGroup,
         data: f,
         // Init positions (D3 will update)
         x: existing ? existing.x : fallbackPos.x,
@@ -234,9 +243,9 @@ export default function App() {
   }, [groupStats, viewMode]);
 
   // Transitions
-  const handleGroupClick = (groupName) => {
-    console.log("Group clicked:", groupName);
-    setActiveGroup(groupName);
+  const handleGroupClick = (groupKey) => {
+    console.log("Group clicked:", groupKey);
+    setActiveGroup(groupKey);
     setViewMode('FIELD');
     setSelected(null);
   };
@@ -356,14 +365,14 @@ export default function App() {
 
     if (isGalaxy) {
       currentNodes = galaxyNodes;
-      const hoveredGroupName = hovered?.title;
-      const galaxyEdges = hoveredGroupName
-        ? groupEdges.filter(e => e.source === hoveredGroupName || e.target === hoveredGroupName)
+      const hoveredGroupKey = hovered?.id;
+      const galaxyEdges = hoveredGroupKey
+        ? groupEdges.filter(e => e.source === hoveredGroupKey || e.target === hoveredGroupKey)
         : groupEdges.filter(e => (e.weight || 0) > 3);
       // Deep clone edges to avoid mutation key issues in D3
       currentEdges = galaxyEdges.map(e => ({
-        source: typeof e.source === 'object' ? e.source.name : e.source,
-        target: typeof e.target === 'object' ? e.target.name : e.target,
+        source: e.source,
+        target: e.target,
         weight: e.weight
       }));
     } else {
@@ -394,8 +403,13 @@ export default function App() {
       return id;
     };
     const getEdgeSourceName = (d) => {
-      const source = typeof d.source === "object" ? (d.source.name || d.source.group || d.source.id) : d.source;
-      return source;
+      if (!isGalaxy) {
+        return typeof d.source === "object" ? (d.source.group || d.source.id) : d.source;
+      }
+      if (typeof d.source === "object") {
+        return d.source.xGroup || d.source.name || d.source.group || d.source.id;
+      }
+      return groupXByKey.get(String(d.source)) || d.source;
     };
     const getBaseEdgeColor = (d) => (isGalaxy ? colorScale(getEdgeSourceName(d)) : EDGE_COLORS.default);
     const setGradientStops = (selection, color) => {
@@ -405,9 +419,17 @@ export default function App() {
     };
 
     const defs = svg.select("defs").empty() ? svg.append("defs") : svg.select("defs");
-    if (isGalaxy && prevGroupingModeRef.current !== groupingMode) {
+    const groupingChanged = isGalaxy && (
+      prevGroupingModeRef.current !== groupingMode
+      || prevYAxisModeRef.current !== yGroupingMode
+      || prevXAxisModeRef.current !== xAxisMode
+    );
+    if (groupingChanged) {
+      gNodes.selectAll(".d3-node").remove();
       gLinks.selectAll(".d3-link").remove();
       defs.selectAll(".link-gradient").remove();
+      groupPositionsMatch.current.clear();
+      layoutPositionCacheRef.current.clear();
     }
     const gradientJoin = defs.selectAll(".link-gradient")
       .data(currentEdges, getEdgeKey);
@@ -492,11 +514,11 @@ export default function App() {
       .style("opacity", 0) // Start invisible
       .on("click", (e, d) => {
         e.stopPropagation();
-        if (isGalaxy) handleGroupClick(d.name);
+        if (isGalaxy) handleGroupClick(d.key);
         else handlePaperClick(d);
       })
       .on("mouseover", (e, d) => setHovered(isGalaxy ? {
-        id: d.id,
+        id: d.key,
         title: d.name,
         year: `Est. ${d.minYear}`,
         citationCount: d.data.totalCitations,
@@ -530,8 +552,8 @@ export default function App() {
     const allNodes = nodesEntry.merge(nodeJoin);
 
     if (isGalaxy) {
-      allNodes.select(".orbit").attr("fill", d => colorScale(d.name)).attr("r", d => d.val * 2.5);
-      allNodes.select(".core").attr("fill", d => colorScale(d.name)).attr("r", d => d.val * 0.8);
+      allNodes.select(".orbit").attr("fill", d => colorScale(d.xGroup)).attr("r", d => d.val * 2.5);
+      allNodes.select(".core").attr("fill", d => colorScale(d.xGroup)).attr("r", d => d.val * 0.8);
       allNodes.select(".label-main").text(d => d.name.length > 25 ? d.name.substring(0, 22) + "..." : d.name).attr("dy", d => d.val * 2 + 20);
       allNodes.select(".label-sub").text(d => `${d.data.count} papers`).attr("dy", d => d.val * 2 + 40);
 
@@ -587,7 +609,7 @@ export default function App() {
         .attr("x2", d => (d.target && typeof d.target.x === "number") ? d.target.x : 0)
         .attr("y2", d => (d.target && typeof d.target.y === "number") ? d.target.y : 0);
     };
-    const dataSignature = `${viewMode}|${layoutMode}|${activeGroup || ""}|${groupingMode}|${rawNodes.length}|${rawEdges.length}`;
+    const dataSignature = `${viewMode}|${layoutMode}|${activeGroup || ""}|${groupingMode}|${yGroupingMode}|${rawNodes.length}|${rawEdges.length}`;
     const signatureChanged = layoutSignatureRef.current !== dataSignature;
     const viewChanged = prevViewMode.current !== viewMode;
     const layoutChanged = prevLayoutMode.current !== layoutMode;
@@ -603,7 +625,7 @@ export default function App() {
     const applyInitialPositions = () => {
       if (isGalaxy) {
         currentNodes.forEach(n => {
-          const cached = groupPositionsMatch.current.get(n.name);
+          const cached = groupPositionsMatch.current.get(n.key);
           if (cached) {
             n.x = cached.x;
             n.y = cached.y;
@@ -641,32 +663,154 @@ export default function App() {
 
     if (isGalaxy) {
       if (layoutMode === 'CENTRAL' || layoutMode === 'TIMELINE') {
-        sim.force("link", d3.forceLink(currentEdges).id(d => d.name).distance(200).strength(layoutMode === 'TIMELINE' ? 0.01 : 0.05));
+        sim.force("link", d3.forceLink(currentEdges).id(d => d.key).distance(200).strength(layoutMode === 'TIMELINE' ? 0.01 : 0.05));
       }
     } else {
       sim.force("link", d3.forceLink(currentEdges).id(d => d.id).distance(150));
     }
 
-    const getLayoutCacheKey = (mode) => `${viewMode}|${activeGroup || ""}|${groupingMode}|${mode}`;
+    const getLayoutCacheKey = (mode) => `${viewMode}|${activeGroup || ""}|${groupingMode}|${yGroupingMode}|${mode}`;
     const cachedTargets = layoutPositionCacheRef.current.get(getLayoutCacheKey(layoutMode));
     const hasCachedTargets = cachedTargets && cachedTargets.size > 0;
 
     // LAYOUT FORCES & AXIS
     gMain.select(".timeline-axis").remove();
+    gMain.select(".y-axis").remove();
+    gMain.select(".x-axis").remove();
 
     const graphCenterY = -height * 0.1;
     const sortedYGroups = yGroups.slice().sort((a, b) => a.localeCompare(b));
-    const yScale = (yGroupingMode !== 'NONE' && isGalaxy && sortedYGroups.length > 0)
-      ? d3.scalePoint().domain(sortedYGroups).range([graphCenterY - height * 0.35, graphCenterY + height * 0.35]).padding(0.6)
-      : null;
+    const yScale = (() => {
+      if (yGroupingMode === 'NONE' || !isGalaxy || sortedYGroups.length === 0) return null;
+      const yPadding = 0.4;
+      const yGroupCount = sortedYGroups.length;
+      const baseGap = Math.max(60, height * 0.05);
+      const minGap = baseGap * 2;
+      const minSpan = height * 0.9;
+      const span = Math.max(minSpan, minGap * (Math.max(1, yGroupCount - 1) + 2 * yPadding)) * 0.7;
+      const range = [graphCenterY - span / 2, graphCenterY + span / 2];
+      return d3.scalePoint().domain(sortedYGroups).range(range).padding(yPadding);
+    })();
+
+    const sortedXGroups = isGalaxy ? xGroups.slice().sort((a, b) => a.localeCompare(b)) : [];
+    const xGroupScale = (() => {
+      if (xAxisMode === 'TIMELINE' || !isGalaxy || sortedXGroups.length === 0) return null;
+      const xPadding = 0.35;
+      const xGroupCount = sortedXGroups.length;
+      const baseGap = Math.max(80, width * 0.06);
+      const minGap = baseGap * 2;
+      const minSpan = width * 0.9;
+      const span = Math.max(minSpan, minGap * (Math.max(1, xGroupCount - 1) + 2 * xPadding));
+      const range = [-span / 2, span / 2];
+      return d3.scalePoint().domain(sortedXGroups).range(range).padding(xPadding);
+    })();
+
+    if (yScale) {
+      const axisX = -width * 0.46;
+      const axisGroup = gMain.insert("g", ":first-child")
+        .attr("class", "y-axis")
+        .attr("transform", `translate(${axisX}, 0)`);
+
+      const axisRange = yScale.range();
+      const yMin = Math.min(axisRange[0], axisRange[1]);
+      const yMax = Math.max(axisRange[0], axisRange[1]);
+
+      axisGroup.append("line")
+        .attr("x1", 0).attr("x2", 0)
+        .attr("y1", yMin - 20).attr("y2", yMax + 20)
+        .attr("stroke", "#94a3b8")
+        .attr("stroke-width", 2)
+        .attr("opacity", 0.6);
+
+      const tick = axisGroup.selectAll(".y-axis-tick")
+        .data(sortedYGroups, d => d)
+        .enter()
+        .append("g")
+        .attr("class", "y-axis-tick")
+        .attr("transform", d => `translate(0, ${yScale(d)})`);
+
+      tick.append("line")
+        .attr("x1", -6).attr("x2", 6)
+        .attr("y1", 0).attr("y2", 0)
+        .attr("stroke", "#64748b")
+        .attr("stroke-width", 1.5);
+
+      tick.append("text")
+        .attr("x", -12)
+        .attr("y", 4)
+        .attr("text-anchor", "end")
+        .style("fill", "#64748b")
+        .style("font-size", "12px")
+        .style("font-weight", "600")
+        .text(d => d);
+
+      axisGroup.append("text")
+        .attr("x", 0)
+        .attr("y", yMin - 36)
+        .attr("text-anchor", "middle")
+        .style("fill", "#475569")
+        .style("font-size", "12px")
+        .style("font-weight", "700")
+        .text(yGroupingMode);
+    }
+
+    if (xGroupScale) {
+      const axisY = graphCenterY + height * 0.48;
+      const axisGroup = gMain.insert("g", ":first-child")
+        .attr("class", "x-axis")
+        .attr("transform", `translate(0, ${axisY})`);
+
+      const axisRange = xGroupScale.range();
+      const xMin = Math.min(axisRange[0], axisRange[1]);
+      const xMax = Math.max(axisRange[0], axisRange[1]);
+
+      axisGroup.append("line")
+        .attr("x1", xMin - 30).attr("x2", xMax + 30)
+        .attr("y1", 0).attr("y2", 0)
+        .attr("stroke", "#94a3b8")
+        .attr("stroke-width", 2)
+        .attr("opacity", 0.6);
+
+      const tick = axisGroup.selectAll(".x-axis-tick")
+        .data(sortedXGroups, d => d)
+        .enter()
+        .append("g")
+        .attr("class", "x-axis-tick")
+        .attr("transform", d => `translate(${xGroupScale(d)}, 0)`);
+
+      tick.append("line")
+        .attr("x1", 0).attr("x2", 0)
+        .attr("y1", -6).attr("y2", 6)
+        .attr("stroke", "#64748b")
+        .attr("stroke-width", 1.5);
+
+      tick.append("text")
+        .attr("x", 0)
+        .attr("y", 22)
+        .attr("text-anchor", "middle")
+        .style("fill", "#64748b")
+        .style("font-size", "12px")
+        .style("font-weight", "600")
+        .text(d => d);
+
+      axisGroup.append("text")
+        .attr("x", (xMin + xMax) / 2)
+        .attr("y", 40)
+        .attr("text-anchor", "middle")
+        .style("fill", "#475569")
+        .style("font-size", "12px")
+        .style("font-weight", "700")
+        .text(xAxisMode);
+    }
 
     if (layoutMode === 'TIMELINE') {
       const years = currentNodes.map(d => isGalaxy ? d.minYear : d.year);
       const minYear = d3.min(years) || 1990;
       const maxYear = d3.max(years) || 2025;
-      const xScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 0.4, width * 0.4]);
+      const timelineXScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 0.6, width * 0.6]);
 
-      sim.force("x", d3.forceX(d => xScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
+      sim.force("x", d3.forceX(d => timelineXScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
+      sim.force("x-band", null);
       if (yScale) {
         sim.force("y", d3.forceY(d => yScale(d.yGroup) ?? graphCenterY).strength(0.9));
       } else {
@@ -677,14 +821,14 @@ export default function App() {
 
       const axisGroup = gMain.insert("g", ":first-child").attr("class", "timeline-axis").attr("transform", `translate(0, ${graphCenterY + height * 0.3})`);
       axisGroup.append("line")
-        .attr("x1", xScale(minYear) - 50).attr("x2", xScale(maxYear) + 50).attr("y1", 0).attr("y2", 0)
+        .attr("x1", timelineXScale(minYear) - 50).attr("x2", timelineXScale(maxYear) + 50).attr("y1", 0).attr("y2", 0)
         .attr("stroke", "#94a3b8").attr("stroke-width", 2).attr("opacity", 0.5);
 
       const startDecade = Math.floor(minYear / 10) * 10;
       const endDecade = Math.ceil(maxYear / 10) * 10;
       for (let y = startDecade; y <= endDecade; y += 10) {
         if (y >= minYear - 5 && y <= maxYear + 5) {
-          const x = xScale(y);
+          const x = timelineXScale(y);
           axisGroup.append("line").attr("x1", x).attr("x2", x).attr("y1", -10).attr("y2", 10).attr("stroke", "#64748b").attr("stroke-width", 2);
           axisGroup.append("text").attr("x", x).attr("y", 30).attr("text-anchor", "middle")
             .style("fill", "#64748b").style("font-size", "14px").style("font-weight", "600").text(y);
@@ -718,6 +862,11 @@ export default function App() {
         sim.force("y-band", d3.forceY(d => yScale(d.yGroup) ?? graphCenterY).strength(0.9));
       } else {
         sim.force("y-band", null);
+      }
+      if (xGroupScale && isGalaxy) {
+        sim.force("x-band", d3.forceX(d => xGroupScale(d.xGroup) ?? 0).strength(0.9));
+      } else {
+        sim.force("x-band", null);
       }
     }
 
@@ -758,7 +907,7 @@ export default function App() {
         ticks += 1;
       }
       if (isGalaxy) {
-        currentNodes.forEach(n => groupPositionsMatch.current.set(n.name, { x: n.x, y: n.y }));
+        currentNodes.forEach(n => groupPositionsMatch.current.set(n.key, { x: n.x, y: n.y }));
       } else {
         currentNodes.forEach(n => nodePositionsCache.current.set(n.id, { x: n.x, y: n.y }));
       }
@@ -810,7 +959,7 @@ export default function App() {
       sim.alphaDecay(0.02);
       sim.on("tick", () => {
         if (isGalaxy) {
-          currentNodes.forEach(n => groupPositionsMatch.current.set(n.name, { x: n.x, y: n.y }));
+          currentNodes.forEach(n => groupPositionsMatch.current.set(n.key, { x: n.x, y: n.y }));
         } else {
           currentNodes.forEach(n => nodePositionsCache.current.set(n.id, { x: n.x, y: n.y }));
         }
@@ -844,6 +993,8 @@ export default function App() {
     // Update refs
     prevViewMode.current = viewMode;
     prevLayoutMode.current = layoutMode;
+    prevXAxisModeRef.current = xAxisMode;
+    prevYAxisModeRef.current = yGroupingMode;
     if (hasRenderableNodes) {
       layoutSignatureRef.current = dataSignature;
     }
@@ -852,7 +1003,7 @@ export default function App() {
       sim.stop();
     };
 
-  }, [viewMode, groupingMode, yGroupingMode, layoutMode, activeGroup, galaxyNodes, nodes, edges, groupEdges, yGroups, colorScale]);
+  }, [viewMode, groupingMode, yGroupingMode, layoutMode, activeGroup, galaxyNodes, nodes, edges, groupEdges, yGroups, xGroups, colorScale, groupXByKey]);
 
   // HIGHLIGHTING EFFECT
   useEffect(() => {
@@ -868,12 +1019,14 @@ export default function App() {
     const rect = svg.selectAll(".node-rect");
 
     if (viewMode === 'GALAXY') {
-      const hoveredGroupName = hovered?.title;
+      const hoveredGroupKey = hovered?.id;
       const getGalaxyEdgeColor = (d) => {
-        const sourceName = typeof d.source === 'object' ? (d.source.name || d.source.group || d.source.id) : d.source;
-        return colorScale(sourceName);
+        if (typeof d.source === 'object') {
+          return colorScale(d.source.xGroup || d.source.name || d.source.group || d.source.id);
+        }
+        return colorScale(groupXByKey.get(String(d.source)) || d.source);
       };
-      if (!hoveredGroupName) {
+      if (!hoveredGroupKey) {
         node.transition().duration(200).style("opacity", 1);
         link.transition().duration(200).attr("stroke-opacity", 0.55);
         gradients.each(function (d) {
@@ -889,15 +1042,15 @@ export default function App() {
 
       link.transition().duration(200)
         .attr("stroke-opacity", d => {
-          const s = typeof d.source === 'object' ? d.source.name : d.source;
-          const t = typeof d.target === 'object' ? d.target.name : d.target;
-          return (s === hoveredGroupName || t === hoveredGroupName) ? 0.9 : 0.15;
+          const s = typeof d.source === 'object' ? d.source.key : d.source;
+          const t = typeof d.target === 'object' ? d.target.key : d.target;
+          return (s === hoveredGroupKey || t === hoveredGroupKey) ? 0.9 : 0.15;
         });
 
       gradients.each(function (d) {
-        const s = typeof d.source === 'object' ? d.source.name : d.source;
-        const t = typeof d.target === 'object' ? d.target.name : d.target;
-        const isConnected = s === hoveredGroupName || t === hoveredGroupName;
+        const s = typeof d.source === 'object' ? d.source.key : d.source;
+        const t = typeof d.target === 'object' ? d.target.key : d.target;
+        const isConnected = s === hoveredGroupKey || t === hoveredGroupKey;
         const color = isConnected ? getGalaxyEdgeColor(d) : "#94a3b8";
         const opacityScale = isConnected ? 1 : 0.3;
         const sel = d3.select(this);
@@ -960,7 +1113,9 @@ export default function App() {
       });
       rect.transition().duration(200).attr("stroke", "#fff").attr("stroke-width", 2);
     }
-  }, [selected, hovered, viewMode, groupingMode]);
+  }, [selected, hovered, viewMode, groupingMode, colorScale, groupXByKey]);
+
+  const activeGroupLabel = activeGroup ? (groupLabelByKey.get(activeGroup) || activeGroup) : null;
 
   return (
     <div className="App galaxy-theme" ref={wrapRef}>
@@ -969,11 +1124,12 @@ export default function App() {
           {viewMode !== 'GALAXY' && <button className="back-to-galaxy" onClick={handleBackToGalaxy}>← Back</button>}
 
           <div className="control-group">
-            <strong style={{ color: '#64748b', fontSize: '0.85rem', marginRight: '5px' }}>GROUP BY</strong>
-            <select className="galaxy-select" value={groupingMode} onChange={e => setGroupingMode(e.target.value)} disabled={viewMode !== 'GALAXY'}>
+            <strong style={{ color: '#64748b', fontSize: '0.85rem', marginRight: '5px' }}>X-AXIS</strong>
+            <select className="galaxy-select" value={xAxisMode} onChange={e => setXAxisMode(e.target.value)} disabled={viewMode !== 'GALAXY'}>
               <option value="FIELD">Field</option>
               <option value="AUTHOR">Author</option>
               <option value="INSTITUTION">Institution</option>
+              <option value="TIMELINE">Timeline</option>
             </select>
           </div>
 
@@ -987,15 +1143,8 @@ export default function App() {
             </select>
           </div>
 
-          <div className="control-group">
-            <strong style={{ color: '#64748b', fontSize: '0.85rem', marginRight: '5px' }}>LAYOUT</strong>
-            <div className="toggle-group">
-              <button className={`toggle-btn ${layoutMode === 'CENTRAL' ? 'active' : ''}`} onClick={() => setLayoutMode('CENTRAL')}>Central</button>
-              <button className={`toggle-btn ${layoutMode === 'TIMELINE' ? 'active' : ''}`} onClick={() => setLayoutMode('TIMELINE')}>Timeline</button>
-            </div>
-          </div>
         </div>
-        <div className="galaxy-title">{viewMode === 'GALAXY' ? `Map of ${groupingMode === 'FIELD' ? 'Physics' : groupingMode + 'S'}` : activeGroup}</div>
+        <div className="galaxy-title">{viewMode === 'GALAXY' ? `Map of ${groupingMode === 'FIELD' ? 'Physics' : groupingMode + 'S'}` : activeGroupLabel}</div>
       </div>
 
       <svg ref={svgRef} className="galaxy-canvas" />
