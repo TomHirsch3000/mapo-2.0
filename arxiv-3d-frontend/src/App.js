@@ -33,6 +33,7 @@ export default function App() {
   const prevViewMode = useRef(viewMode);
   const prevLayoutMode = useRef(layoutMode);
   const layoutSignatureRef = useRef("");
+  const lastActiveGroupRef = useRef(null);
 
   const EDGE_COLORS = {
     citation: "#f59e0b",
@@ -209,6 +210,7 @@ export default function App() {
   };
 
   const handleBackToGalaxy = () => {
+    lastActiveGroupRef.current = activeGroup;
     setActiveGroup(null);
     setViewMode('GALAXY');
     setSelected(null);
@@ -293,6 +295,19 @@ export default function App() {
     if (svg.select(".g-main").attr("transform") === null) {
       svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8));
     }
+    // When returning to Galaxy, focus on the last active group
+    if (viewMode === 'GALAXY' && prevViewMode.current !== 'GALAXY' && lastActiveGroupRef.current) {
+      const groupName = lastActiveGroupRef.current;
+      const pos = groupPositionsMatch.current.get(groupName);
+      if (pos) {
+        const scale = 0.8;
+        const tx = width / 2 - pos.x * scale;
+        const ty = height / 2 - pos.y * scale;
+        svg.transition().duration(800)
+          .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+      }
+      lastActiveGroupRef.current = null;
+    }
 
     // Determine current dataset
     let currentNodes = [];
@@ -302,7 +317,9 @@ export default function App() {
     if (isGalaxy) {
       currentNodes = galaxyNodes;
       // Deep clone edges to avoid mutation key issues in D3
-      currentEdges = groupEdges.map(e => ({
+      currentEdges = groupEdges
+        .filter(e => (e.weight || 0) > 3)
+        .map(e => ({
         source: typeof e.source === 'object' ? e.source.name : e.source,
         target: typeof e.target === 'object' ? e.target.name : e.target,
         weight: e.weight
@@ -524,13 +541,15 @@ export default function App() {
         .attr("x2", d => (d.target && typeof d.target.x === "number") ? d.target.x : 0)
         .attr("y2", d => (d.target && typeof d.target.y === "number") ? d.target.y : 0);
     };
-    const layoutSignature = `${viewMode}|${layoutMode}|${activeGroup || ""}|${groupingMode}`;
-    const signatureChanged = layoutSignatureRef.current !== layoutSignature;
+    const dataSignature = `${viewMode}|${layoutMode}|${activeGroup || ""}|${groupingMode}|${rawNodes.length}|${rawEdges.length}`;
+    const signatureChanged = layoutSignatureRef.current !== dataSignature;
     const viewChanged = prevViewMode.current !== viewMode;
     const layoutChanged = prevLayoutMode.current !== layoutMode;
     const shouldAnimateLayout = layoutChanged && !viewChanged;
-    const shouldPrecompute = signatureChanged && !shouldAnimateLayout;
+    const hasRenderableNodes = currentNodes.length > 0;
+    const shouldPrecompute = signatureChanged && !shouldAnimateLayout && hasRenderableNodes;
     const shouldIntro = shouldPrecompute;
+    const introScale = isGalaxy ? 0.2 : 1;
 
     const seededRandom = d3.randomLcg(0.42);
 
@@ -632,7 +651,14 @@ export default function App() {
 
     if (shouldPrecompute) {
       sim.stop();
-      for (let i = 0; i < 280; i += 1) sim.tick();
+      sim.alpha(1);
+      sim.alphaDecay(0.03);
+      let ticks = 0;
+      const maxTicks = 6000;
+      while (sim.alpha() > 0.02 && ticks < maxTicks) {
+        sim.tick();
+        ticks += 1;
+      }
       if (isGalaxy) {
         currentNodes.forEach(n => groupPositionsMatch.current.set(n.name, { x: n.x, y: n.y }));
       } else {
@@ -641,15 +667,23 @@ export default function App() {
 
       gMain.selectAll(".d3-node").style("opacity", 0);
       gMain.selectAll(".d3-link").attr("stroke-opacity", 0);
-      syncPositions(0.1);
+      syncPositions(introScale);
 
       if (shouldIntro) {
-        gMain.selectAll(".d3-node")
-          .transition().duration(650).ease(d3.easeQuadOut)
-          .style("opacity", 1)
-          .attr("transform", d => `translate(${d.x}, ${d.y}) scale(1)`);
+        const introNodes = gMain.selectAll(".d3-node");
+        if (isGalaxy) {
+          introNodes
+            .transition().duration(900).ease(d3.easeQuadOut)
+            .style("opacity", 1)
+            .attr("transform", d => `translate(${d.x}, ${d.y}) scale(1)`);
+        } else {
+          introNodes
+            .transition().duration(900).ease(d3.easeQuadOut)
+            .style("opacity", 1)
+            .attr("transform", d => `translate(${d.x}, ${d.y}) scale(1)`);
+        }
         gMain.selectAll(".d3-link")
-          .transition().duration(650).ease(d3.easeQuadOut)
+          .transition().duration(900).ease(d3.easeQuadOut)
           .attr("stroke-opacity", isGalaxy ? 0.55 : 0.5);
       } else {
         gMain.selectAll(".d3-node").style("opacity", 1);
@@ -663,8 +697,8 @@ export default function App() {
     }
 
     if (shouldAnimateLayout) {
-      sim.velocityDecay(0.6);
-      sim.alphaDecay(0.05);
+      sim.velocityDecay(0.65);
+      sim.alphaDecay(0.035);
       sim.on("tick", () => {
         if (isGalaxy) {
           currentNodes.forEach(n => groupPositionsMatch.current.set(n.name, { x: n.x, y: n.y }));
@@ -674,11 +708,13 @@ export default function App() {
         syncPositions(1);
       });
       sim.alpha(1).restart();
-      const stopTimer = d3.timeout(() => sim.stop(), 650);
+      const stopTimer = d3.timeout(() => sim.stop(), 1000);
       simulationRef.current = sim;
       prevViewMode.current = viewMode;
       prevLayoutMode.current = layoutMode;
-      layoutSignatureRef.current = layoutSignature;
+      if (hasRenderableNodes) {
+        layoutSignatureRef.current = dataSignature;
+      }
 
       return () => {
         stopTimer.stop();
@@ -692,7 +728,9 @@ export default function App() {
     // Update refs
     prevViewMode.current = viewMode;
     prevLayoutMode.current = layoutMode;
-    layoutSignatureRef.current = layoutSignature;
+    if (hasRenderableNodes) {
+      layoutSignatureRef.current = dataSignature;
+    }
 
     return () => {
       sim.stop();
