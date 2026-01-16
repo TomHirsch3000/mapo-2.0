@@ -1,96 +1,96 @@
-# Brief - Map of Physics
+Brief - Map of Physics
 
-## Overview
+Overview
 An interactive 2D visualization of academic papers arranged in a graph form. The visualization feels immersive, smooth, and data-driven, blending scientific clarity with spatial depth to invite exploration of the citation landscape.
 
-## Core Interface
-*   **Canvas**: A 2D chart rendered on a large white background (~#f0f0f0).
-*   **Navigation**: Pannable and zoomable (horizontally and vertically) with smooth transitions and inertial motion. Zoom is centered around the mouse pointer.
-*   **Grid**: No gridlines.
-*   **Bottom Panel**: Always visible, taking up 20% of the screen height. Displays summary details of selected nodes (galaxy or paper).
+Core Interface
+    Canvas: A 2D chart rendered on a large white background (~f0f0f0).
+    Navigation: Pannable and zoomable (horizontally and vertically) with smooth transitions and inertial motion. Zoom is centered around the mouse pointer.
+    Grid: No gridlines.
+    Bottom Panel: Always visible, taking up 20% of the screen height. Displays summary details of selected nodes (galaxy or paper).
 
-## Layout Modes
+Layout Modes
 The application features a toggleable layout system that re-organizes nodes in real-time between Central and Timeline layouts.
 
-### 1. Central Layout (Cluster)
-*   **Use Case**: Seeing the "center of gravity" of a field.
-*   **Physics**:
-    *   Nodes gravitate toward the center (Radial force).
-    *   Higher impact nodes (more citations) are pulled closer to the center.
-    *   Collision detection prevents overlapping.
+1. Central Layout (Cluster)
+    Use Case: Seeing the "center of gravity" of a field.
+    Physics:
+        Nodes gravitate toward the center (Radial force).
+        Higher impact nodes (more citations) are pulled closer to the center.
+        Collision detection prevents overlapping.
 
-### 2. Timeline Layout (Chronological)
-*   **Use Case**: Understanding the history and evolution of a field.
-*   **Structure**:
-    *   **X-Axis**: Represents Time (Year of publication). Oldest on the left, newest on the right.
-    *   **Vertical Distribution**: Nodes spread out away from the timeline axis to avoid overlap. Larger nodes are positioned closer to the axis, while smaller nodes are pushed further away.
-    *   **Axis**: Displays decade markers at the bottom.
+2. Timeline Layout (Chronological)
+    Use Case: Understanding the history and evolution of a field.
+    Structure:
+        X-Axis: Represents Time (Year of publication). Oldest on the left, newest on the right.
+        Vertical Distribution: Nodes spread out away from the timeline axis to avoid overlap. Larger nodes are positioned closer to the axis, while smaller nodes are pushed further away.
+        Axis: Displays decade markers at the bottom.
 
-## Views (Levels of Detail)
+Views (Levels of Detail)
 
-### 1. Galaxy View (Macro Level)
-*   **Concept**: Nodes represent groups of papers.
-*   **Grouping**: Selectable via a dropdown (Field, Author, or Institution). Default is **Field**.
-*   **Nodes**:
-    *   Shape: Circle.
-    *   Size: Based on the number of papers in the galaxy group.
-    *   Color: Varies based on the active grouping (e.g., Field), with distinct colors for each group.
-    *   Positioning: Defaults to Central layout unless toggled.
-*   **Edges**:
-    *   **Structure**: Bi-directional connections (separate edges for citations vs. references).
-    *   **Color**: Colored according to the source node.
-    *   **Style**: Prominent and clearly visible (not too thin). Curved and directional with tapering width and fading tail (no arrowhead).
-    *   **Thickness**: Determined by the volume of connections.
+1. Galaxy View (Macro Level)
+    Concept: Nodes represent groups of papers.
+    Grouping: Selectable via a dropdown (Field, Author, or Institution). Default is Field.
+    Nodes:
+        Shape: Circle.
+        Size: Based on the number of papers in the galaxy group.
+        Color: Varies based on the active grouping (e.g., Field), with distinct colors for each group.
+        Positioning: Defaults to Central layout unless toggled.
+    Edges:
+        Structure: Bi-directional connections (separate edges for citations vs. references).
+        Color: Colored according to the source node.
+        Style: Prominent and clearly visible (not too thin). Curved and directional with tapering width and fading tail (no arrowhead).
+        Thickness: Determined by the volume of connections.
 
-### 2. Topic View (Micro Level)
-*   **Concept**: Represents individual papers within a selected group (e.g., "All papers in Quantum Physics").
-*   **Nodes**:
-    *   Shape: Rectangular cards with curved corners.
-    *   Content: Paper title (centered at top, wrapped, legible).
-    *   Size: Base radius scaled slightly by citation count.
-    *   Color: Always based on the AI Primary Field (consistent palette), regardless of Galaxy View aggregation.
-    *   Opacity: Modulated by z-depth for atmospheric perspective.
-*   **Edges**:
-    *   Connect papers via citations and references.
-    *   **Style**: Prominent and clearly visible. Curved and directional with tapering width and fading tail (no arrowhead).
-*   **Interaction**:
-    *   **Highlight Mode (Hover/Select)**:
-        *   **Active Elements**: The selected node and its direct connections (neighbors) remain fully opaque and colored.
-        *   **Edges**: Connecting edges are highlighted and color-coded (Orange for Citations, Blue for References).
-        *   **Background**: All unrelated nodes and edges fade to grey/low opacity to focus attention on the active subgraph.
-*   **Bottom Panel**: Displays abstract and full details of the selected paper.
+2. Topic View (Micro Level)
+    Concept: Represents individual papers within a selected group (e.g., "All papers in Quantum Physics").
+    Nodes:
+        Shape: Rectangular cards with curved corners.
+        Content: Paper title (centered at top, wrapped, legible).
+        Size: Base radius scaled slightly by citation count.
+        Color: Always based on the AI Primary Field (consistent palette), regardless of Galaxy View aggregation.
+        Opacity: Modulated by z-depth for atmospheric perspective.
+    Edges:
+        Connect papers via citations and references.
+        Style: Prominent and clearly visible. Curved and directional with tapering width and fading tail (no arrowhead).
+    Interaction:
+        Highlight Mode (Hover/Select):
+            Active Elements: The selected node and its direct connections (neighbors) remain fully opaque and colored.
+            Edges: Connecting edges are highlighted and color-coded (Orange for Citations, Blue for References).
+            Background: All unrelated nodes and edges fade to grey/low opacity to focus attention on the active subgraph.
+    Bottom Panel: Displays abstract and full details of the selected paper.
 
-## Transitions & Navigation
+Transitions & Navigation
 
-### View Transitions (Galaxy ↔ Topic)
-*   **To Topic View**:
-    *   Clicking a galaxy node.
-    *   Scrolling (zooming) into a galaxy node.
-    *   *Effect*: Galaxy view disappears; only nodes from that topic appear.
-*   **To Galaxy View**:
-    *   Scrolling out far enough from Topic view.
-    *   Clicking the 'Back' button in Topic view.
+View Transitions (Galaxy <-> Topic)
+    To Topic View:
+        Clicking a galaxy node.
+        Scrolling (zooming) into a galaxy node.
+        Effect: Galaxy view disappears; only nodes from that topic appear.
+    To Galaxy View:
+        Scrolling out far enough from Topic view.
+        Clicking the 'Back' button in Topic view.
 
-### Layout Transitions
-*   **Movement**: When toggling between Timeline and Central views, nodes should visibly move *even more slowly* to their new locations (approx. 0.5 seconds).
+Layout Transitions
+    Movement: When toggling between Timeline and Central views, nodes should visibly move even more slowly to their new locations (approx. 0.5 seconds).
 
-### Zoom Behavior
-*   **Separation**: As you zoom in, nodes grow slightly and separate to avoid overlap.
-*   **Precision**: Zoom steps become finer at close range for smooth exploration.
+Zoom Behavior
+    Separation: As you zoom in, nodes grow slightly and separate to avoid overlap.
+    Precision: Zoom steps become finer at close range for smooth exploration.
 
-## Visual Behavior & Physics
+Visual Behavior & Physics
 
-### Node Positioning Requirements
-*   **Loading**: Nodes must fade in *already in position*. No chaotic movement on load.
-*   **Determinism**: Node positions must be deterministic and remembered during the session. Returning to a view shows nodes in the exact same place.
+Node Positioning Requirements
+    Loading: Nodes must fade in already in position. No chaotic movement on load.
+    Determinism: Node positions must be deterministic and remembered during the session. Returning to a view shows nodes in the exact same place.
 
-### Z-Axis & Parallax (Depth by Citations)
-*   **Concept**: A hidden z-position derived from citation count.
-    *   **High Citations**: Closer to viewer (larger, brighter, focused).
-    *   **Low Citations**: Further back (smaller, slightly faded).
-*   **Parallax**: Zooming in makes high-z nodes appear to advance and separate faster than low-z nodes, creating a pseudo-3D "flying through space" effect while keeping the interface 2D.
+Z-Axis & Parallax (Depth by Citations)
+    Concept: A hidden z-position derived from citation count.
+    High Citations: Closer to viewer (larger, brighter, focused).
+    Low Citations: Further back (smaller, slightly faded).
+    Parallax: Zooming in makes high-z nodes appear to advance and separate faster than low-z nodes, creating a pseudo-3D "flying through space" effect while keeping the interface 2D.
 
-## Aesthetics
-*   **Font**: Clean sans-serif (e.g., "Plus Jakarta Sans" or "Poppins").
-*   **Palette**: Consistent color palette (e.g., Tableau 10 or custom field colors).
-*   **UI Components**: Tooltips and side cards styled as lightweight floating panels with soft shadows.
+Aesthetics
+    Font: Clean sans-serif (e.g., "Plus Jakarta Sans" or "Poppins").
+    Palette: Consistent color palette (e.g., Tableau 10 or custom field colors).
+    UI Components: Tooltips and side cards styled as lightweight floating panels with soft shadows.
