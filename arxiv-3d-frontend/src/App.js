@@ -29,6 +29,7 @@ export default function App() {
   const simulationRef = useRef(null);
   const groupPositionsMatch = useRef(new Map());
   const nodePositionsCache = useRef(new Map()); // Store all node positions
+  const layoutPositionCacheRef = useRef(new Map());
   const isTransitioning = useRef(false);
   const prevViewMode = useRef(viewMode);
   const prevLayoutMode = useRef(layoutMode);
@@ -600,6 +601,10 @@ export default function App() {
       sim.force("link", d3.forceLink(currentEdges).id(d => d.id).distance(150));
     }
 
+    const getLayoutCacheKey = (mode) => `${viewMode}|${activeGroup || ""}|${groupingMode}|${mode}`;
+    const cachedTargets = layoutPositionCacheRef.current.get(getLayoutCacheKey(layoutMode));
+    const hasCachedTargets = cachedTargets && cachedTargets.size > 0;
+
     // LAYOUT FORCES & AXIS
     gMain.select(".timeline-axis").remove();
 
@@ -632,14 +637,26 @@ export default function App() {
     } else {
       sim.force("x", null);
       sim.force("y", null);
-      sim.force("center", d3.forceCenter(0, 0));
-
-      if (isGalaxy) {
-        const maxVal = d3.max(currentNodes, n => n.val) || 1;
-        sim.force("radial", d3.forceRadial(d => (1 - d.val / maxVal) * 400, 0, 0).strength(0.15));
+      if (layoutChanged && hasCachedTargets) {
+        sim.force("center", null);
+        sim.force("radial", null);
+        sim.force("x", d3.forceX(d => {
+          const pos = cachedTargets.get(d.id);
+          return pos ? pos.x : 0;
+        }).strength(0.7));
+        sim.force("y", d3.forceY(d => {
+          const pos = cachedTargets.get(d.id);
+          return pos ? pos.y : 0;
+        }).strength(0.7));
       } else {
-        const maxCites = d3.max(currentNodes, n => n.citationCount) || 1;
-        sim.force("radial", d3.forceRadial(d => (1 - d.citationCount / maxCites) * 300, 0, 0).strength(0.25));
+        sim.force("center", d3.forceCenter(0, 0));
+        if (isGalaxy) {
+          const maxVal = d3.max(currentNodes, n => n.val) || 1;
+          sim.force("radial", d3.forceRadial(d => (1 - d.val / maxVal) * 400, 0, 0).strength(0.15));
+        } else {
+          const maxCites = d3.max(currentNodes, n => n.citationCount) || 1;
+          sim.force("radial", d3.forceRadial(d => (1 - d.citationCount / maxCites) * 300, 0, 0).strength(0.25));
+        }
       }
     }
 
@@ -663,6 +680,15 @@ export default function App() {
         currentNodes.forEach(n => groupPositionsMatch.current.set(n.name, { x: n.x, y: n.y }));
       } else {
         currentNodes.forEach(n => nodePositionsCache.current.set(n.id, { x: n.x, y: n.y }));
+      }
+      {
+        const cacheKey = getLayoutCacheKey(layoutMode);
+        let cache = layoutPositionCacheRef.current.get(cacheKey);
+        if (!cache) {
+          cache = new Map();
+          layoutPositionCacheRef.current.set(cacheKey, cache);
+        }
+        currentNodes.forEach(n => cache.set(n.id, { x: n.x, y: n.y }));
       }
 
       gMain.selectAll(".d3-node").style("opacity", 0);
@@ -697,18 +723,25 @@ export default function App() {
     }
 
     if (shouldAnimateLayout) {
-      sim.velocityDecay(0.65);
-      sim.alphaDecay(0.035);
+      sim.velocityDecay(0.7);
+      sim.alphaDecay(0.02);
       sim.on("tick", () => {
         if (isGalaxy) {
           currentNodes.forEach(n => groupPositionsMatch.current.set(n.name, { x: n.x, y: n.y }));
         } else {
           currentNodes.forEach(n => nodePositionsCache.current.set(n.id, { x: n.x, y: n.y }));
         }
+        const cacheKey = getLayoutCacheKey(layoutMode);
+        let cache = layoutPositionCacheRef.current.get(cacheKey);
+        if (!cache) {
+          cache = new Map();
+          layoutPositionCacheRef.current.set(cacheKey, cache);
+        }
+        currentNodes.forEach(n => cache.set(n.id, { x: n.x, y: n.y }));
         syncPositions(1);
       });
       sim.alpha(1).restart();
-      const stopTimer = d3.timeout(() => sim.stop(), 1000);
+      const stopTimer = d3.timeout(() => sim.stop(), 1500);
       simulationRef.current = sim;
       prevViewMode.current = viewMode;
       prevLayoutMode.current = layoutMode;
