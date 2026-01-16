@@ -41,6 +41,7 @@ export default function App() {
   const prevGroupingModeRef = useRef(groupingMode);
   const prevYAxisModeRef = useRef(yGroupingMode);
   const prevXAxisModeRef = useRef(xAxisMode);
+  const prevSelectedIdRef = useRef(null);
   const edgeRevealTimeoutRef = useRef(null);
   const edgeRevealPendingRef = useRef(false);
   const firstDataRenderRef = useRef(true);
@@ -341,6 +342,11 @@ export default function App() {
 
     // Attach zoom behavior
     svg.call(zoom);
+    svg.on("click.unselect", (event) => {
+      if (viewMode === 'FIELD' && selected) {
+        setSelected(null);
+      }
+    });
     // Initialize zoom position ONLY if it's the first time
     if (svg.select(".g-main").attr("transform") === null) {
       svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8));
@@ -379,18 +385,65 @@ export default function App() {
     } else {
       currentNodes = nodes.filter(n => n.group === activeGroup);
 
+      const selectedId = selected?.id;
+      let connectedEdges = [];
+      let connectedIds = new Set();
+      if (selectedId) {
+        connectedEdges = edges.filter(e => {
+          const s = typeof e.source === 'object' ? e.source.id : e.source;
+          const t = typeof e.target === 'object' ? e.target.id : e.target;
+          return s === selectedId || t === selectedId;
+        });
+        connectedIds = new Set([selectedId]);
+        connectedEdges.forEach(e => {
+          const s = typeof e.source === 'object' ? e.source.id : e.source;
+          const t = typeof e.target === 'object' ? e.target.id : e.target;
+          connectedIds.add(s);
+          connectedIds.add(t);
+        });
+      }
+
+      if (selectedId && connectedEdges.length > 0) {
+        const currentIds = new Set(currentNodes.map(n => n.id));
+        const extraNodes = [];
+        connectedEdges.forEach(e => {
+          const s = typeof e.source === 'object' ? e.source.id : e.source;
+          const t = typeof e.target === 'object' ? e.target.id : e.target;
+          const otherId = s === selectedId ? t : s;
+          if (!currentIds.has(otherId)) {
+            const extra = nodeByIdRef.current.get(String(otherId));
+            if (extra) {
+              currentIds.add(otherId);
+              extraNodes.push({ ...extra, _isExtra: true });
+            }
+          }
+        });
+        if (extraNodes.length > 0) {
+          currentNodes = currentNodes.concat(extraNodes);
+        }
+      }
+
       // Positions are initialized deterministically before simulation.
-      currentEdges = edges.filter(e => {
-        const s = typeof e.source === 'object' ? e.source.id : e.source;
-        const t = typeof e.target === 'object' ? e.target.id : e.target;
-        return currentNodes.find(n => n.id === s) && currentNodes.find(n => n.id === t);
-      });
+      if (selectedId && connectedEdges.length > 0) {
+        currentEdges = connectedEdges.map(e => ({
+          source: typeof e.source === 'object' ? e.source.id : e.source,
+          target: typeof e.target === 'object' ? e.target.id : e.target,
+          importance: e.importance ?? 1
+        }));
+      } else {
+        currentEdges = edges.filter(e => {
+          const s = typeof e.source === 'object' ? e.source.id : e.source;
+          const t = typeof e.target === 'object' ? e.target.id : e.target;
+          return currentNodes.find(n => n.id === s) && currentNodes.find(n => n.id === t);
+        });
+      }
 
       const maxCites = d3.max(currentNodes, d => d.citationCount) || 1;
       const sizeScale = d3.scaleSqrt().domain([0, maxCites]).range([0.8, 2.5]);
       currentNodes.forEach(d => {
         d._scale = sizeScale(d.citationCount);
         d._w = 120 * d._scale; d._h = 50 * d._scale;
+        d._isConnected = selectedId ? connectedIds.has(d.id) : false;
       });
     }
 
@@ -420,6 +473,12 @@ export default function App() {
     };
 
     const defs = svg.select("defs").empty() ? svg.append("defs") : svg.select("defs");
+    const selectedChanged = prevSelectedIdRef.current !== (selected?.id || null);
+    if (!isGalaxy && selectedChanged) {
+      gLinks.selectAll(".d3-link").interrupt().remove();
+      defs.selectAll(".link-gradient").remove();
+      nodePositionsCache.current.clear();
+    }
     const groupingChanged = isGalaxy && (
       prevGroupingModeRef.current !== groupingMode
       || prevYAxisModeRef.current !== yGroupingMode
@@ -566,7 +625,7 @@ export default function App() {
       allNodes.select("rect")
         .attr("width", d => d._w).attr("height", d => d._h)
         .attr("x", d => -d._w / 2).attr("y", d => -d._h / 2)
-        .attr("fill", d => colorScale(d.group));
+        .attr("fill", d => colorScale(d.xGroup || d.group));
 
       const fo = allNodes.select("foreignObject")
         .attr("width", d => d._w - 10).attr("height", d => d._h - 10)
@@ -623,6 +682,14 @@ export default function App() {
 
     const seededRandom = d3.randomLcg(0.42);
 
+    let timelineXScale = null;
+    if (layoutMode === 'TIMELINE') {
+      const years = currentNodes.map(d => isGalaxy ? d.minYear : d.year);
+      const minYear = d3.min(years) || 1990;
+      const maxYear = d3.max(years) || 2025;
+      timelineXScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 0.6, width * 0.6]);
+    }
+
     const applyInitialPositions = () => {
       if (isGalaxy) {
         currentNodes.forEach(n => {
@@ -638,16 +705,34 @@ export default function App() {
         });
       } else {
         const groupAnchor = groupPositionsMatch.current.get(activeGroup) || getDeterministicPoint(activeGroup || "group", 120);
+        const selectedAnchor = selected ? (nodePositionsCache.current.get(selected.id) || groupAnchor) : groupAnchor;
         currentNodes.forEach(n => {
           const cached = nodePositionsCache.current.get(n.id);
-          if (cached) {
+          if (cached && !n._isExtra) {
             n.x = cached.x;
             n.y = cached.y;
+            if (selected && !n._isExtra && !n._isConnected) {
+              n.fx = n.x;
+              n.fy = n.y;
+            } else {
+              n.fx = null;
+              n.fy = null;
+            }
             return;
           }
-          const offset = getDeterministicPoint(n.id, 60);
-          n.x = groupAnchor.x + offset.x + (seededRandom() - 0.5) * 8;
-          n.y = groupAnchor.y + offset.y + (seededRandom() - 0.5) * 8;
+          const offsetRadius = n._isExtra ? 1000 : 60;
+          const offset = getDeterministicPoint(n.id, offsetRadius);
+          const anchor = n._isExtra ? selectedAnchor : groupAnchor;
+          const anchorX = (timelineXScale && n._isExtra) ? timelineXScale(n.year) : anchor.x;
+          n.x = anchorX + offset.x + (seededRandom() - 0.5) * 8;
+          n.y = anchor.y + offset.y + (seededRandom() - 0.5) * 8;
+          if (selected && !n._isExtra && !n._isConnected) {
+            n.fx = n.x;
+            n.fy = n.y;
+          } else {
+            n.fx = null;
+            n.fy = null;
+          }
         });
       }
     };
@@ -657,10 +742,25 @@ export default function App() {
     // --- FORCES & SIMULATION ---
     if (simulationRef.current) simulationRef.current.stop();
 
+    const graphCenterY = -height * 0.1;
+    const selectedNode = !isGalaxy && selected ? currentNodes.find(n => n.id === selected.id) : null;
+    const selectedAnchor = selectedNode ? { x: selectedNode.x, y: selectedNode.y } : { x: 0, y: graphCenterY };
+
+    const hasTimeline = !isGalaxy && (layoutMode === 'TIMELINE' || yGroupingMode === 'TIMELINE');
+
     const sim = d3.forceSimulation(currentNodes)
       .randomSource(seededRandom)
       .force("charge", d3.forceManyBody().strength(isGalaxy ? -400 : -600))
-      .force("collide", d3.forceCollide().radius(d => isGalaxy ? (d.val * 2 + 50) : (d._w * 0.6)));
+      .force("collide", d3.forceCollide().radius(d => {
+        if (isGalaxy) return (d.val * 2 + 50);
+        return (d._w * 0.6) + (d._isExtra ? 90 : 0);
+      }));
+
+    if (!isGalaxy && selected && !hasTimeline) {
+      sim.force("extra-ring", d3.forceRadial(d => (d._isExtra ? 1000 : 0), selectedAnchor.x, selectedAnchor.y).strength(0.9));
+    } else {
+      sim.force("extra-ring", null);
+    }
 
     if (isGalaxy) {
       if (layoutMode === 'CENTRAL' || layoutMode === 'TIMELINE') {
@@ -679,7 +779,6 @@ export default function App() {
     gMain.select(".y-axis").remove();
     gMain.select(".x-axis").remove();
 
-    const graphCenterY = -height * 0.1;
     const sortedYGroups = yGroups.slice().sort((a, b) => a.localeCompare(b));
     const yScale = (() => {
       if (yGroupingMode === 'NONE' || yGroupingMode === 'TIMELINE' || !isGalaxy || sortedYGroups.length === 0) return null;
@@ -864,9 +963,9 @@ export default function App() {
       const years = currentNodes.map(d => isGalaxy ? d.minYear : d.year);
       const minYear = d3.min(years) || 1990;
       const maxYear = d3.max(years) || 2025;
-      const timelineXScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 0.6, width * 0.6]);
+      const timelineScale = timelineXScale || d3.scaleLinear().domain([minYear, maxYear]).range([-width * 0.6, width * 0.6]);
 
-      sim.force("x", d3.forceX(d => timelineXScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
+      sim.force("x", d3.forceX(d => timelineScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
       sim.force("x-band", null);
       if (yTimelineScale) {
         sim.force("y", d3.forceY(d => yTimelineScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
@@ -1056,6 +1155,7 @@ export default function App() {
     prevLayoutMode.current = layoutMode;
     prevXAxisModeRef.current = xAxisMode;
     prevYAxisModeRef.current = yGroupingMode;
+    prevSelectedIdRef.current = selected?.id || null;
     if (hasRenderableNodes) {
       layoutSignatureRef.current = dataSignature;
     }
@@ -1064,7 +1164,7 @@ export default function App() {
       sim.stop();
     };
 
-  }, [viewMode, groupingMode, yGroupingMode, layoutMode, activeGroup, galaxyNodes, nodes, edges, groupEdges, yGroups, xGroups, colorScale, groupXByKey]);
+  }, [viewMode, groupingMode, yGroupingMode, layoutMode, activeGroup, selected, galaxyNodes, nodes, edges, groupEdges, yGroups, xGroups, colorScale, groupXByKey]);
 
   // HIGHLIGHTING EFFECT
   useEffect(() => {
