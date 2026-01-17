@@ -42,6 +42,7 @@ export default function App() {
   const prevYAxisModeRef = useRef(yGroupingMode);
   const prevXAxisModeRef = useRef(xAxisMode);
   const prevSelectedIdRef = useRef(null);
+  const returnToGalaxyRef = useRef(false);
   const edgeRevealTimeoutRef = useRef(null);
   const edgeRevealPendingRef = useRef(false);
   const firstDataRenderRef = useRef(true);
@@ -254,6 +255,7 @@ export default function App() {
 
   const handleBackToGalaxy = () => {
     lastActiveGroupRef.current = activeGroup;
+    returnToGalaxyRef.current = true;
     setActiveGroup(null);
     setViewMode('GALAXY');
     setSelected(null);
@@ -325,18 +327,15 @@ export default function App() {
             handleGroupClick(closest.name);
             // Smooth transition: zoom to 0.8 scale of the field view
             svg.transition().duration(750)
-              .call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8))
+              .call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.2))
               .on("end", () => { isTransitioning.current = false; });
           }
         }
 
         // 2. Zooming OUT (Field -> Galaxy)
-        if ((viewMode === 'FIELD' || viewMode === 'DETAIL') && k < 0.45) {
+        if ((viewMode === 'FIELD' || viewMode === 'DETAIL') && k < 0.2) {
           isTransitioning.current = true;
           handleBackToGalaxy();
-          svg.transition().duration(750)
-            .call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8))
-            .on("end", () => { isTransitioning.current = false; });
         }
       });
 
@@ -349,20 +348,20 @@ export default function App() {
     });
     // Initialize zoom position ONLY if it's the first time
     if (svg.select(".g-main").attr("transform") === null) {
-      svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8));
+      svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.3));
     }
     // When returning to Galaxy, focus on the last active group
     if (viewMode === 'GALAXY' && prevViewMode.current !== 'GALAXY' && lastActiveGroupRef.current) {
       const groupName = lastActiveGroupRef.current;
       const pos = groupPositionsMatch.current.get(groupName);
       if (pos) {
-        const scale = 0.8;
+        const scale = 1.2;
         const tx = width / 2 - pos.x * scale;
         const ty = height / 2 - pos.y * scale;
-        svg.transition().duration(800)
-          .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+        svg.call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
       }
       lastActiveGroupRef.current = null;
+      isTransitioning.current = false;
     }
 
     // Determine current dataset
@@ -675,10 +674,13 @@ export default function App() {
     const layoutChanged = prevLayoutMode.current !== layoutMode;
     const shouldAnimateLayout = layoutChanged && !viewChanged;
     const hasRenderableNodes = currentNodes.length > 0;
+    const isReturningGalaxy = viewMode === 'GALAXY' && returnToGalaxyRef.current;
     const shouldPrecompute = (signatureChanged && !shouldAnimateLayout && hasRenderableNodes)
       || (hasRenderableNodes && firstDataRenderRef.current);
-    const shouldIntro = shouldPrecompute;
-    const introScale = isGalaxy ? 0.2 : 1;
+    const shouldRunIntro = shouldPrecompute || isReturningGalaxy;
+    const shouldIntro = shouldRunIntro;
+    const introStartScale = isGalaxy ? (isReturningGalaxy ? 2 : 0.2) : 0.2;
+    const introTargetScale = isGalaxy ? (isReturningGalaxy ? 1.4 : 1) : 1;
 
     const seededRandom = d3.randomLcg(0.42);
 
@@ -687,7 +689,7 @@ export default function App() {
       const years = currentNodes.map(d => isGalaxy ? d.minYear : d.year);
       const minYear = d3.min(years) || 1990;
       const maxYear = d3.max(years) || 2025;
-      timelineXScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 0.6, width * 0.6]);
+      timelineXScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 1.2, width * 1.2]);
     }
 
     const applyInitialPositions = () => {
@@ -739,6 +741,27 @@ export default function App() {
 
     applyInitialPositions();
 
+    // When entering Field view, start zoomed further out
+    if (viewMode === 'FIELD' && prevViewMode.current !== 'FIELD') {
+      isTransitioning.current = true;
+      svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.12));
+      svg.transition().duration(650)
+        .call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.3))
+        .on("end", () => { isTransitioning.current = false; });
+    }
+
+    // Center selected node in Field view after positions exist
+    if (viewMode === 'FIELD' && selected) {
+      const selNode = currentNodes.find(n => n.id === selected.id);
+      if (selNode) {
+        const t = d3.zoomTransform(svg.node());
+        const tx = width / 2 - selNode.x * t.k;
+        const ty = height / 2 - selNode.y * t.k;
+        svg.transition().duration(450)
+          .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(t.k));
+      }
+    }
+
     // --- FORCES & SIMULATION ---
     if (simulationRef.current) simulationRef.current.stop();
 
@@ -750,11 +773,14 @@ export default function App() {
 
     const sim = d3.forceSimulation(currentNodes)
       .randomSource(seededRandom)
-      .force("charge", d3.forceManyBody().strength(isGalaxy ? -400 : -600))
+      .force("charge", d3.forceManyBody().strength(d => {
+        if (isGalaxy) return -400;
+        return d._isExtra ? -1600 : -600;
+      }))
       .force("collide", d3.forceCollide().radius(d => {
         if (isGalaxy) return (d.val * 2 + 50);
-        return (d._w * 0.6) + (d._isExtra ? 90 : 0);
-      }));
+        return (d._w * 0.6) + (d._isExtra ? 260 : 40);
+      }).iterations(4));
 
     if (!isGalaxy && selected && !hasTimeline) {
       sim.force("extra-ring", d3.forceRadial(d => (d._isExtra ? 1000 : 0), selectedAnchor.x, selectedAnchor.y).strength(0.9));
@@ -963,7 +989,7 @@ export default function App() {
       const years = currentNodes.map(d => isGalaxy ? d.minYear : d.year);
       const minYear = d3.min(years) || 1990;
       const maxYear = d3.max(years) || 2025;
-      const timelineScale = timelineXScale || d3.scaleLinear().domain([minYear, maxYear]).range([-width * 0.6, width * 0.6]);
+      const timelineScale = timelineXScale || d3.scaleLinear().domain([minYear, maxYear]).range([-width * 1.2, width * 1.2]);
 
       sim.force("x", d3.forceX(d => timelineScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
       sim.force("x-band", null);
@@ -1051,7 +1077,7 @@ export default function App() {
       }, delayMs);
     };
 
-    if (shouldPrecompute) {
+    if (shouldRunIntro) {
       if (shouldIntro) {
         edgeRevealPendingRef.current = true;
         gLinks.selectAll(".d3-link").interrupt().attr("opacity", 0).attr("stroke-opacity", 0);
@@ -1083,22 +1109,29 @@ export default function App() {
 
       gNodes.selectAll(".d3-node").style("opacity", 0);
       gLinks.selectAll(".d3-link").attr("stroke-opacity", 0);
-      syncPositions(introScale);
+      syncPositions(introStartScale);
 
       if (shouldIntro) {
         const introNodes = gNodes.selectAll(".d3-node");
-        if (isGalaxy) {
-          introNodes
-            .transition().duration(900).ease(d3.easeQuadOut)
-            .style("opacity", 1)
-            .attr("transform", d => `translate(${d.x}, ${d.y}) scale(1)`);
-        } else {
-          introNodes
-            .transition().duration(900).ease(d3.easeQuadOut)
-            .style("opacity", 1)
-            .attr("transform", d => `translate(${d.x}, ${d.y}) scale(1)`);
-        }
+        introNodes
+          .transition().duration(900).ease(d3.easeQuadOut)
+          .style("opacity", 1)
+          .attr("transform", d => `translate(${d.x}, ${d.y}) scale(${introTargetScale})`);
         scheduleEdgeReveal(2000, isGalaxy ? 0.55 : 0.9);
+        if (isReturningGalaxy) {
+          sim.on("tick", () => syncPositions(introTargetScale));
+          sim.alpha(0.6).restart();
+          const settleTimer = d3.timeout(() => {
+            sim.stop();
+            sim.on("tick", null);
+            syncPositions(introTargetScale);
+          }, 900);
+          simulationRef.current = sim;
+          return () => {
+            settleTimer.stop();
+            sim.stop();
+          };
+        }
       } else {
         gNodes.selectAll(".d3-node").style("opacity", 1);
         if (!edgeRevealPendingRef.current) {
@@ -1156,6 +1189,9 @@ export default function App() {
     prevXAxisModeRef.current = xAxisMode;
     prevYAxisModeRef.current = yGroupingMode;
     prevSelectedIdRef.current = selected?.id || null;
+    if (viewMode === 'GALAXY' && returnToGalaxyRef.current) {
+      returnToGalaxyRef.current = false;
+    }
     if (hasRenderableNodes) {
       layoutSignatureRef.current = dataSignature;
     }
