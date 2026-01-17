@@ -1,0 +1,12 @@
+{
+  "nodeCount": 1996,
+  "edgeCount": 11542,
+  "usedLandmarks": false,
+  "hasClusters": false,
+  "filters": {
+    "minCitations": 10,
+    "topN": 0,
+    "fields": null,
+    "yearRange": null
+  }
+}

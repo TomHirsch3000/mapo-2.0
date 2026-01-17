@@ -523,6 +523,16 @@ def main():
     parser.add_argument("--year-to", type=int, default=None,
                         help="Maximum publication year (inclusive)")
 
+    # Output filename options
+    parser.add_argument("--output-nodes", type=str, default="nodes.json",
+                        help="Output filename for nodes JSON (default: nodes.json)")
+    parser.add_argument("--output-edges", type=str, default="edges.json",
+                        help="Output filename for edges JSON (default: edges.json)")
+    parser.add_argument("--output-metadata", type=str, default="metadata.json",
+                        help="Output filename for metadata JSON (default: metadata.json)")
+    parser.add_argument("--output-clusters", type=str, default="clusters.json",
+                        help="Output filename for clusters JSON (default: clusters.json)")
+
     args = parser.parse_args()
 
     conn = open_db(args.db)
@@ -591,13 +601,13 @@ def main():
         
         save_json(
             dict(cluster_summary),
-            "clusters.json",
+            args.output_clusters,
             args.frontend_dir
         )
 
     # Export main files
-    save_json(nodes, "nodes.json", args.frontend_dir)
-    save_json(edges, "edges.json", args.frontend_dir)
+    save_json(nodes, args.output_nodes, args.frontend_dir)
+    save_json(edges, args.output_edges, args.frontend_dir)
     
     # Export metadata
     metadata = {
@@ -612,7 +622,7 @@ def main():
             "yearRange": [args.year_from, args.year_to] if args.year_from or args.year_to else None,
         }
     }
-    save_json(metadata, "metadata.json", args.frontend_dir)
+    save_json(metadata, args.output_metadata, args.frontend_dir)
 
     conn.close()
     print("\n[info] Done! Your enhanced visualization data is ready.")

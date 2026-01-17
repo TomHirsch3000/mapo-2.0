@@ -63,6 +63,13 @@ python import_openalex.py ^
   --email tom.hirsch3000@gmail.com ^
   --reset
 
+# new comcept import for testing top 2000 papers from astrophysics
+python import_openalex.py ^
+  --topic-name "Astrophysics" ^
+  --sample 2000 ^
+  --db papers_astrophysics.db ^
+  --email tom.hirsch3000@gmail.com
+
 
 run live batch by year
 
@@ -150,6 +157,8 @@ python rebuild_citations_openalex.py ^
   --id-chunk-size 5000 ^
   --batch-size 50
 
+# run for astrophysics
+python rebuild_citations_openalex.py --db papers_astrophysics.db
 
 -------------------------------------------------
 Find rows missing abstracts from semantic scholar and arxiv
@@ -159,6 +168,8 @@ Find rows missing abstracts from semantic scholar and arxiv
 python fetch_abstracts_s2_arxiv.py --db papers_particle_physics.db --verbose --limit 50
 
 
+# run for astrophysics
+python fetch_abstracts_s2_arxiv.py --db papers_astrophysics.db
 
 -------------------------------------------------
 generate AI metadata
@@ -174,6 +185,10 @@ python process_ai_metadata.py --db papers_particle_physics_all.db --only-unproce
 
 if I just want to process the papers in the node.json then use this
 python process_ai_for_landmarks.py --db papers_particle_physics_all.db --from-json nodes.json
+
+# run for astrophysics
+python process_ai_metadata.py --db papers_astrophysics.db
+
 -------------------------------------------------
 Generate nodes.json + edges.json for the frontend
 -------------------------------------------------
@@ -201,6 +216,27 @@ python build_frontend_json.py ^
   --min-citations 50 ^
   --frontend-dir ../arxiv-3d-frontend/public
 
+
+# run for astrophysics
+
+python build_frontend_json.py ^
+  --db papers_astrophysics.db ^
+  --use-landmarks ^
+  --landmark-count 500 ^
+  --compute-clusters ^
+  --cluster-threshold 3 ^
+  --min-citations 50 ^
+  --frontend-dir ../arxiv-3d-frontend/public
+
+
+  python build_frontend_json.py ^
+  --db papers_astrophysics.db ^
+  --output-nodes astrophysics_nodes.json ^
+  --output-edges astrophysics_edges.json ^
+  --output-metadata astrophysics_metadata.json ^
+  --output-clusters astrophysics_clusters.json ^
+  --min-citations 10 ^
+  --frontend-dir ../arxiv-3d-frontend/public
 
 -------------------------------------------------
 build for hosting
