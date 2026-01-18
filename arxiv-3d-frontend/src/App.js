@@ -16,11 +16,13 @@ export default function App() {
   // Data State
   const [rawNodes, setRawNodes] = useState([]);
   const [rawEdges, setRawEdges] = useState([]);
+  const [universeData, setUniverseData] = useState(null);
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
+  const [activeGalaxy, setActiveGalaxy] = useState(null);
 
   // View State
-  const [viewMode, setViewMode] = useState('GALAXY'); // 'GALAXY' | 'FIELD' | 'DETAIL'
+  const [viewMode, setViewMode] = useState('UNIVERSE'); // 'UNIVERSE' | 'GALAXY' | 'FIELD' | 'DETAIL'
   const [xAxisMode, setXAxisMode] = useState('NONE'); // 'NONE' | 'FIELD' | 'AUTHOR' | 'INSTITUTION' | 'TIMELINE'
   const [yGroupingMode, setYGroupingMode] = useState('NONE'); // 'NONE' | 'FIELD' | 'AUTHOR' | 'INSTITUTION' | 'TIMELINE'
   const [activeGroup, setActiveGroup] = useState(null);
@@ -43,6 +45,7 @@ export default function App() {
   const prevXAxisModeRef = useRef(xAxisMode);
   const prevSelectedIdRef = useRef(null);
   const returnToGalaxyRef = useRef(false);
+  const returnToUniverseRef = useRef(false);
   const edgeRevealTimeoutRef = useRef(null);
   const edgeRevealPendingRef = useRef(false);
   const firstDataRenderRef = useRef(true);
@@ -77,18 +80,33 @@ export default function App() {
   const sanitizeId = (value) => String(value).replace(/[^a-zA-Z0-9_-]/g, "_");
   const getEdgeId = (d) => (typeof d === "object" ? (d.id || d.name) : d);
 
-  /** Load data */
+  /** Load universe data on mount */
   useEffect(() => {
+    fetch("./universe.json")
+      .then(r => r.json())
+      .then(data => {
+        setUniverseData(data);
+      })
+      .catch(err => console.error("Failed to load universe data:", err));
+  }, []);
+
+  /** Load galaxy data when activeGalaxy changes */
+  useEffect(() => {
+    if (!activeGalaxy || !universeData) return;
+    
+    const galaxy = universeData.nodes?.find(g => g.id === activeGalaxy);
+    if (!galaxy) return;
+
     Promise.all([
-      fetch("./nodes.json").then(r => r.json()),
-      fetch("./edges.json").then(r => r.json()),
+      fetch(`./${galaxy.nodesFile}`).then(r => r.json()),
+      fetch(`./${galaxy.edgesFile}`).then(r => r.json()),
     ])
       .then(([n, e]) => {
         setRawNodes(Array.isArray(n) ? n : []);
         setRawEdges(Array.isArray(e) ? e : []);
       })
-      .catch(err => console.error("Failed to load:", err));
-  }, []);
+      .catch(err => console.error("Failed to load galaxy data:", err));
+  }, [activeGalaxy, universeData]);
 
   /* Data Processing */
   const { nodes, groupStats, xGroups, groupEdges, yGroups } = useMemo(() => {
@@ -216,6 +234,55 @@ export default function App() {
   const groupLabelByKey = useMemo(() => new Map(groupStats.map(g => [g.key, g.name])), [groupStats]);
   const groupXByKey = useMemo(() => new Map(groupStats.map(g => [g.key, g.xGroup])), [groupStats]);
 
+  // Universe View Data (Galaxy Nodes)
+  const universeNodes = useMemo(() => {
+    if (viewMode !== 'UNIVERSE' || !universeData) return [];
+
+    const galaxyNodes = (universeData.nodes || []).map((galaxy) => {
+      const existing = groupPositionsMatch.current.get(galaxy.id);
+      
+      // Size based on node count
+      const val = galaxy.size || (Math.sqrt(galaxy.nodeCount || 0) * 0.3 + 10);
+      
+      // Use position from universe.json or deterministic fallback
+      const position = galaxy.position || [0, 0, 0];
+      const node = {
+        id: galaxy.id,
+        key: galaxy.id,
+        type: 'galaxy',
+        name: galaxy.name,
+        nodeCount: galaxy.nodeCount || 0,
+        edgeCount: galaxy.edgeCount || 0,
+        val: Math.max(val, 15),
+        data: galaxy,
+        // Init positions from universe.json
+        x: existing ? existing.x : position[0],
+        y: existing ? existing.y : position[1],
+      };
+
+      return node;
+    });
+
+    // Add menu/info node to the universe view
+    const menuNode = {
+      id: 'mapo-menu-node',
+      key: 'mapo-menu-node',
+      type: 'menu',
+      name: 'ℹ️',
+      nodeCount: 0,
+      edgeCount: 0,
+      val: 12, // Smaller, subtle size
+      isMenuNode: true,
+      // Position in top-right area of the view (will be adjusted by zoom transform)
+      x: 800,
+      y: -600,
+      fx: 800, // Fixed position
+      fy: -600,
+    };
+
+    return [...galaxyNodes, menuNode];
+  }, [universeData, viewMode]);
+
   // Galaxy View Data (Group Nodes)
   const galaxyNodes = useMemo(() => {
     if (viewMode !== 'GALAXY') return [];
@@ -246,6 +313,24 @@ export default function App() {
   }, [groupStats, viewMode]);
 
   // Transitions
+  const handleGalaxyClick = (galaxyId) => {
+    console.log("Galaxy clicked:", galaxyId);
+    setActiveGalaxy(galaxyId);
+    setViewMode('GALAXY');
+    setActiveGroup(null);
+    setSelected(null);
+  };
+
+  const handleBackToUniverse = () => {
+    returnToUniverseRef.current = true;
+    setActiveGalaxy(null);
+    setActiveGroup(null);
+    setViewMode('UNIVERSE');
+    setSelected(null);
+    setRawNodes([]);
+    setRawEdges([]);
+  };
+
   const handleGroupClick = (groupKey) => {
     console.log("Group clicked:", groupKey);
     setActiveGroup(groupKey);
@@ -306,7 +391,35 @@ export default function App() {
         // --- SEMANTIC ZOOM LOGIC ---
         const k = event.transform.k;
 
-        // 1. Zooming IN (Galaxy -> Field)
+        // 1. Zooming IN (Universe -> Galaxy)
+        if (viewMode === 'UNIVERSE' && k > 1.8) {
+          const cx = (width / 2 - event.transform.x) / k;
+          const cy = (height / 2 - event.transform.y) / k;
+
+          let closest = null;
+          let minD = Infinity;
+
+          universeNodes.forEach(n => {
+            // Skip menu node - don't navigate to it
+            if (n.isMenuNode) return;
+            const dx = n.x - cx;
+            const dy = n.y - cy;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < minD) { minD = d; closest = n; }
+          });
+
+          // Threshold: expanded for easier navigation
+          if (closest && minD < (closest.val * 2.5 + 100)) {
+            isTransitioning.current = true;
+            handleGalaxyClick(closest.id);
+            // Smooth transition: zoom to 0.3 scale of the galaxy view
+            svg.transition().duration(750)
+              .call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.3))
+              .on("end", () => { isTransitioning.current = false; });
+          }
+        }
+
+        // 2. Zooming IN (Galaxy -> Field)
         if (viewMode === 'GALAXY' && k > 1.8) {
           const cx = (width / 2 - event.transform.x) / k;
           const cy = (height / 2 - event.transform.y) / k;
@@ -332,7 +445,13 @@ export default function App() {
           }
         }
 
-        // 2. Zooming OUT (Field -> Galaxy)
+        // 3. Zooming OUT (Galaxy -> Universe)
+        if (viewMode === 'GALAXY' && k < 0.15) {
+          isTransitioning.current = true;
+          handleBackToUniverse();
+        }
+
+        // 4. Zooming OUT (Field -> Galaxy)
         if ((viewMode === 'FIELD' || viewMode === 'DETAIL') && k < 0.2) {
           isTransitioning.current = true;
           handleBackToGalaxy();
@@ -350,8 +469,21 @@ export default function App() {
     if (svg.select(".g-main").attr("transform") === null) {
       svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.3));
     }
+    // When returning to Universe, reset zoom
+    if (viewMode === 'UNIVERSE' && prevViewMode.current !== 'UNIVERSE') {
+      svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.3));
+      returnToUniverseRef.current = false;
+      isTransitioning.current = false;
+    }
+
+    // When entering Galaxy from Universe, set zoom
+    if (viewMode === 'GALAXY' && prevViewMode.current === 'UNIVERSE') {
+      svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.3));
+      isTransitioning.current = false;
+    }
+
     // When returning to Galaxy, focus on the last active group
-    if (viewMode === 'GALAXY' && prevViewMode.current !== 'GALAXY' && lastActiveGroupRef.current) {
+    if (viewMode === 'GALAXY' && prevViewMode.current !== 'GALAXY' && prevViewMode.current !== 'UNIVERSE' && lastActiveGroupRef.current) {
       const groupName = lastActiveGroupRef.current;
       const pos = groupPositionsMatch.current.get(groupName);
       if (pos) {
@@ -367,9 +499,13 @@ export default function App() {
     // Determine current dataset
     let currentNodes = [];
     let currentEdges = [];
+    let isUniverse = (viewMode === 'UNIVERSE');
     let isGalaxy = (viewMode === 'GALAXY');
 
-    if (isGalaxy) {
+    if (isUniverse) {
+      currentNodes = universeNodes;
+      currentEdges = []; // No edges in universe view
+    } else if (isGalaxy) {
       currentNodes = galaxyNodes;
       const hoveredGroupKey = hovered?.id;
       const galaxyEdges = hoveredGroupKey
@@ -511,15 +647,19 @@ export default function App() {
       setGradientStops(d3.select(this), getBaseEdgeColor(d));
     });
     // --- EXPLICIT CLEANUP (LINKS) ---
-    // If we are in Galaxy, kill paper links. If in Field, kill galaxy links.
+    // If we are in Universe, remove all links. If in Galaxy, kill paper links. If in Field, kill galaxy links.
     // Also remove generic .d3-link if they don't match current expected class (legacy cleanup)
-    gLinks.selectAll(isGalaxy ? ".type-paper-link" : ".type-galaxy-link").remove();
-    // Safety: Remove any link that doesn't have the correct class for current view
-    // (This prevents "plain" links from sticking around)
-    gLinks.selectAll(".d3-link").filter(function () {
-      const cl = d3.select(this).attr("class");
-      return !cl.includes(isGalaxy ? 'type-galaxy-link' : 'type-paper-link');
-    }).remove();
+    if (isUniverse) {
+      gLinks.selectAll(".d3-link").remove();
+    } else {
+      gLinks.selectAll(isGalaxy ? ".type-paper-link" : ".type-galaxy-link").remove();
+      // Safety: Remove any link that doesn't have the correct class for current view
+      // (This prevents "plain" links from sticking around)
+      gLinks.selectAll(".d3-link").filter(function () {
+        const cl = d3.select(this).attr("class");
+        return !cl.includes(isGalaxy ? 'type-galaxy-link' : 'type-paper-link');
+      }).remove();
+    }
 
     const linkJoin = gLinks.selectAll(".d3-link")
       // Namespace key by view type to force full replacement on view switch
@@ -528,15 +668,15 @@ export default function App() {
     linkJoin.exit().transition().duration(500).attr("stroke-opacity", 0).remove();
 
     const linksEntry = linkJoin.enter().append("path")
-      .attr("class", `d3-link ${isGalaxy ? 'type-galaxy-link' : 'type-paper-link'}`)
+      .attr("class", `d3-link ${isUniverse ? 'type-universe-link' : (isGalaxy ? 'type-galaxy-link' : 'type-paper-link')}`)
       .attr("fill", "none")
       .attr("stroke-linecap", "round")
       .attr("stroke-opacity", 0);
 
     // Update both new and existing
     const links = linksEntry.merge(linkJoin)
-      .attr("class", `d3-link ${isGalaxy ? 'type-galaxy-link' : 'type-paper-link'}`) // Ensure class is correct on update
-      .attr("stroke-width", d => isGalaxy ? Math.max(1.6, Math.sqrt(d.weight || 1) + 0.8) : 6)
+      .attr("class", `d3-link ${isUniverse ? 'type-universe-link' : (isGalaxy ? 'type-galaxy-link' : 'type-paper-link')}`) // Ensure class is correct on update
+      .attr("stroke-width", d => isUniverse ? 0 : (isGalaxy ? Math.max(1.6, Math.sqrt(d.weight || 1) + 0.8) : 6))
       .attr("stroke", d => `url(#${getGradientId(d)})`)
       .attr("opacity", 0)
       .attr("stroke-opacity", 0);
@@ -553,7 +693,8 @@ export default function App() {
         // Check if this node is "incompatible" with current view
         // e.g. We are in FIELD mode, but this is a Group node
         const isGroupNode = d.id.startsWith("group-");
-        const isWrongType = (isGalaxy && !isGroupNode) || (!isGalaxy && isGroupNode);
+        const isGalaxyNode = d.type === 'galaxy';
+        const isWrongType = (isUniverse && !isGalaxyNode) || (isGalaxy && !isGroupNode) || (!isGalaxy && !isUniverse && isGroupNode) || (!isGalaxy && !isUniverse && isGalaxyNode);
 
         const el = d3.select(this);
 
@@ -568,31 +709,68 @@ export default function App() {
 
     // ENTER
     const nodesEntry = nodeJoin.enter().append("g")
-      .attr("class", d => `d3-node ${isGalaxy ? 'type-group' : 'type-paper'}`)
+      .attr("class", d => `d3-node ${isUniverse ? 'type-galaxy' : (isGalaxy ? 'type-group' : 'type-paper')}`)
       .attr("cursor", "pointer")
       .style("opacity", 0) // Start invisible
       .on("click", (e, d) => {
         e.stopPropagation();
-        if (isGalaxy) handleGroupClick(d.key);
+        if (isUniverse && d.isMenuNode) {
+          // Don't navigate when clicking menu node, just keep it selected/hovered
+          setSelected({ ...d, isMenuNode: true });
+          return;
+        }
+        if (isUniverse) handleGalaxyClick(d.id);
+        else if (isGalaxy) handleGroupClick(d.key);
         else handlePaperClick(d);
       })
-      .on("mouseover", (e, d) => setHovered(isGalaxy ? {
-        id: d.key,
-        title: d.name,
-        year: `Est. ${d.minYear}`,
-        citationCount: d.data.totalCitations,
-        groupCount: d.data.count,
-        minYear: d.minYear,
-        field: "Galaxy Group",
-        abstract: `${d.data.count} papers in this cluster. Combined citation impact of ${d.data.totalCitations}.`
-      } : d))
-      .on("mouseout", () => setHovered(null));
+      .on("mouseover", (e, d) => {
+        if (isUniverse && d.isMenuNode) {
+          setHovered({
+            id: d.id,
+            title: "About This Map",
+            isMenuNode: true,
+          });
+        } else if (isUniverse) {
+          setHovered({
+            id: d.id,
+            title: d.name,
+            citationCount: d.nodeCount,
+            groupCount: d.nodeCount,
+            edgeCount: d.edgeCount,
+            field: "Galaxy",
+            abstract: `${d.nodeCount} papers in this galaxy. ${d.edgeCount} connections.`
+          });
+        } else if (isGalaxy) {
+          setHovered({
+            id: d.key,
+            title: d.name,
+            year: `Est. ${d.minYear}`,
+            citationCount: d.data.totalCitations,
+            groupCount: d.data.count,
+            minYear: d.minYear,
+            field: "Galaxy Group",
+            abstract: `${d.data.count} papers in this cluster. Combined citation impact of ${d.data.totalCitations}.`
+          });
+        } else {
+          setHovered(d);
+        }
+      })
+      .on("mouseout", (e, d) => {
+        // Don't clear hover if menu node is selected/hovered
+        if (d.isMenuNode && (selected?.isMenuNode || hovered?.isMenuNode)) {
+          return;
+        }
+        // Clear hover for non-menu nodes unless menu is selected
+        if (!selected?.isMenuNode) {
+          setHovered(null);
+        }
+      });
 
     // Keep new nodes hidden until we pre-calc positions (no movement on appearance)
     nodesEntry.style("opacity", 0);
 
     // Construct Node content based on type
-    if (isGalaxy) {
+    if (isUniverse || isGalaxy) {
       nodesEntry.append("circle").attr("class", "orbit").attr("r", d => d.val * 2.5).attr("fill-opacity", 0.15);
       nodesEntry.append("circle").attr("class", "core").attr("r", d => d.val * 0.8).attr("fill-opacity", 0.8).style("filter", "blur(1px)");
       nodesEntry.append("text").attr("class", "label-main").attr("text-anchor", "middle").attr("dy", d => d.val * 2 + 20)
@@ -610,7 +788,30 @@ export default function App() {
     // Merge for updates
     const allNodes = nodesEntry.merge(nodeJoin);
 
-    if (isGalaxy) {
+    if (isUniverse) {
+      // Universe nodes - use a color scheme based on galaxy id
+      const universeColorScale = d3.scaleOrdinal(d3.schemeTableau10);
+      allNodes.select(".orbit")
+        .attr("fill", d => d.isMenuNode ? "#94a3b8" : universeColorScale(d.id))
+        .attr("r", d => d.val * 2.5)
+        .attr("fill-opacity", d => d.isMenuNode ? 0.08 : 0.15);
+      allNodes.select(".core")
+        .attr("fill", d => d.isMenuNode ? "#64748b" : universeColorScale(d.id))
+        .attr("r", d => d.val * 0.8)
+        .attr("fill-opacity", d => d.isMenuNode ? 0.4 : 0.8);
+      allNodes.select(".label-main")
+        .text(d => d.isMenuNode ? d.name : (d.name.length > 25 ? d.name.substring(0, 22) + "..." : d.name))
+        .attr("dy", d => d.val * 2 + 20)
+        .style("font-size", d => d.isMenuNode ? "20px" : "16px");
+      allNodes.select(".label-sub")
+        .text(d => d.isMenuNode ? "" : `${d.nodeCount} papers`)
+        .attr("dy", d => d.val * 2 + 40)
+        .style("opacity", d => d.isMenuNode ? 0 : 1);
+
+      // Remove Field elements if switching types
+      allNodes.select("rect").remove();
+      allNodes.select("foreignObject").remove();
+    } else if (isGalaxy) {
       allNodes.select(".orbit").attr("fill", d => colorScale(d.xGroup)).attr("r", d => d.val * 2.5);
       allNodes.select(".core").attr("fill", d => colorScale(d.xGroup)).attr("r", d => d.val * 0.8);
       allNodes.select(".label-main").text(d => d.name.length > 25 ? d.name.substring(0, 22) + "..." : d.name).attr("dy", d => d.val * 2 + 20);
@@ -677,7 +878,8 @@ export default function App() {
     const isReturningGalaxy = viewMode === 'GALAXY' && returnToGalaxyRef.current;
     const shouldPrecompute = (signatureChanged && !shouldAnimateLayout && hasRenderableNodes)
       || (hasRenderableNodes && firstDataRenderRef.current);
-    const shouldRunIntro = shouldPrecompute || isReturningGalaxy;
+    // Skip precompute for universe view since positions are fixed from universe.json
+    const shouldRunIntro = (!isUniverse && shouldPrecompute) || isReturningGalaxy;
     const shouldIntro = shouldRunIntro;
     const introStartScale = isGalaxy ? (isReturningGalaxy ? 2 : 0.2) : 0.2;
     const introTargetScale = isGalaxy ? (isReturningGalaxy ? 1.4 : 1) : 1;
@@ -693,7 +895,39 @@ export default function App() {
     }
 
     const applyInitialPositions = () => {
-      if (isGalaxy) {
+      if (isUniverse) {
+        // Universe view: use positions from universe.json
+        currentNodes.forEach(n => {
+          // Get position from data (galaxy.position) - this comes from universe.json
+          const position = (n.data && n.data.position) ? n.data.position : null;
+          
+          // Prioritize position from universe.json over cached positions
+          if (position && (position[0] !== 0 || position[1] !== 0)) {
+            // Use position from universe.json (non-zero)
+            n.x = position[0];
+            n.y = position[1];
+          } else {
+            // Fallback: check if node already has correct position, then cached, then keep existing
+            const cached = groupPositionsMatch.current.get(n.key || n.id);
+            if (n.x && n.y && (n.x !== 0 || n.y !== 0)) {
+              // Node already has a position (from initial creation), keep it
+              // Don't overwrite
+            } else if (cached && (cached.x !== 0 || cached.y !== 0)) {
+              // Use cached position if it's not at origin
+              n.x = cached.x;
+              n.y = cached.y;
+            } else {
+              // Final fallback: keep existing or use (0, 0)
+              n.x = n.x || 0;
+              n.y = n.y || 0;
+            }
+          }
+          
+          // Fix positions to prevent force simulation from moving them
+          n.fx = n.x;
+          n.fy = n.y;
+        });
+      } else if (isGalaxy) {
         currentNodes.forEach(n => {
           const cached = groupPositionsMatch.current.get(n.key);
           if (cached) {
@@ -774,10 +1008,12 @@ export default function App() {
     const sim = d3.forceSimulation(currentNodes)
       .randomSource(seededRandom)
       .force("charge", d3.forceManyBody().strength(d => {
+        if (isUniverse) return -200; // Lighter repulsion for universe view
         if (isGalaxy) return -400;
         return d._isExtra ? -1600 : -600;
       }))
       .force("collide", d3.forceCollide().radius(d => {
+        if (isUniverse) return (d.val * 2 + 80); // Keep galaxies well separated
         if (isGalaxy) return (d.val * 2 + 50);
         return (d._w * 0.6) + (d._isExtra ? 260 : 40);
       }).iterations(4));
@@ -788,7 +1024,13 @@ export default function App() {
       sim.force("extra-ring", null);
     }
 
-    if (isGalaxy) {
+    if (isUniverse) {
+      // Universe view: Disable forces that would move nodes - positions are fixed
+      sim.force("center", null);
+      sim.force("link", null);
+      sim.force("charge", null);
+      sim.force("collide", d3.forceCollide().radius(d => d.val * 2 + 80).iterations(4)); // Keep collision to prevent overlap
+    } else if (isGalaxy) {
       if (layoutMode === 'CENTRAL' || layoutMode === 'TIMELINE') {
         sim.force("link", d3.forceLink(currentEdges).id(d => d.key).distance(200).strength(layoutMode === 'TIMELINE' ? 0.01 : 0.05));
       }
@@ -1033,7 +1275,9 @@ export default function App() {
           return pos ? pos.y : 0;
         }).strength(0.7));
       } else {
-        sim.force("center", d3.forceCenter(0, graphCenterY));
+        if (!isUniverse) {
+          sim.force("center", d3.forceCenter(0, graphCenterY));
+        }
         if (isGalaxy) {
           const maxVal = d3.max(currentNodes, n => n.val) || 1;
           sim.force("radial", d3.forceRadial(d => (1 - d.val / maxVal) * 400, 0, 0).strength(0.15));
@@ -1092,7 +1336,12 @@ export default function App() {
         sim.tick();
         ticks += 1;
       }
-      if (isGalaxy) {
+      if (isUniverse) {
+        // Universe nodes: save positions to cache
+        currentNodes.forEach(n => {
+          groupPositionsMatch.current.set(n.key || n.id, { x: n.x, y: n.y });
+        });
+      } else if (isGalaxy) {
         currentNodes.forEach(n => groupPositionsMatch.current.set(n.key, { x: n.x, y: n.y }));
       } else {
         currentNodes.forEach(n => nodePositionsCache.current.set(n.id, { x: n.x, y: n.y }));
@@ -1200,7 +1449,7 @@ export default function App() {
       sim.stop();
     };
 
-  }, [viewMode, groupingMode, yGroupingMode, layoutMode, activeGroup, selected, galaxyNodes, nodes, edges, groupEdges, yGroups, xGroups, colorScale, groupXByKey]);
+  }, [viewMode, groupingMode, yGroupingMode, layoutMode, activeGroup, selected, universeNodes, galaxyNodes, nodes, edges, groupEdges, yGroups, xGroups, colorScale, groupXByKey]);
 
   // HIGHLIGHTING EFFECT
   useEffect(() => {
@@ -1214,6 +1463,13 @@ export default function App() {
     const link = svg.selectAll(".d3-link");
     const gradients = svg.select("defs").selectAll(".link-gradient");
     const rect = svg.selectAll(".node-rect");
+
+    if (viewMode === 'UNIVERSE') {
+      // Universe view: no edges, simple highlighting
+      node.transition().duration(200).style("opacity", 1);
+      prevGroupingModeRef.current = groupingMode;
+      return;
+    }
 
     if (viewMode === 'GALAXY') {
       const hoveredGroupKey = hovered?.id;
@@ -1318,7 +1574,8 @@ export default function App() {
     <div className="App galaxy-theme" ref={wrapRef}>
       <div className="galaxy-header">
         <div className="controls-row" style={{ display: 'flex', gap: '12px', alignItems: 'center', position: 'absolute', top: 20, left: 20, pointerEvents: 'auto' }}>
-          {viewMode !== 'GALAXY' && <button className="back-to-galaxy" onClick={handleBackToGalaxy}>← Back</button>}
+          {viewMode === 'GALAXY' && <button className="back-to-galaxy" onClick={handleBackToUniverse}>← Back to Universe</button>}
+          {viewMode !== 'GALAXY' && viewMode !== 'UNIVERSE' && <button className="back-to-galaxy" onClick={handleBackToGalaxy}>← Back</button>}
 
           <div className="control-group">
             <strong style={{ color: '#64748b', fontSize: '0.85rem', marginRight: '5px' }}>X-AXIS</strong>
@@ -1343,7 +1600,11 @@ export default function App() {
           </div>
 
         </div>
-        <div className="galaxy-title">{viewMode === 'GALAXY' ? `Map of ${groupingMode === 'FIELD' ? 'Physics' : groupingMode + 'S'}` : activeGroupLabel}</div>
+        <div className="galaxy-title">
+          {viewMode === 'UNIVERSE' ? 'Map of Physics - Universe' : 
+           viewMode === 'GALAXY' ? `Map of ${groupingMode === 'FIELD' ? 'Physics' : groupingMode + 'S'}` : 
+           activeGroupLabel}
+        </div>
       </div>
 
       <svg ref={svgRef} className="galaxy-canvas" />
@@ -1352,7 +1613,43 @@ export default function App() {
       <div className="galaxy-footer" style={{ transform: (selected || hovered) ? 'translateY(0)' : 'translateY(0)', opacity: 1, pointerEvents: 'none' }}>
         {(selected || hovered) ? (
           <div className="footer-panels" style={{ pointerEvents: 'auto' }}>
-            {selected && (
+            {/* Menu/Info node content */}
+            {(selected?.isMenuNode || hovered?.isMenuNode) && (
+              <div className="footer-panel menu-panel" style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr auto', gap: '24px', alignItems: 'start' }}>
+                <div>
+                  <h4>About This Map</h4>
+                  <h3>Map of Physics</h3>
+                  <div className="footer-abstract" style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(0, 0, 0, 0.05)' }}>
+                    <p>
+                      This interactive map visualizes the landscape of physics research, showing how different areas 
+                      of physics connect through citations and references. Each galaxy represents a major field of study, 
+                      containing clusters of related papers. You can zoom in to explore individual papers and their 
+                      connections, or zoom out to see the broader structure of physics research.
+                    </p>
+                    <p style={{ marginTop: '12px' }}>
+                      <strong>How to use:</strong> Hover over nodes to see details, click to select, and use the mouse 
+                      wheel or pinch to zoom. Navigate by zooming in on galaxies to explore their contents.
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img 
+                    src="./Mapo information flow.png" 
+                    alt="Map of Physics Information Flow" 
+                    style={{ 
+                      maxWidth: '400px', 
+                      maxHeight: '300px', 
+                      width: 'auto', 
+                      height: 'auto',
+                      borderRadius: '8px',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      objectFit: 'contain'
+                    }} 
+                  />
+                </div>
+              </div>
+            )}
+            {selected && !selected.isMenuNode && (
               <div className="footer-panel selected-panel">
                 <h4>Selected</h4>
                 <h3>{selected.title}</h3>
@@ -1366,7 +1663,7 @@ export default function App() {
                 </div>
               </div>
             )}
-            {hovered && hovered.id !== selected?.id && (
+            {hovered && !hovered.isMenuNode && hovered.id !== selected?.id && (
               <div className="footer-panel hover-panel" style={!selected ? { gridColumn: '1 / -1' } : {}}>
                 <h4>Hovering</h4>
                 <h3>{hovered.title || hovered.name}</h3>

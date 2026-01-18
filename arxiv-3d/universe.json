@@ -1,0 +1,43 @@
+{
+  "nodes": [
+    {
+      "id": "particle-physics",
+      "name": "Particle Physics",
+      "type": "galaxy",
+      "nodeCount": 500,
+      "edgeCount": 5441,
+      "nodesFile": "nodes.json",
+      "edgesFile": "edges.json",
+      "metadataFile": "metadata.json",
+      "position": [
+        600.0,
+        0.0,
+        0
+      ],
+      "size": 16.71,
+      "angle": 0.0
+    },
+    {
+      "id": "astrophysics",
+      "name": "Astrophysics",
+      "type": "galaxy",
+      "nodeCount": 1996,
+      "edgeCount": 11542,
+      "nodesFile": "astrophysics_nodes.json",
+      "edgesFile": "astrophysics_edges.json",
+      "metadataFile": "astrophysics_metadata.json",
+      "position": [
+        -600.0,
+        7.347880794884119e-14,
+        0
+      ],
+      "size": 23.4,
+      "angle": 180.0
+    }
+  ],
+  "metadata": {
+    "galaxyCount": 2,
+    "totalNodes": 2496,
+    "totalEdges": 16983
+  }
+}

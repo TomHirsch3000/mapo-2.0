@@ -112,6 +112,9 @@ def AI_category_one(text: str) -> List[str]:
             messages=[{"role": "user", "content": (
                 "In a few key words pick the closest field of physics for this "
                 "scientific paper based on this abstract. "
+                "The field should be different from the primary concept."
+                "The field should be different from the database name "
+                "and a lower level concept e.g. not 'astrophysics' but 'theory of expanding universe'"
                 "Return ONLY a Python list of strings, e.g. "
                 "['High energy physics', 'Particle physics'].\n\n" + text
             )}],
