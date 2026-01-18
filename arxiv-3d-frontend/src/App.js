@@ -1625,8 +1625,8 @@ export default function App() {
         // FORCE REVEAL: Ensure edges are visible if no reveal is pending
         // We use style to force checking against DOM reality
         if (!edgeRevealPendingRef.current) {
-          link.style("opacity", 1)
-            .transition().duration(200).attr("stroke-opacity", 0.55);
+          link.style("opacity", 1);
+          link.transition().duration(200).attr("stroke-opacity", 0.55);
         } else {
           // If pending, do nothing to opacity (let intro handle it)
           link.transition().duration(200).attr("stroke-opacity", 0.55);
@@ -1682,7 +1682,9 @@ export default function App() {
         if (targetId === selected.id) connectedIds.add(sourceId);
       });
 
-      node.transition().duration(200).style("opacity", d => connectedIds.has(d.id) || d.id === selected.id ? 1 : 0.1);
+      // Strict filtering: unconnected nodes are hidden and non-interactive
+      node.style("pointer-events", d => connectedIds.has(d.id) || d.id === selected.id ? "auto" : "none")
+        .transition().duration(200).style("opacity", d => connectedIds.has(d.id) || d.id === selected.id ? 1 : 0);
 
       link.transition().duration(200)
         .attr("stroke-opacity", d => {
@@ -1693,7 +1695,7 @@ export default function App() {
         .attr("stroke-width", d => {
           const s = getEdgeId(d.source);
           const t = getEdgeId(d.target);
-          return (s === selected.id || t === selected.id) ? 6 : 1;
+          return (s === selected.id || t === selected.id) ? 8 : 1;
         });
 
       gradients.each(function (d) {
