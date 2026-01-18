@@ -9,6 +9,53 @@ import * as d3 from "d3";
 import "./App.css";
 import "./styles/Galaxy.css";
 
+// --- Helpers ---
+const roundedHexagonPath = (radius) => {
+  // Generate a hexagon path. We will use stroke-linejoin="round" in CSS/Attributes to round it visually.
+  const points = [];
+  for (let i = 0; i < 6; i++) {
+    const angle = (i * 60) * (Math.PI / 180); // Pointy topped: 30, 90... Flat topped: 0, 60...
+    // Let's use flat topped (0, 60...)
+    points.push([radius * Math.cos(angle), radius * Math.sin(angle)]);
+  }
+  return points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ") + " Z";
+};
+
+const generateHexPositions = (nodes, spacing) => {
+  const result = new Map();
+  const sorted = nodes.filter(n => !n.isMenuNode).sort((a, b) => (b.val || 0) - (a.val || 0));
+  const menu = nodes.find(n => n.isMenuNode);
+
+  if (menu) {
+    // Position menu node away from the cluster
+    result.set(menu.id || menu.key, { x: -spacing * 5, y: -spacing * 3 }); // Top-left ish
+  }
+
+  // Generate grid points
+  const points = [];
+  const maxRing = Math.ceil(Math.sqrt(nodes.length)) + 1;
+  for (let q = -maxRing; q <= maxRing; q++) {
+    for (let r = -maxRing; r <= maxRing; r++) {
+      if (Math.abs(q + r) <= maxRing) {
+        // Flat-topped hex to pixel
+        var x = spacing * (3 / 2 * q);
+        var y = spacing * (Math.sqrt(3) / 2 * q + Math.sqrt(3) * r);
+        const dist = Math.sqrt(x * x + y * y);
+        points.push({ x, y, dist });
+      }
+    }
+  }
+  points.sort((a, b) => a.dist - b.dist);
+
+  sorted.forEach((n, i) => {
+    if (points[i]) {
+      result.set(n.id || n.key, { x: points[i].x, y: points[i].y });
+    }
+  });
+
+  return result;
+};
+
 export default function App() {
   const svgRef = useRef(null);
   const wrapRef = useRef(null);
@@ -93,7 +140,7 @@ export default function App() {
   /** Load galaxy data when activeGalaxy changes */
   useEffect(() => {
     if (!activeGalaxy || !universeData) return;
-    
+
     const galaxy = universeData.nodes?.find(g => g.id === activeGalaxy);
     if (!galaxy) return;
 
@@ -240,10 +287,10 @@ export default function App() {
 
     const galaxyNodes = (universeData.nodes || []).map((galaxy) => {
       const existing = groupPositionsMatch.current.get(galaxy.id);
-      
+
       // Size based on node count
       const val = galaxy.size || (Math.sqrt(galaxy.nodeCount || 0) * 0.3 + 10);
-      
+
       // Use position from universe.json or deterministic fallback
       const position = galaxy.position || [0, 0, 0];
       const node = {
@@ -510,7 +557,7 @@ export default function App() {
       const hoveredGroupKey = hovered?.id;
       const galaxyEdges = hoveredGroupKey
         ? groupEdges.filter(e => e.source === hoveredGroupKey || e.target === hoveredGroupKey)
-        : groupEdges.filter(e => (e.weight || 0) > 3);
+        : groupEdges.filter(e => (e.weight || 0) > 0);
       // Deep clone edges to avoid mutation key issues in D3
       currentEdges = galaxyEdges.map(e => ({
         source: e.source,
@@ -518,17 +565,18 @@ export default function App() {
         weight: e.weight
       }));
     } else {
-      currentNodes = nodes.filter(n => n.group === activeGroup);
-
+      // FIELD VIEW
       const selectedId = selected?.id;
-      let connectedEdges = [];
       let connectedIds = new Set();
+
       if (selectedId) {
-        connectedEdges = edges.filter(e => {
+        // 1. Get ALL connected edges for the selected node
+        const connectedEdges = edges.filter(e => {
           const s = typeof e.source === 'object' ? e.source.id : e.source;
           const t = typeof e.target === 'object' ? e.target.id : e.target;
           return s === selectedId || t === selectedId;
         });
+
         connectedIds = new Set([selectedId]);
         connectedEdges.forEach(e => {
           const s = typeof e.source === 'object' ? e.source.id : e.source;
@@ -536,43 +584,33 @@ export default function App() {
           connectedIds.add(s);
           connectedIds.add(t);
         });
-      }
 
-      if (selectedId && connectedEdges.length > 0) {
-        const currentIds = new Set(currentNodes.map(n => n.id));
-        const extraNodes = [];
-        connectedEdges.forEach(e => {
-          const s = typeof e.source === 'object' ? e.source.id : e.source;
-          const t = typeof e.target === 'object' ? e.target.id : e.target;
-          const otherId = s === selectedId ? t : s;
-          if (!currentIds.has(otherId)) {
-            const extra = nodeByIdRef.current.get(String(otherId));
-            if (extra) {
-              currentIds.add(otherId);
-              extraNodes.push({ ...extra, _isExtra: true });
-            }
+        // 2. Build currentNodes from ALL available nodes matching connectedIds
+        const m = nodeByIdRef.current;
+        currentNodes = [];
+        connectedIds.forEach(id => {
+          const n = m.get(String(id));
+          if (n) {
+            currentNodes.push(n);
           }
         });
-        if (extraNodes.length > 0) {
-          currentNodes = currentNodes.concat(extraNodes);
-        }
-      }
 
-      // Positions are initialized deterministically before simulation.
-      if (selectedId && connectedEdges.length > 0) {
-        currentEdges = connectedEdges.map(e => ({
-          source: typeof e.source === 'object' ? e.source.id : e.source,
-          target: typeof e.target === 'object' ? e.target.id : e.target,
-          importance: e.importance ?? 1
-        }));
+        // 3. Filter edges
+        currentEdges = connectedEdges;
+
       } else {
+        // Default Field View: Show all in group
+        currentNodes = nodes.filter(n => n.group === activeGroup);
+        // Filter edges to only those within the group
+        const nodeIds = new Set(currentNodes.map(n => n.id));
         currentEdges = edges.filter(e => {
           const s = typeof e.source === 'object' ? e.source.id : e.source;
           const t = typeof e.target === 'object' ? e.target.id : e.target;
-          return currentNodes.find(n => n.id === s) && currentNodes.find(n => n.id === t);
+          return nodeIds.has(s) && nodeIds.has(t);
         });
       }
 
+      // Calculate sizes for field nodes
       const maxCites = d3.max(currentNodes, d => d.citationCount) || 1;
       const sizeScale = d3.scaleSqrt().domain([0, maxCites]).range([0.8, 2.5]);
       currentNodes.forEach(d => {
@@ -771,12 +809,27 @@ export default function App() {
 
     // Construct Node content based on type
     if (isUniverse || isGalaxy) {
-      nodesEntry.append("circle").attr("class", "orbit").attr("r", d => d.val * 2.5).attr("fill-opacity", 0.15);
-      nodesEntry.append("circle").attr("class", "core").attr("r", d => d.val * 0.8).attr("fill-opacity", 0.8).style("filter", "blur(1px)");
-      nodesEntry.append("text").attr("class", "label-main").attr("text-anchor", "middle").attr("dy", d => d.val * 2 + 20)
-        .style("font-size", "16px").style("font-weight", "600").style("fill", "#0f172a").style("text-shadow", "0 2px 4px white");
-      nodesEntry.append("text").attr("class", "label-sub").attr("text-anchor", "middle").attr("dy", d => d.val * 2 + 40)
-        .style("font-size", "12px").style("fill", "#64748b");
+      nodesEntry.each(function (d) {
+        const el = d3.select(this);
+        if (isUniverse && !d.isMenuNode) {
+          // Hexagon for Universe nodes
+          el.append("path").attr("class", "orbit")
+            .attr("stroke-width", 12) // Thick stroke for rounding
+            .attr("stroke-linejoin", "round")
+            .attr("fill-opacity", 0.15);
+          el.append("path").attr("class", "core")
+            .attr("fill-opacity", 0.8).style("filter", "blur(1px)");
+        } else {
+          // Circle for others (Galaxy nodes or Menu node)
+          el.append("circle").attr("class", "orbit").attr("r", d => d.val * 2.5).attr("fill-opacity", 0.15);
+          el.append("circle").attr("class", "core").attr("r", d => d.val * 0.8).attr("fill-opacity", 0.8).style("filter", "blur(1px)");
+        }
+
+        el.append("text").attr("class", "label-main").attr("text-anchor", "middle").attr("dy", d => d.val * 2 + 20)
+          .style("font-size", "16px").style("font-weight", "600").style("fill", "#0f172a").style("text-shadow", "0 2px 4px white");
+        el.append("text").attr("class", "label-sub").attr("text-anchor", "middle").attr("dy", d => d.val * 2 + 40)
+          .style("font-size", "12px").style("fill", "#64748b");
+      });
     } else {
       nodesEntry.append("rect").attr("class", "node-rect").attr("rx", 6).attr("fill-opacity", 0.9).attr("stroke", "#fff").attr("stroke-width", 2)
         .style("filter", "drop-shadow(0px 2px 4px rgba(0,0,0,0.1))");
@@ -791,14 +844,42 @@ export default function App() {
     if (isUniverse) {
       // Universe nodes - use a color scheme based on galaxy id
       const universeColorScale = d3.scaleOrdinal(d3.schemeTableau10);
-      allNodes.select(".orbit")
-        .attr("fill", d => d.isMenuNode ? "#94a3b8" : universeColorScale(d.id))
-        .attr("r", d => d.val * 2.5)
-        .attr("fill-opacity", d => d.isMenuNode ? 0.08 : 0.15);
-      allNodes.select(".core")
-        .attr("fill", d => d.isMenuNode ? "#64748b" : universeColorScale(d.id))
-        .attr("r", d => d.val * 0.8)
-        .attr("fill-opacity", d => d.isMenuNode ? 0.4 : 0.8);
+
+      allNodes.each(function (d) {
+        const el = d3.select(this);
+        const color = d.isMenuNode ? "#94a3b8" : universeColorScale(d.id);
+        const isHex = !d.isMenuNode;
+
+        // Handle Orbit
+        const orbit = el.select(".orbit");
+        orbit
+          .attr("fill", d.isMenuNode ? "#94a3b8" : color)
+          .attr("stroke", d.isMenuNode ? "none" : color) // Stroke for rounded corners
+          .attr("fill-opacity", d.isMenuNode ? 0.08 : 0.15);
+
+        if (isHex) {
+          orbit.attr("d", roundedHexagonPath(d.val * 2.5))
+            .attr("r", null); // Clear r if it was a circle
+        } else {
+          orbit.attr("r", d.val * 2.5)
+            .attr("d", null);
+        }
+
+        // Handle Core
+        const core = el.select(".core");
+        core
+          .attr("fill", d.isMenuNode ? "#64748b" : color)
+          .attr("fill-opacity", d.isMenuNode ? 0.4 : 0.8);
+
+        if (isHex) {
+          core.attr("d", roundedHexagonPath(d.val * 0.8))
+            .attr("r", null);
+        } else {
+          core.attr("r", d.val * 0.8)
+            .attr("d", null);
+        }
+      });
+
       allNodes.select(".label-main")
         .text(d => d.isMenuNode ? d.name : (d.name.length > 25 ? d.name.substring(0, 22) + "..." : d.name))
         .attr("dy", d => d.val * 2 + 20)
@@ -881,8 +962,8 @@ export default function App() {
     // Skip precompute for universe view since positions are fixed from universe.json
     const shouldRunIntro = (!isUniverse && shouldPrecompute) || isReturningGalaxy;
     const shouldIntro = shouldRunIntro;
-    const introStartScale = isGalaxy ? (isReturningGalaxy ? 2 : 0.2) : 0.2;
-    const introTargetScale = isGalaxy ? (isReturningGalaxy ? 1.4 : 1) : 1;
+    const introStartScale = isGalaxy ? (isReturningGalaxy ? 2.5 : 0.1) : 0.1;
+    const introTargetScale = 1;
 
     const seededRandom = d3.randomLcg(0.42);
 
@@ -896,33 +977,19 @@ export default function App() {
 
     const applyInitialPositions = () => {
       if (isUniverse) {
-        // Universe view: use positions from universe.json
+        // Universe view: Hex Tesselation
+        const hexPositions = generateHexPositions(currentNodes, 160); // 160 spacing
+
         currentNodes.forEach(n => {
-          // Get position from data (galaxy.position) - this comes from universe.json
-          const position = (n.data && n.data.position) ? n.data.position : null;
-          
-          // Prioritize position from universe.json over cached positions
-          if (position && (position[0] !== 0 || position[1] !== 0)) {
-            // Use position from universe.json (non-zero)
-            n.x = position[0];
-            n.y = position[1];
+          const pos = hexPositions.get(n.id || n.key);
+          if (pos) {
+            n.x = pos.x;
+            n.y = pos.y;
           } else {
-            // Fallback: check if node already has correct position, then cached, then keep existing
-            const cached = groupPositionsMatch.current.get(n.key || n.id);
-            if (n.x && n.y && (n.x !== 0 || n.y !== 0)) {
-              // Node already has a position (from initial creation), keep it
-              // Don't overwrite
-            } else if (cached && (cached.x !== 0 || cached.y !== 0)) {
-              // Use cached position if it's not at origin
-              n.x = cached.x;
-              n.y = cached.y;
-            } else {
-              // Final fallback: keep existing or use (0, 0)
-              n.x = n.x || 0;
-              n.y = n.y || 0;
-            }
+            // Fallback
+            n.x = 0; n.y = 0;
           }
-          
+
           // Fix positions to prevent force simulation from moving them
           n.fx = n.x;
           n.fy = n.y;
@@ -1018,10 +1085,23 @@ export default function App() {
         return (d._w * 0.6) + (d._isExtra ? 260 : 40);
       }).iterations(4));
 
+
+
     if (!isGalaxy && selected && !hasTimeline) {
-      sim.force("extra-ring", d3.forceRadial(d => (d._isExtra ? 1000 : 0), selectedAnchor.x, selectedAnchor.y).strength(0.9));
+      // Selected Node Logic: Strong radial force to keep neighbors in a ring
+      // And stronger charge to prevent overlap
+      sim.force("charge", d3.forceManyBody().strength(-1000));
+      sim.force("collide", d3.forceCollide().radius(d => d._w * 0.7 + 50).iterations(3));
+
+      // Pin selected node to center
+      sim.force("center-pin", d3.forceRadial(0, selectedAnchor.x, selectedAnchor.y).strength(d => d.id === selected.id ? 1 : 0));
+
+      // Push neighbors out
+      sim.force("neighbor-ring", d3.forceRadial(300, selectedAnchor.x, selectedAnchor.y).strength(0.8));
     } else {
       sim.force("extra-ring", null);
+      sim.force("center-pin", null);
+      sim.force("neighbor-ring", null);
     }
 
     if (isUniverse) {
@@ -1035,7 +1115,9 @@ export default function App() {
         sim.force("link", d3.forceLink(currentEdges).id(d => d.key).distance(200).strength(layoutMode === 'TIMELINE' ? 0.01 : 0.05));
       }
     } else {
-      sim.force("link", d3.forceLink(currentEdges).id(d => d.id).distance(150));
+      // FIELD VIEW
+      const linkDist = selected ? 350 : 150; // Widen distance when filtered
+      sim.force("link", d3.forceLink(currentEdges).id(d => d.id).distance(linkDist));
     }
 
     const getLayoutCacheKey = (mode) => `${viewMode}|${activeGroup || ""}|${groupingMode}|${xAxisMode}|${yGroupingMode}|${mode}`;
@@ -1601,9 +1683,9 @@ export default function App() {
 
         </div>
         <div className="galaxy-title">
-          {viewMode === 'UNIVERSE' ? 'Map of Physics - Universe' : 
-           viewMode === 'GALAXY' ? `Map of ${groupingMode === 'FIELD' ? 'Physics' : groupingMode + 'S'}` : 
-           activeGroupLabel}
+          {viewMode === 'UNIVERSE' ? 'Map of Physics - Universe' :
+            viewMode === 'GALAXY' ? `Map of ${groupingMode === 'FIELD' ? 'Physics' : groupingMode + 'S'}` :
+              (selected ? selected.title : activeGroupLabel)}
         </div>
       </div>
 
@@ -1621,30 +1703,30 @@ export default function App() {
                   <h3>Map of Physics</h3>
                   <div className="footer-abstract" style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(0, 0, 0, 0.05)' }}>
                     <p>
-                      This interactive map visualizes the landscape of physics research, showing how different areas 
-                      of physics connect through citations and references. Each galaxy represents a major field of study, 
-                      containing clusters of related papers. You can zoom in to explore individual papers and their 
+                      This interactive map visualizes the landscape of physics research, showing how different areas
+                      of physics connect through citations and references. Each galaxy represents a major field of study,
+                      containing clusters of related papers. You can zoom in to explore individual papers and their
                       connections, or zoom out to see the broader structure of physics research.
                     </p>
                     <p style={{ marginTop: '12px' }}>
-                      <strong>How to use:</strong> Hover over nodes to see details, click to select, and use the mouse 
+                      <strong>How to use:</strong> Hover over nodes to see details, click to select, and use the mouse
                       wheel or pinch to zoom. Navigate by zooming in on galaxies to explore their contents.
                     </p>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img 
-                    src="./Mapo information flow.png" 
-                    alt="Map of Physics Information Flow" 
-                    style={{ 
-                      maxWidth: '400px', 
-                      maxHeight: '300px', 
-                      width: 'auto', 
+                  <img
+                    src="./Mapo information flow.png"
+                    alt="Map of Physics Information Flow"
+                    style={{
+                      maxWidth: '400px',
+                      maxHeight: '300px',
+                      width: 'auto',
                       height: 'auto',
                       borderRadius: '8px',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                       objectFit: 'contain'
-                    }} 
+                    }}
                   />
                 </div>
               </div>
