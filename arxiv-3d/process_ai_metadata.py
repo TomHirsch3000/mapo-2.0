@@ -97,7 +97,7 @@ def summarize_text(
         return ""
 
 
-def AI_category_one(text: str) -> List[str]:
+def AI_category_one(text: str, excluded_words: Optional[str] = None) -> List[str]:
     """Return a list of physics fields for this paper."""
     if not client:
         print("[warn] AI_category_one: no LLM client; returning ['Unknown']")
@@ -105,6 +105,12 @@ def AI_category_one(text: str) -> List[str]:
     if not text:
         print("[warn] AI_category_one: empty text; returning ['Unknown']")
         return ["Unknown"]
+
+    # Construct exclusion instruction if provided
+    exclusion_text = ""
+    if excluded_words:
+        exclusion_text = f"Do NOT use any of these words or categories: {excluded_words}. "
+
     try:
         print("[debug] AI_category_one: calling LLM…")
         r = client.chat.completions.create(
@@ -112,9 +118,10 @@ def AI_category_one(text: str) -> List[str]:
             messages=[{"role": "user", "content": (
                 "In a few key words pick the closest field of physics for this "
                 "scientific paper based on this abstract. "
-                "The field should be different from the primary concept."
+                "The field should be different from the primary concept. "
                 "The field should be different from the database name "
-                "and a lower level concept e.g. not 'astrophysics' but 'theory of expanding universe'"
+                "and a lower level concept e.g. not 'astrophysics' but 'theory of expanding universe'. "
+                f"{exclusion_text}"
                 "Return ONLY a Python list of strings, e.g. "
                 "['High energy physics', 'Particle physics'].\n\n" + text
             )}],
@@ -248,6 +255,7 @@ def process_ai(
     max_citations: Optional[int],
     field_contains: Optional[str],
     author_contains: Optional[str],
+    no_category: Optional[str] = None,
 ):
     ensure_ai_columns(conn)
 
@@ -384,7 +392,7 @@ def process_ai(
         need_ai_fields = overwrite_ai_fields or not ai_field_list or ai_field_list == "[]"
         if need_ai_fields:
             print("[info] Generating AI category list…")
-            AI_field_list: List[str] = AI_category_one(working_abstract or "")
+            AI_field_list: List[str] = AI_category_one(working_abstract or "", excluded_words=no_category)
             AI_primary_field: str = AI_field_list[0] if AI_field_list else "Unknown"
             print(f"[debug] AI_field_list = {AI_field_list}, AI_primary_field = {AI_primary_field!r}")
         else:
@@ -524,6 +532,14 @@ def parse_args():
         help="Filter by author name (matches first_author_name / all_author_names)"
     )
 
+    p.add_argument(
+        "--no-category", dest="no_category", type=str, default=None,
+        help="List of words to avoid in category generation"
+    )
+    p.add_argument(
+        "--no_catagory", dest="no_category", help=argparse.SUPPRESS
+    )
+
     return p.parse_args()
 
 
@@ -544,6 +560,7 @@ def main():
             max_citations=args.max_citations,
             field_contains=args.field_contains,
             author_contains=args.author_contains,
+            no_category=args.no_category,
         )
     finally:
         conn.close()

@@ -57,6 +57,7 @@ const generateHexPositions = (nodes, spacing) => {
 };
 
 export default function App() {
+  // Trigger rebuild
   const svgRef = useRef(null);
   const wrapRef = useRef(null);
 
@@ -395,6 +396,10 @@ export default function App() {
 
   const handlePaperClick = (paper) => {
     setSelected(paper);
+    // Update active group to this paper's group so "Back" works correctly contextually
+    if (paper.group) {
+      setActiveGroup(paper.group);
+    }
   };
 
   // --- RENDER EFFECT ---
@@ -557,7 +562,7 @@ export default function App() {
       const hoveredGroupKey = hovered?.id;
       const galaxyEdges = hoveredGroupKey
         ? groupEdges.filter(e => e.source === hoveredGroupKey || e.target === hoveredGroupKey)
-        : groupEdges.filter(e => (e.weight || 0) > 0);
+        : groupEdges;
       // Deep clone edges to avoid mutation key issues in D3
       currentEdges = galaxyEdges.map(e => ({
         source: e.source,
@@ -821,7 +826,14 @@ export default function App() {
             .attr("fill-opacity", 0.8).style("filter", "blur(1px)");
         } else {
           // Circle for others (Galaxy nodes or Menu node)
-          el.append("circle").attr("class", "orbit").attr("r", d => d.val * 2.5).attr("fill-opacity", 0.15);
+          // Added stroke and stroke-width (default 0 or small) so we can animate stroke-opacity in CSS
+          el.append("circle").attr("class", "orbit")
+            .attr("r", d => d.val * 2.5)
+            .attr("fill-opacity", 0.15)
+            .attr("stroke", d => colorScale(d.xGroup)) // Set default color so stroke exists
+            .attr("stroke-width", 2)
+            .attr("stroke-opacity", 0.2); // Start low
+
           el.append("circle").attr("class", "core").attr("r", d => d.val * 0.8).attr("fill-opacity", 0.8).style("filter", "blur(1px)");
         }
 
@@ -1022,13 +1034,29 @@ export default function App() {
               n.fy = null;
             }
             return;
+          } else if (selected && !isGalaxy) {
+            // Warm Start for Topic View (Selected Node)
+            if (n.id === selected.id) {
+              n.x = selectedAnchor.x;
+              n.y = selectedAnchor.y;
+            } else {
+              const maxCites = d3.max(currentNodes, d => d.citationCount) || 1;
+              const importance = (n.citationCount || 0) / maxCites;
+              const targetRadius = 600 - (importance * 350);
+              const base = hashString(n.id);
+              const angle = ((base % 360) * Math.PI) / 180;
+
+              n.x = selectedAnchor.x + Math.cos(angle) * targetRadius;
+              n.y = selectedAnchor.y + Math.sin(angle) * targetRadius;
+            }
+          } else {
+            const offsetRadius = n._isExtra ? 1000 : 60;
+            const offset = getDeterministicPoint(n.id, offsetRadius);
+            const anchor = n._isExtra ? selectedAnchor : groupAnchor;
+            const anchorX = (timelineXScale && n._isExtra) ? timelineXScale(n.year) : anchor.x;
+            n.x = anchorX + offset.x + (seededRandom() - 0.5) * 8;
+            n.y = anchor.y + offset.y + (seededRandom() - 0.5) * 8;
           }
-          const offsetRadius = n._isExtra ? 1000 : 60;
-          const offset = getDeterministicPoint(n.id, offsetRadius);
-          const anchor = n._isExtra ? selectedAnchor : groupAnchor;
-          const anchorX = (timelineXScale && n._isExtra) ? timelineXScale(n.year) : anchor.x;
-          n.x = anchorX + offset.x + (seededRandom() - 0.5) * 8;
-          n.y = anchor.y + offset.y + (seededRandom() - 0.5) * 8;
           if (selected && !n._isExtra && !n._isConnected) {
             n.fx = n.x;
             n.fy = n.y;
@@ -1088,16 +1116,33 @@ export default function App() {
 
 
     if (!isGalaxy && selected && !hasTimeline) {
-      // Selected Node Logic: Strong radial force to keep neighbors in a ring
-      // And stronger charge to prevent overlap
-      sim.force("charge", d3.forceManyBody().strength(-1000));
-      sim.force("collide", d3.forceCollide().radius(d => d._w * 0.7 + 50).iterations(3));
+      // Selected Node Logic: Strong radial force to keep neighbors around but separated
 
-      // Pin selected node to center
+      // 1. Stronger Charge to prevent overlapping
+      sim.force("charge", d3.forceManyBody().strength(-3000));
+
+      // 2. Strong collide with padding
+      sim.force("collide", d3.forceCollide().radius(d => {
+        // Larger collision radius for the central node
+        if (d.id === selected.id) return d._w * 0.8 + 80;
+        return d._w * 0.6 + 20;
+      }).iterations(4));
+
+      // 3. Pin selected node to center
       sim.force("center-pin", d3.forceRadial(0, selectedAnchor.x, selectedAnchor.y).strength(d => d.id === selected.id ? 1 : 0));
 
-      // Push neighbors out
-      sim.force("neighbor-ring", d3.forceRadial(300, selectedAnchor.x, selectedAnchor.y).strength(0.8));
+      // 4. Position neighbors based on importance (citationCount)
+      // Larger/More important nodes -> Closer to center
+      const maxCites = d3.max(currentNodes, d => d.citationCount) || 1;
+
+      sim.force("neighbor-ring", d3.forceRadial(d => {
+        if (d.id === selected.id) return 0;
+        // Inverse mapping: High citations -> Low radius (closer)
+        // Range: 250px (closest) to 600px (furthest)
+        const importance = (d.citationCount || 0) / maxCites;
+        return 600 - (importance * 350);
+      }, selectedAnchor.x, selectedAnchor.y).strength(0.6));
+
     } else {
       sim.force("extra-ring", null);
       sim.force("center-pin", null);
@@ -1116,7 +1161,7 @@ export default function App() {
       }
     } else {
       // FIELD VIEW
-      const linkDist = selected ? 350 : 150; // Widen distance when filtered
+      const linkDist = selected ? 450 : 150; // Widen distance when filtered
       sim.force("link", d3.forceLink(currentEdges).id(d => d.id).distance(linkDist));
     }
 
@@ -1390,12 +1435,15 @@ export default function App() {
 
     const scheduleEdgeReveal = (delayMs, targetOpacity) => {
       edgeRevealPendingRef.current = true;
-      gLinks.selectAll(".d3-link").attr("opacity", 0).attr("stroke-opacity", 0);
+      // Re-select to ensure we have the latest DOM elements
+      const currentLinks = gMain.selectAll(".d3-link");
+      currentLinks.attr("opacity", 0).attr("stroke-opacity", 0);
+
       if (edgeRevealTimeoutRef.current) {
         edgeRevealTimeoutRef.current.stop();
       }
       edgeRevealTimeoutRef.current = d3.timeout(() => {
-        gLinks.selectAll(".d3-link")
+        currentLinks
           .transition().duration(900).ease(d3.easeQuadOut)
           .attr("opacity", 1)
           .attr("stroke-opacity", targetOpacity);
@@ -1406,15 +1454,22 @@ export default function App() {
     if (shouldRunIntro) {
       if (shouldIntro) {
         edgeRevealPendingRef.current = true;
+        // Keep them hidden initially
         gLinks.selectAll(".d3-link").interrupt().attr("opacity", 0).attr("stroke-opacity", 0);
       }
+      // Ensure we clear previous timeouts to avoid cancellations
+      if (edgeRevealTimeoutRef.current) edgeRevealTimeoutRef.current.stop();
       firstDataRenderRef.current = false;
       sim.stop();
       sim.alpha(1);
       sim.alphaDecay(0.03);
       let ticks = 0;
       const maxTicks = 6000;
-      while (sim.alpha() > 0.02 && ticks < maxTicks) {
+      // If selected (Topic View), we pre-calculated positions, so we don't need as many ticks to "untangle"
+      // But we still want some settling.
+      const runTicks = (selected && !isGalaxy) ? 300 : maxTicks;
+
+      while (sim.alpha() > 0.02 && ticks < runTicks) {
         sim.tick();
         ticks += 1;
       }
@@ -1448,7 +1503,7 @@ export default function App() {
           .transition().duration(900).ease(d3.easeQuadOut)
           .style("opacity", 1)
           .attr("transform", d => `translate(${d.x}, ${d.y}) scale(${introTargetScale})`);
-        scheduleEdgeReveal(2000, isGalaxy ? 0.55 : 0.9);
+        scheduleEdgeReveal(500, isGalaxy ? 0.55 : 0.9);
         if (isReturningGalaxy) {
           sim.on("tick", () => syncPositions(introTargetScale));
           sim.alpha(0.6).restart();
@@ -1473,7 +1528,11 @@ export default function App() {
     } else {
       gNodes.selectAll(".d3-node").style("opacity", 1);
       if (!edgeRevealPendingRef.current) {
-        gLinks.selectAll(".d3-link").attr("opacity", 1).attr("stroke-opacity", isGalaxy ? 0.55 : 0.9);
+        // Force visible if not pending reveal
+        gLinks.selectAll(".d3-link")
+          .style("opacity", 1) // Ensure style opacity is set
+          .attr("opacity", 1)
+          .attr("stroke-opacity", isGalaxy ? 0.55 : 0.9);
       }
       syncPositions(1);
     }
@@ -1563,7 +1622,15 @@ export default function App() {
       };
       if (!hoveredGroupKey) {
         node.transition().duration(200).style("opacity", 1);
-        link.transition().duration(200).attr("stroke-opacity", 0.55);
+        // FORCE REVEAL: Ensure edges are visible if no reveal is pending
+        // We use style to force checking against DOM reality
+        if (!edgeRevealPendingRef.current) {
+          link.style("opacity", 1)
+            .transition().duration(200).attr("stroke-opacity", 0.55);
+        } else {
+          // If pending, do nothing to opacity (let intro handle it)
+          link.transition().duration(200).attr("stroke-opacity", 0.55);
+        }
         gradients.each(function (d) {
           const color = getGalaxyEdgeColor(d);
           const sel = d3.select(this);
@@ -1622,6 +1689,11 @@ export default function App() {
           const s = getEdgeId(d.source);
           const t = getEdgeId(d.target);
           return (s === selected.id || t === selected.id) ? 1 : 0.05;
+        })
+        .attr("stroke-width", d => {
+          const s = getEdgeId(d.source);
+          const t = getEdgeId(d.target);
+          return (s === selected.id || t === selected.id) ? 6 : 1;
         });
 
       gradients.each(function (d) {
@@ -1632,8 +1704,8 @@ export default function App() {
         const opacityScale = isConnected ? 1 : 0.15;
         const sel = d3.select(this);
         sel.select(".grad-stop-start").attr("stop-color", color).attr("stop-opacity", 0.0);
-        sel.select(".grad-stop-mid").attr("stop-color", color).attr("stop-opacity", 0.25 * opacityScale);
-        sel.select(".grad-stop-end").attr("stop-color", color).attr("stop-opacity", 0.85 * opacityScale);
+        sel.select(".grad-stop-mid").attr("stop-color", color).attr("stop-opacity", 0.4 * opacityScale); // Increased opacity
+        sel.select(".grad-stop-end").attr("stop-color", color).attr("stop-opacity", 1.0 * opacityScale); // Increased opacity
       });
 
       rect.transition().duration(200).attr("stroke", d => d.id === selected.id ? "#0f172a" : "#fff").attr("stroke-width", d => d.id === selected.id ? 4 : 2);
