@@ -1,20 +1,144 @@
 {
   "nodes": [
     {
-      "id": "1",
-      "name": "Astrophysics",
+      "id": "3",
+      "name": "Particle Physics",
       "type": "galaxy",
-      "nodeCount": 1996,
-      "edgeCount": 11542,
-      "nodesFile": "astrophysics_nodes.json",
-      "edgesFile": "astrophysics_edges.json",
-      "metadataFile": "astrophysics_metadata.json",
+      "nodeCount": 500,
+      "edgeCount": 5441,
+      "totalWorksCount": 679823,
+      "firstPublicationYear": 1613,
+      "worksByDecade": [
+        {
+          "decade": 1610,
+          "works_count": 1
+        },
+        {
+          "decade": 1640,
+          "works_count": 5
+        },
+        {
+          "decade": 1660,
+          "works_count": 1
+        },
+        {
+          "decade": 1680,
+          "works_count": 1
+        },
+        {
+          "decade": 1740,
+          "works_count": 1
+        },
+        {
+          "decade": 1750,
+          "works_count": 1
+        },
+        {
+          "decade": 1790,
+          "works_count": 1
+        },
+        {
+          "decade": 1800,
+          "works_count": 4
+        },
+        {
+          "decade": 1810,
+          "works_count": 1
+        },
+        {
+          "decade": 1820,
+          "works_count": 4
+        },
+        {
+          "decade": 1830,
+          "works_count": 7
+        },
+        {
+          "decade": 1840,
+          "works_count": 15
+        },
+        {
+          "decade": 1850,
+          "works_count": 42
+        },
+        {
+          "decade": 1860,
+          "works_count": 39
+        },
+        {
+          "decade": 1870,
+          "works_count": 43
+        },
+        {
+          "decade": 1880,
+          "works_count": 49
+        },
+        {
+          "decade": 1890,
+          "works_count": 69
+        },
+        {
+          "decade": 1900,
+          "works_count": 112
+        },
+        {
+          "decade": 1910,
+          "works_count": 112
+        },
+        {
+          "decade": 1920,
+          "works_count": 216
+        },
+        {
+          "decade": 1930,
+          "works_count": 356
+        },
+        {
+          "decade": 1940,
+          "works_count": 873
+        },
+        {
+          "decade": 1950,
+          "works_count": 5938
+        },
+        {
+          "decade": 1960,
+          "works_count": 20186
+        },
+        {
+          "decade": 1970,
+          "works_count": 40243
+        },
+        {
+          "decade": 1980,
+          "works_count": 57273
+        },
+        {
+          "decade": 1990,
+          "works_count": 89490
+        },
+        {
+          "decade": 2000,
+          "works_count": 147206
+        },
+        {
+          "decade": 2010,
+          "works_count": 198118
+        },
+        {
+          "decade": 2020,
+          "works_count": 118954
+        }
+      ],
+      "nodesFile": "nodes.json",
+      "edgesFile": "edges.json",
+      "metadataFile": "metadata.json",
       "position": [
         80.0,
         0.0,
         0
       ],
-      "size": 23.4,
+      "size": 111.63,
       "angle": 0.0
     },
     {
@@ -23,6 +147,102 @@
       "type": "galaxy",
       "nodeCount": 1994,
       "edgeCount": 9000,
+      "totalWorksCount": 2317228,
+      "firstPublicationYear": 1753,
+      "worksByDecade": [
+        {
+          "decade": 1750,
+          "works_count": 18
+        },
+        {
+          "decade": 1800,
+          "works_count": 7
+        },
+        {
+          "decade": 1820,
+          "works_count": 20
+        },
+        {
+          "decade": 1830,
+          "works_count": 120
+        },
+        {
+          "decade": 1840,
+          "works_count": 201
+        },
+        {
+          "decade": 1850,
+          "works_count": 192
+        },
+        {
+          "decade": 1860,
+          "works_count": 110
+        },
+        {
+          "decade": 1870,
+          "works_count": 282
+        },
+        {
+          "decade": 1880,
+          "works_count": 397
+        },
+        {
+          "decade": 1890,
+          "works_count": 482
+        },
+        {
+          "decade": 1900,
+          "works_count": 549
+        },
+        {
+          "decade": 1910,
+          "works_count": 660
+        },
+        {
+          "decade": 1920,
+          "works_count": 1219
+        },
+        {
+          "decade": 1930,
+          "works_count": 2751
+        },
+        {
+          "decade": 1940,
+          "works_count": 2655
+        },
+        {
+          "decade": 1950,
+          "works_count": 14490
+        },
+        {
+          "decade": 1960,
+          "works_count": 63251
+        },
+        {
+          "decade": 1970,
+          "works_count": 133204
+        },
+        {
+          "decade": 1980,
+          "works_count": 208396
+        },
+        {
+          "decade": 1990,
+          "works_count": 359135
+        },
+        {
+          "decade": 2000,
+          "works_count": 507769
+        },
+        {
+          "decade": 2010,
+          "works_count": 627219
+        },
+        {
+          "decade": 2020,
+          "works_count": 392295
+        }
+      ],
       "nodesFile": "condensed_matter_nodes.json",
       "edgesFile": "condensed_matter_edges.json",
       "metadataFile": "condensed_matter_metadata.json",
@@ -31,24 +251,112 @@
         -189.29482671904333,
         0
       ],
-      "size": 23.4,
+      "size": 120.0,
       "angle": 240.0
     },
     {
-      "id": "3",
-      "name": "Particle Physics",
+      "id": "1",
+      "name": "Astrophysics",
       "type": "galaxy",
-      "nodeCount": 500,
-      "edgeCount": 5441,
-      "nodesFile": "nodes.json",
-      "edgesFile": "edges.json",
-      "metadataFile": "metadata.json",
+      "nodeCount": 1996,
+      "edgeCount": 11542,
+      "totalWorksCount": 1547052,
+      "firstPublicationYear": 1827,
+      "worksByDecade": [
+        {
+          "decade": 1820,
+          "works_count": 98
+        },
+        {
+          "decade": 1830,
+          "works_count": 634
+        },
+        {
+          "decade": 1840,
+          "works_count": 896
+        },
+        {
+          "decade": 1850,
+          "works_count": 1954
+        },
+        {
+          "decade": 1860,
+          "works_count": 1399
+        },
+        {
+          "decade": 1870,
+          "works_count": 2473
+        },
+        {
+          "decade": 1880,
+          "works_count": 3398
+        },
+        {
+          "decade": 1890,
+          "works_count": 5638
+        },
+        {
+          "decade": 1900,
+          "works_count": 5514
+        },
+        {
+          "decade": 1910,
+          "works_count": 5378
+        },
+        {
+          "decade": 1920,
+          "works_count": 6583
+        },
+        {
+          "decade": 1930,
+          "works_count": 8934
+        },
+        {
+          "decade": 1940,
+          "works_count": 7312
+        },
+        {
+          "decade": 1950,
+          "works_count": 14644
+        },
+        {
+          "decade": 1960,
+          "works_count": 37038
+        },
+        {
+          "decade": 1970,
+          "works_count": 87803
+        },
+        {
+          "decade": 1980,
+          "works_count": 135593
+        },
+        {
+          "decade": 1990,
+          "works_count": 199202
+        },
+        {
+          "decade": 2000,
+          "works_count": 309084
+        },
+        {
+          "decade": 2010,
+          "works_count": 423348
+        },
+        {
+          "decade": 2020,
+          "works_count": 287376
+        }
+      ],
+      "nodesFile": "astrophysics_nodes.json",
+      "edgesFile": "astrophysics_edges.json",
+      "metadataFile": "astrophysics_metadata.json",
       "position": [
         -121.42116167511337,
         210.30762113533177,
         0
       ],
-      "size": 16.71,
+      "size": 117.24,
       "angle": 480.0
     }
   ],
