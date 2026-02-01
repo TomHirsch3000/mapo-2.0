@@ -189,6 +189,24 @@ python process_ai_for_landmarks.py --db papers_particle_physics_all.db --from-js
 # run for astrophysics
 python process_ai_metadata.py --db papers_astrophysics.db
 
+
+
+-------------------------------------------------
+re label papers and exclude mislabeled
+-------------------------------------------------
+arxiv-3d\venv311\Scripts\python.exe arxiv-3d/
+
+python clean_and_categorize.py --db papers_astrophysics.db --field "Astrophysics"
+
+python clean_and_categorize.py --db papers_astrophysics.db --field "Astrophysics" --skip-standardize
+python clean_and_categorize.py --db papers_astrophysics.db --field "Astrophysics" --skip-mislabel
+
+Options
+--limit <N>: Only process the first N papers (useful for testing).
+--skip-mislabel: Skip the relevance check step.
+--skip-standardize: Skip the field standardization step.
+
+
 -------------------------------------------------
 Generate nodes.json + edges.json for the frontend
 -------------------------------------------------
@@ -237,6 +255,27 @@ python build_frontend_json.py ^
   --output-clusters astrophysics_clusters.json ^
   --min-citations 10 ^
   --frontend-dir ../arxiv-3d-frontend/public
+
+  python build_frontend_json.py ^
+  --db papers_condensed_matter_physics.db ^
+  --output-nodes condensed_matter_nodes.json ^
+  --output-edges condensed_matter_edges.json ^
+  --output-metadata condensed_matter_metadata.json ^
+  --output-clusters condensed_matter_clusters.json ^
+  --min-citations 10 ^
+  --frontend-dir ../arxiv-3d-frontend/public
+
+
+-------------------------------------------------
+build universe json
+-------------------------------------------------
+
+:: Run from arxiv-3d directory
+python build_universe_json.py --galaxies ^
+"1:Astrophysics:astrophysics_nodes.json:astrophysics_edges.json:astrophysics_metadata.json" ^
+"2:Condensed Matter:condensed_matter_nodes.json:condensed_matter_edges.json:condensed_matter_metadata.json" ^
+"3:Particle Physics:nodes.json:edges.json:metadata.json" ^
+--output universe.json --frontend-dir ../arxiv-3d-frontend/public
 
 -------------------------------------------------
 build for hosting
