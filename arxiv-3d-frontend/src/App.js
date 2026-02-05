@@ -286,27 +286,37 @@ export default function App() {
   const universeNodes = useMemo(() => {
     if (viewMode !== 'UNIVERSE' || !universeData) return [];
 
-    const galaxyNodes = (universeData.nodes || []).map((galaxy) => {
+    // Pre-sort by size (Works) to put largest in center
+    const sortedRaw = (universeData.nodes || []).sort((a, b) => (b.totalWorksCount || 0) - (a.totalWorksCount || 0));
+
+    const galaxyNodes = sortedRaw.map((galaxy, i) => {
       const existing = groupPositionsMatch.current.get(galaxy.id);
 
-      // Size based on Total Citations (Impact) if available, else Works
+      // SIZE FIX: Strictly based on Total Works (Papers)
       const totalWorks = galaxy.totalWorksCount || 0;
-      const totalCitations = galaxy.totalCitations || 0; // Will be added to backend
       let val = 20;
 
-      if (totalCitations > 0) {
-        // Citations vary wildly (e.g. 100k to 10M). Log scale.
-        // log10(100k) = 5. log10(10M) = 7.
-        const logVal = Math.log10(totalCitations + 1);
-        val = 20 + (logVal / 8) * 120; // Scale up to ~140
-      } else if (totalWorks > 0) {
-        const logVal = Math.log10(totalWorks + 1);
-        val = 20 + (logVal / 7) * 100;
+      if (totalWorks > 0) {
+        // Use Sqrt scale for area-proportional sizing
+        // approx range: 0 -> 20, 100k -> 60, 1M -> ~80?
+        // Let's tune: Max works is ~1.5M (Condensed Matter). We want that to be BIG but not screen-filling.
+        // sqrt(1.5M) is ~1224. 
+        // val = 30 + (sqrt(works) / 20) -> 30 + 60 = 90.
+        // min val 30.
+        val = 30 + Math.sqrt(totalWorks) * 0.05;
       } else {
-        val = Math.sqrt(galaxy.nodeCount || 0) * 0.3 + 10;
+        val = 25; // Smaller default for unknowns
       }
 
-      // Use position from universe.json or deterministic fallback
+      // POS FIX: Deterministic Spiral Layout Initialization
+      // "Try something else" -> Don't rely on random scatter.
+      // Place them in a golden spiral so they are strictly separated at spawn.
+      const angle = i * 2.5; // Golden angle-ish
+      const radius = 100 + (val * 10) + (i * 200); // Expanding spiral
+      const spiralX = Math.cos(angle) * radius;
+      const spiralY = Math.sin(angle) * radius;
+
+      // Use position from universe.json if timeline, else SPIRAL
       const position = galaxy.position || [0, 0, 0];
       const node = {
         id: galaxy.id,
@@ -316,34 +326,38 @@ export default function App() {
         nodeCount: galaxy.nodeCount || 0,
         edgeCount: galaxy.edgeCount || 0,
         totalWorksCount: totalWorks,
-        val: Math.max(val, 15),
+        val: Math.max(val, 30),
         data: galaxy,
-        // Init positions from universe.json
-        x: existing ? existing.x : position[0],
-        y: existing ? existing.y : position[1],
+        x: existing ? existing.x : spiralX, // Use existing or Spiral
+        y: existing ? existing.y : spiralY, // Use existing or Spiral
+        z: position[2],
+        field: 'Galaxy',
+        citationCount: galaxy.totalCitations || 0 // Keep data but don't use for size
       };
+
+      // Force initial position to break "same spot" bug
+      if (!existing && viewMode === 'UNIVERSE') {
+        node.x = spiralX;
+        node.y = spiralY;
+      }
 
       return node;
     });
 
-    // Add menu/info node to the universe view
-    const menuNode = {
-      id: 'mapo-menu-node',
-      key: 'mapo-menu-node',
+    // Add Menu Node
+    galaxyNodes.push({
+      id: 'menu-node',
+      key: 'menu-node',
       type: 'menu',
-      name: 'ℹ️',
-      nodeCount: 0,
-      edgeCount: 0,
-      val: 12, // Smaller, subtle size
+      name: 'Menu',
+      val: 40,
+      x: 0, y: 0,
+      fx: 800, fy: -600, // Fixed top right
       isMenuNode: true,
-      // Position in top-right area of the view (will be adjusted by zoom transform)
-      x: 800,
-      y: -600,
-      fx: 800, // Fixed position
-      fy: -600,
-    };
+      data: {}
+    });
 
-    return [...galaxyNodes, menuNode];
+    return galaxyNodes;
   }, [universeData, viewMode]);
 
   // Galaxy View Data (Group Nodes)
@@ -1086,23 +1100,24 @@ export default function App() {
 
     const applyInitialPositions = () => {
       if (isUniverse) {
-        // Universe view: Hex Tesselation
-        const hexPositions = generateHexPositions(currentNodes, 160); // 160 spacing
+        // Universe view:
+        if (layoutMode === 'CENTRAL') {
+          // ENFORCE SPIRAL LAYOUT if seemingly stuck
+          currentNodes.forEach((n, i) => {
+            n.fx = null;
+            n.fy = null;
 
-        currentNodes.forEach(n => {
-          const pos = hexPositions.get(n.id || n.key);
-          if (pos) {
-            n.x = pos.x;
-            n.y = pos.y;
-          } else {
-            // Fallback
-            n.x = 0; n.y = 0;
-          }
-
-          // Fix positions to prevent force simulation from moving them
-          n.fx = n.x;
-          n.fy = n.y;
-        });
+            if ((Math.abs(n.x) < 1 && Math.abs(n.y) < 1) || !n.x) {
+              const val = n.val || 30;
+              const angle = i * 2.5;
+              const radius = 100 + (val * 10) + (i * 200);
+              n.x = Math.cos(angle) * radius;
+              n.y = Math.sin(angle) * radius;
+              n.vx = n.x * 0.01;
+              n.vy = n.y * 0.01;
+            }
+          });
+        }
       } else if (isGalaxy) {
         currentNodes.forEach(n => {
           const cached = groupPositionsMatch.current.get(n.key);
@@ -1248,8 +1263,9 @@ export default function App() {
       }))
       .force("collide", d3.forceCollide().radius(d => {
         if (isUniverse) {
-          // Universe Central Collision
-          return (d.val * 2.5 + 40); // Hex radius + padding
+          // Universe Central Collision - MASSIVE spacing
+          // "Not even close together" -> Radius + 150px padding
+          return (d.val * 2.5 + 150);
         }
         if (isGalaxy) return (d.val * 2 + 50);
         return (d._w * 0.6) + (d._isExtra ? 260 : 40);
@@ -1311,9 +1327,14 @@ export default function App() {
         sim.force("charge", null);
         sim.force("collide", null);
       } else {
-        // Central Layout Forces
-        sim.force("center", d3.forceCenter(0, 0));
-        sim.force("charge", d3.forceManyBody().strength(-300));
+        // Central Layout (Universe) - FORCE SIMULATION (No Grid)
+        // Use soft gravity instead of hard center to allow cloud to breathe
+        sim.force("center", null);
+        sim.force("x", d3.forceX(0).strength(0.05));
+        sim.force("y", d3.forceY(0).strength(0.05));
+
+        // Strong repulsion to help push them apart initially (-2000)
+        sim.force("charge", d3.forceManyBody().strength(-2000));
         // Collision already set above with conditional radius
         sim.force("link", null);
       }
@@ -1330,6 +1351,11 @@ export default function App() {
               n.fx = 800; n.fy = -600;
             } else {
               n.fx = null; n.fy = null;
+              // Add Jitter if undefined/zero to prevent stacking
+              if (!n.x && !n.y) {
+                n.x = (Math.random() - 0.5) * 100;
+                n.y = (Math.random() - 0.5) * 100;
+              }
             }
           }
         });
@@ -1377,9 +1403,15 @@ export default function App() {
         currentNodes.forEach(n => {
           n.fx = null;
           n.fy = null;
+          // Add Jitter if undefined/zero to prevent stacking at 0,0
+          if (!n.x && !n.y) {
+            n.x = (Math.random() - 0.5) * 500; // Increased jitter range
+            n.y = (Math.random() - 0.5) * 500;
+          }
         });
 
-        // We do NOT use generateHexPositions here anymore.
+        // RESTART SIMULATION to ensure expansion happens if it has cooled
+        sim.alpha(1).restart();
       }
 
     } else if (isGalaxy) {
