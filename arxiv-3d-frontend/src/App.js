@@ -71,7 +71,7 @@ export default function App() {
 
   // View State
   const [viewMode, setViewMode] = useState('UNIVERSE'); // 'UNIVERSE' | 'GALAXY' | 'FIELD' | 'DETAIL'
-  const [xAxisMode, setXAxisMode] = useState('NONE'); // 'NONE' | 'FIELD' | 'AUTHOR' | 'INSTITUTION' | 'TIMELINE'
+  const [xAxisMode, setXAxisMode] = useState('TIMELINE'); // 'NONE' | 'FIELD' | 'AUTHOR' | 'INSTITUTION' | 'TIMELINE'
   const [yGroupingMode, setYGroupingMode] = useState('NONE'); // 'NONE' | 'FIELD' | 'AUTHOR' | 'INSTITUTION' | 'TIMELINE'
   const [activeGroup, setActiveGroup] = useState(null);
 
@@ -289,8 +289,20 @@ export default function App() {
     const galaxyNodes = (universeData.nodes || []).map((galaxy) => {
       const existing = groupPositionsMatch.current.get(galaxy.id);
 
-      // Size based on node count
-      const val = galaxy.size || (Math.sqrt(galaxy.nodeCount || 0) * 0.3 + 10);
+      // Size based on Total Works Count (log scale)
+      const totalWorks = galaxy.totalWorksCount || 0;
+      let val = 20; // Base size
+
+      if (totalWorks > 0) {
+        // Log scale: log10(1) = 0, log10(1M) = 6
+        // Range roughly 20 to 120
+        const logVal = Math.log10(totalWorks + 1);
+        // Assuming max works ~2M -> log is ~6.3
+        // Let's normalize against a rough max of 10M -> log 7
+        val = 20 + (logVal / 7) * 100;
+      } else {
+        val = Math.sqrt(galaxy.nodeCount || 0) * 0.3 + 10;
+      }
 
       // Use position from universe.json or deterministic fallback
       const position = galaxy.position || [0, 0, 0];
@@ -301,6 +313,7 @@ export default function App() {
         name: galaxy.name,
         nodeCount: galaxy.nodeCount || 0,
         edgeCount: galaxy.edgeCount || 0,
+        totalWorksCount: totalWorks,
         val: Math.max(val, 15),
         data: galaxy,
         // Init positions from universe.json
@@ -365,6 +378,7 @@ export default function App() {
     console.log("Galaxy clicked:", galaxyId);
     setActiveGalaxy(galaxyId);
     setViewMode('GALAXY');
+    setXAxisMode('NONE'); // Default to Central/Cluster layout
     setActiveGroup(null);
     setSelected(null);
   };
@@ -762,7 +776,14 @@ export default function App() {
           setSelected({ ...d, isMenuNode: true });
           return;
         }
-        if (isUniverse) handleGalaxyClick(d.id);
+        if (isUniverse) {
+          if (d.data?.hasPapers === false) {
+            // Stub galaxy: Select to show metadata but do not enter
+            setSelected(d);
+            return;
+          }
+          handleGalaxyClick(d.id);
+        }
         else if (isGalaxy) handleGroupClick(d.key);
         else handlePaperClick(d);
       })
@@ -774,14 +795,23 @@ export default function App() {
             isMenuNode: true,
           });
         } else if (isUniverse) {
+          const hasPapers = d.data?.hasPapers !== false;
+          const totalWorks = d.data?.totalWorksCount || 0;
           setHovered({
             id: d.id,
             title: d.name,
-            citationCount: d.nodeCount,
-            groupCount: d.nodeCount,
+            citationCount: hasPapers ? d.nodeCount : totalWorks,
+            groupCount: hasPapers ? d.nodeCount : 0,
             edgeCount: d.edgeCount,
             field: "Galaxy",
-            abstract: `${d.nodeCount} papers in this galaxy. ${d.edgeCount} connections.`
+            abstract: hasPapers
+              ? `${d.nodeCount} papers in this galaxy. ${d.edgeCount} connections.`
+              : `Data pending download. Total works in field: ${d3.format(",")(totalWorks)}.`,
+            // Rich Metadata
+            oldestWork: d.data?.oldestWork,
+            mostCitedWork: d.data?.mostCitedWork,
+            totalWorks: totalWorks,
+            hasPapers: hasPapers
           });
         } else if (isGalaxy) {
           setHovered({
@@ -859,7 +889,10 @@ export default function App() {
 
       allNodes.each(function (d) {
         const el = d3.select(this);
-        const color = d.isMenuNode ? "#94a3b8" : universeColorScale(d.id);
+        // Safely access data.hasPapers. Menu nodes don't have data, so they default to "false" concept or handled by isMenuNode check later.
+        // Actually, let's just make it safe.
+        const hasPapers = d.data?.hasPapers !== false;
+        const color = d.isMenuNode ? "#94a3b8" : (hasPapers ? universeColorScale(d.id) : "#cbd5e1");
         const isHex = !d.isMenuNode;
 
         // Handle Orbit
@@ -867,7 +900,7 @@ export default function App() {
         orbit
           .attr("fill", d.isMenuNode ? "#94a3b8" : color)
           .attr("stroke", d.isMenuNode ? "none" : color) // Stroke for rounded corners
-          .attr("fill-opacity", d.isMenuNode ? 0.08 : 0.15);
+          .attr("fill-opacity", d.isMenuNode ? 0.08 : (hasPapers ? 0.15 : 0.05));
 
         if (isHex) {
           orbit.attr("d", roundedHexagonPath(d.val * 2.5))
@@ -881,7 +914,7 @@ export default function App() {
         const core = el.select(".core");
         core
           .attr("fill", d.isMenuNode ? "#64748b" : color)
-          .attr("fill-opacity", d.isMenuNode ? 0.4 : 0.8);
+          .attr("fill-opacity", d.isMenuNode ? 0.4 : (hasPapers ? 0.8 : 0.4));
 
         if (isHex) {
           core.attr("d", roundedHexagonPath(d.val * 0.8))
@@ -895,9 +928,12 @@ export default function App() {
       allNodes.select(".label-main")
         .text(d => d.isMenuNode ? d.name : (d.name.length > 25 ? d.name.substring(0, 22) + "..." : d.name))
         .attr("dy", d => d.val * 2 + 20)
-        .style("font-size", d => d.isMenuNode ? "20px" : "16px");
+        .style("font-size", d => d.isMenuNode ? "20px" : "16px")
+        .style("fill", d => (d.data?.hasPapers !== false) ? "#0f172a" : "#94a3b8"); // Grey text for stubs
+
       allNodes.select(".label-sub")
-        .text(d => d.isMenuNode ? "" : `${d.nodeCount} papers`)
+        // Show "No local data" or just count (0)
+        .text(d => d.isMenuNode ? "" : (d.data?.hasPapers !== false ? `${d.nodeCount} papers` : "No data"))
         .attr("dy", d => d.val * 2 + 40)
         .style("opacity", d => d.isMenuNode ? 0 : 1);
 
@@ -1070,6 +1106,11 @@ export default function App() {
 
     applyInitialPositions();
 
+    // Initial Center View (Crucial for Universe Timeline to be visible)
+    if (firstDataRenderRef.current && width && height) {
+      svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2));
+    }
+
     // When entering Field view, start zoomed further out
     if (viewMode === 'FIELD' && prevViewMode.current !== 'FIELD') {
       isTransitioning.current = true;
@@ -1098,26 +1139,92 @@ export default function App() {
     const selectedNode = !isGalaxy && selected ? currentNodes.find(n => n.id === selected.id) : null;
     const selectedAnchor = selectedNode ? { x: selectedNode.x, y: selectedNode.y } : { x: 0, y: graphCenterY };
 
-    const hasTimeline = !isGalaxy && (layoutMode === 'TIMELINE' || yGroupingMode === 'TIMELINE');
+    const hasTimeline = layoutMode === 'TIMELINE' || yGroupingMode === 'TIMELINE';
+
+    // Universe Timeline Scale
+    let universeXScale = null;
+    let universeYScale = null; // For ridge plot spacing
+
+    if (isUniverse && layoutMode === 'TIMELINE') {
+      // Global min/max year across all galaxies
+      const allDecades = universeNodes.flatMap(n => n.data?.worksByDecade?.map(d => d.decade) || []);
+      const minYear = d3.min(allDecades) || 1800;
+      const maxYear = d3.max(allDecades) || 2025;
+
+      // Use 90% of width for timeline to maximize spread and alignment
+      universeXScale = d3.scaleLinear()
+        .domain([minYear, maxYear])
+        .range([-width * 0.45, width * 0.45]);
+
+      // Sort nodes by first publication year
+      const sortedNodes = [...universeNodes]
+        .filter(n => !n.isMenuNode)
+        .sort((a, b) => (a.data.firstPublicationYear || 0) - (b.data.firstPublicationYear || 0));
+
+      // Increase vertical spread to prevent overlap
+      // Use fixed height per row to guarantee separation regardless of screen size
+      const rowHeight = 70;
+      const contentHeight = sortedNodes.length * rowHeight;
+      const totalHeight = Math.max(height * 0.9, contentHeight);
+
+      universeYScale = d3.scalePoint()
+        .domain(sortedNodes.map(n => n.id))
+        .range([-totalHeight / 2, totalHeight / 2])
+        .padding(0.2);
+    }
+
 
     const sim = d3.forceSimulation(currentNodes)
       .randomSource(seededRandom)
       .force("charge", d3.forceManyBody().strength(d => {
-        if (isUniverse) return -200; // Lighter repulsion for universe view
+        if (isUniverse) return -200;
         if (isGalaxy) return -400;
         return d._isExtra ? -1600 : -600;
       }))
       .force("collide", d3.forceCollide().radius(d => {
-        if (isUniverse) return (d.val * 2 + 80); // Keep galaxies well separated
+        if (isUniverse) return (d.val * 2 + 80);
         if (isGalaxy) return (d.val * 2 + 50);
         return (d._w * 0.6) + (d._isExtra ? 260 : 40);
       }).iterations(4));
 
+    // Universe Area Generator
+    const generateAreaPath = (d) => {
+      const decades = d.data.worksByDecade || [];
+      if (!decades.length || !universeXScale) return "M0,0Z";
+
+      // We need to map decade -> x (relative to node.x)
+      // count -> y (height)
+
+      // Normalize height: find max count in this galaxy to roughly fit node size intent
+      const maxCount = d3.max(decades, x => x.works_count) || 1;
+      const heightScale = d3.scaleLinear()
+        .domain([0, maxCount])
+        .range([0, -45]); // Grow upwards 45px (Reduced from 80 to prevent overlap)
+
+      // We want to center the area chart on the node position X-wise?
+      // No, if we want a true timeline, the X position of the node should be the 'start' or 'center' of the timeline?
+      // Actually, ridge plots usually align X axes. 
+      // So node.x is the center of the screen (0), and the path is drawn using universeXScale directly.
+      // But 'd' path coords are relative to the group transform (translate(d.x, d.y)).
+      // So if node.x is 0, we can use universeXScale(year). 
+      // If node is positioned at universeXScale(startYear), we offset.
+
+      // Decision: In Timeline Layout, set node.x = 0 (or constant).
+      // Draw path relative to that.
+
+      const area = d3.area()
+        .x(p => universeXScale(p.decade) - d.x) // Adjust for node position
+        .y0(0)
+        .y1(p => heightScale(p.works_count))
+        .curve(d3.curveBasis); // Smooth curves
+
+      return area(decades);
+    };
+
 
 
     if (!isGalaxy && selected && !hasTimeline) {
-      // Selected Node Logic: Strong radial force to keep neighbors around but separated
-
+      // ... (Selected Node Logic - unchanged)
       // 1. Stronger Charge to prevent overlapping
       sim.force("charge", d3.forceManyBody().strength(-3000));
 
@@ -1131,14 +1238,10 @@ export default function App() {
       // 3. Pin selected node to center
       sim.force("center-pin", d3.forceRadial(0, selectedAnchor.x, selectedAnchor.y).strength(d => d.id === selected.id ? 1 : 0));
 
-      // 4. Position neighbors based on importance (citationCount)
-      // Larger/More important nodes -> Closer to center
+      // 4. Position neighbors based on importance
       const maxCites = d3.max(currentNodes, d => d.citationCount) || 1;
-
       sim.force("neighbor-ring", d3.forceRadial(d => {
         if (d.id === selected.id) return 0;
-        // Inverse mapping: High citations -> Low radius (closer)
-        // Range: 250px (closest) to 600px (furthest)
         const importance = (d.citationCount || 0) / maxCites;
         return 600 - (importance * 350);
       }, selectedAnchor.x, selectedAnchor.y).strength(0.6));
@@ -1150,19 +1253,157 @@ export default function App() {
     }
 
     if (isUniverse) {
-      // Universe view: Disable forces that would move nodes - positions are fixed
       sim.force("center", null);
       sim.force("link", null);
       sim.force("charge", null);
-      sim.force("collide", d3.forceCollide().radius(d => d.val * 2 + 80).iterations(4)); // Keep collision to prevent overlap
+      sim.force("collide", null); // Manual positioning, no collision needed usually
+
+      // Update forces/positions based on layout
+      // Update forces/positions based on layout
+      if (layoutMode === 'TIMELINE' && universeXScale) {
+        // Ridge Plot Layout - Robust Explicit Positioning
+        // Sort explicitly by year again to be sure (currentNodes might be unsorted/filtered)
+        const sortedForLayout = [...currentNodes]
+          .filter(n => !n.isMenuNode)
+          .sort((a, b) => (a.data.firstPublicationYear || 0) - (b.data.firstPublicationYear || 0));
+
+        const idToIndex = new Map(sortedForLayout.map((n, i) => [n.id, i]));
+        const rowHeight = 90; // Generous 90px spacing
+        const totalH = sortedForLayout.length * rowHeight;
+
+        currentNodes.forEach(n => {
+          if (n.isMenuNode) return;
+          const idx = idToIndex.get(n.id);
+          if (idx !== undefined) {
+            n.fx = 0; // Center X
+            n.fy = (idx * rowHeight) - (totalH / 2); // Center Y list
+          }
+        });
+
+      } else {
+        // Spiral Layout (Central)
+        // INCREASED spacing from 160 to 260 to prevent overlap
+        const hexPositions = generateHexPositions(currentNodes, 260);
+        currentNodes.forEach(n => {
+          const pos = hexPositions.get(n.id || n.key);
+          if (pos) {
+            n.fx = pos.x;
+            n.fy = pos.y;
+          } else {
+            n.fx = 0; n.fy = 0;
+          }
+        });
+      }
+
     } else if (isGalaxy) {
       if (layoutMode === 'CENTRAL' || layoutMode === 'TIMELINE') {
         sim.force("link", d3.forceLink(currentEdges).id(d => d.key).distance(200).strength(layoutMode === 'TIMELINE' ? 0.01 : 0.05));
       }
     } else {
       // FIELD VIEW
-      const linkDist = selected ? 450 : 150; // Widen distance when filtered
+      const linkDist = selected ? 450 : 150;
       sim.force("link", d3.forceLink(currentEdges).id(d => d.id).distance(linkDist));
+    }
+
+    // ... (Layout Force Code - unchanged) ...
+
+
+    // ... xGroupScale definition ...
+
+    // Apply Initial Positions override? No, handled in forces for Universe now.
+
+    // ... (Simulation start logic - unchanged)
+
+    // --- RENDER UPDATE FOR UNIVERSE SHAPES ---
+    if (isUniverse) {
+      const tDuration = 1000;
+
+      allNodes.each(function (d) {
+        const el = d3.select(this);
+        const orbit = el.select(".orbit");
+        const core = el.select(".core");
+        const label = el.select(".label-main");
+        const sub = el.select(".label-sub");
+
+        if (layoutMode === 'TIMELINE' && !d.isMenuNode) {
+          // Morph to Area
+          const areaPath = generateAreaPath(d);
+
+          orbit.transition().duration(tDuration)
+            .attr("d", areaPath)
+            .attr("fill-opacity", 0.4)
+            .attr("stroke-width", 2);
+
+          // Hide core or make it follow? simpler to hide or match
+          core.transition().duration(tDuration)
+            .attr("d", areaPath) // Core matches area
+            .attr("fill-opacity", 0.1)
+            .style("filter", "none");
+
+          // Move labels to left of the ridge
+          // Start year X
+          const startYear = d.data.firstPublicationYear || 1900;
+          const startX = universeXScale ? (universeXScale(startYear) - d.fx) : -200;
+
+          label.transition().duration(tDuration)
+            .attr("x", startX - 20)
+            .attr("dy", 0)
+            .attr("text-anchor", "end");
+
+          sub.transition().duration(tDuration)
+            .attr("x", startX - 20)
+            .attr("dy", 15)
+            .attr("text-anchor", "end")
+            .style("opacity", 1);
+
+        } else {
+          // Hexagon (Default)
+          const val = d.val || 20;
+          const hexPath = roundedHexagonPath(val * 2.5);
+          const corePath = roundedHexagonPath(val * 0.8);
+
+          orbit.transition().duration(tDuration)
+            .attr("d", hexPath)
+            .attr("fill-opacity", 0.15)
+            .attr("stroke-width", 12);
+
+          core.transition().duration(tDuration)
+            .attr("d", corePath)
+            .attr("fill-opacity", 0.8)
+            .style("filter", "blur(1px)");
+
+          label.transition().duration(tDuration)
+            .attr("x", 0)
+            .attr("dy", val * 2 + 20)
+            .attr("text-anchor", "middle");
+
+          sub.transition().duration(tDuration)
+            .attr("x", 0)
+            .attr("dy", val * 2 + 40)
+            .attr("text-anchor", "middle");
+        }
+      });
+
+      // Add Timeline Axis if needed
+      if (layoutMode === 'TIMELINE' && universeXScale) {
+        let gAxis = gMain.select(".universe-axis");
+        if (gAxis.empty()) {
+          gAxis = gMain.append("g").attr("class", "universe-axis");
+        }
+
+        // Dynamic axis
+        const axis = d3.axisBottom(universeXScale).ticks(10).tickFormat(d3.format("d"));
+        gAxis.attr("transform", `translate(0, ${height / 2 - 50})`)
+          .transition().duration(1000)
+          .style("opacity", 1)
+          .call(axis);
+
+        gAxis.selectAll("text").style("font-size", "14px").style("fill", "#64748b");
+        gAxis.selectAll("line").style("stroke", "#cbd5e1");
+        gAxis.selectAll("path").style("stroke", "#cbd5e1");
+      } else {
+        gMain.select(".universe-axis").transition().duration(500).style("opacity", 0).remove();
+      }
     }
 
     const getLayoutCacheKey = (mode) => `${viewMode}|${activeGroup || ""}|${groupingMode}|${xAxisMode}|${yGroupingMode}|${mode}`;
@@ -1354,7 +1595,7 @@ export default function App() {
         .text(xAxisMode);
     }
 
-    if (layoutMode === 'TIMELINE') {
+    if (layoutMode === 'TIMELINE' && !isUniverse) {
       const years = currentNodes.map(d => isGalaxy ? d.minYear : d.year);
       const minYear = d3.min(years) || 1990;
       const maxYear = d3.max(years) || 2025;
@@ -1722,7 +1963,7 @@ export default function App() {
       });
       rect.transition().duration(200).attr("stroke", "#fff").attr("stroke-width", 2);
     }
-  }, [selected, hovered, viewMode, groupingMode, colorScale, groupXByKey]);
+  }, [selected, hovered, viewMode, groupingMode, colorScale, groupXByKey, xAxisMode, layoutMode, universeNodes, yGroupingMode]);
 
   const activeGroupLabel = activeGroup ? (groupLabelByKey.get(activeGroup) || activeGroup) : null;
 
@@ -1734,19 +1975,28 @@ export default function App() {
           {viewMode !== 'GALAXY' && viewMode !== 'UNIVERSE' && <button className="back-to-galaxy" onClick={handleBackToGalaxy}>← Back</button>}
 
           <div className="control-group">
-            <strong style={{ color: '#64748b', fontSize: '0.85rem', marginRight: '5px' }}>X-AXIS</strong>
-            <select className="galaxy-select" value={xAxisMode} onChange={e => setXAxisMode(e.target.value)} disabled={viewMode !== 'GALAXY'}>
-              <option value="NONE">None</option>
-              <option value="FIELD">Field</option>
-              <option value="AUTHOR">Author</option>
-              <option value="INSTITUTION">Institution</option>
+            <strong style={{ color: '#64748b', fontSize: '0.85rem', marginRight: '5px' }}>LAYOUT</strong>
+            <select className="galaxy-select" value={layoutMode} onChange={e => {
+              // If in Universe, we map Layout change to internal state or just rely on layoutMode being derived?
+              // Actually layoutMode is derived from xAxisMode. So we should change xAxisMode to 'TIMELINE' or 'NONE'
+              // But for Universe, 'NONE' means Central (Spiral).
+              if (viewMode === 'UNIVERSE') {
+                setXAxisMode(e.target.value === 'TIMELINE' ? 'TIMELINE' : 'NONE');
+              } else {
+                setXAxisMode(e.target.value);
+              }
+            }} disabled={false}>
+              <option value="NONE">Central</option>
+              {viewMode !== 'UNIVERSE' && <option value="FIELD">Field</option>}
+              {viewMode !== 'UNIVERSE' && <option value="AUTHOR">Author</option>}
+              {viewMode !== 'UNIVERSE' && <option value="INSTITUTION">Institution</option>}
               <option value="TIMELINE">Timeline</option>
             </select>
           </div>
 
           <div className="control-group">
             <strong style={{ color: '#64748b', fontSize: '0.85rem', marginRight: '5px' }}>Y-AXIS</strong>
-            <select className="galaxy-select" value={yGroupingMode} onChange={e => setYGroupingMode(e.target.value)} disabled={viewMode !== 'GALAXY'}>
+            <select className="galaxy-select" value={yGroupingMode} onChange={e => setYGroupingMode(e.target.value)} disabled={viewMode === 'UNIVERSE'}>
               <option value="NONE">None</option>
               <option value="FIELD">Field</option>
               <option value="AUTHOR">Author</option>
@@ -1822,13 +2072,49 @@ export default function App() {
             {hovered && !hovered.isMenuNode && hovered.id !== selected?.id && (
               <div className="footer-panel hover-panel" style={!selected ? { gridColumn: '1 / -1' } : {}}>
                 <h4>Hovering</h4>
-                <h3>{hovered.title || hovered.name}</h3>
-                <div className="footer-meta">
-                  {hovered.year && <span>{hovered.year} • </span>}
-                  <span>{hovered.citationCount} Citations</span>
-                  {hovered.groupCount !== undefined && <span> • {hovered.groupCount} Papers</span>}
-                </div>
-                {hovered.authors && <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '5px' }}>{hovered.authors}</div>}
+
+                {hovered.field === "Galaxy" ? (
+                  // Rich Galaxy Metadata
+                  <>
+                    <h3>{hovered.title}</h3>
+                    <div className="footer-meta" style={{ marginBottom: '8px' }}>
+                      <strong>{d3.format(",")(hovered.totalWorks || 0)}</strong> known works
+                      <span style={{ color: '#94a3b8' }}> • </span>
+                      <strong>{d3.format(",")(hovered.groupCount || 0)}</strong> in map
+                    </div>
+
+                    {hovered.oldestWork && (
+                      <div style={{ fontSize: '0.85rem', marginBottom: '4px' }}>
+                        <span style={{ color: '#64748b', fontWeight: 600 }}>First Work ({hovered.oldestWork.year}):</span> <br />
+                        {hovered.oldestWork.title}
+                      </div>
+                    )}
+
+                    {hovered.mostCitedWork && (
+                      <div style={{ fontSize: '0.85rem', marginTop: '6px' }}>
+                        <span style={{ color: '#64748b', fontWeight: 600 }}>Most Cited ({hovered.mostCitedWork.year}):</span> <br />
+                        {hovered.mostCitedWork.title} <span style={{ color: '#f59e0b' }}>({d3.format(",")(hovered.mostCitedWork.citations)} cites)</span>
+                      </div>
+                    )}
+
+                    {!hovered.hasPapers && (
+                      <div style={{ marginTop: '10px', color: '#64748b', fontStyle: 'italic', fontSize: '0.8rem' }}>
+                        ℹ️ Detailed paper map pending locally.
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // Standard Paper/Group Metadata
+                  <>
+                    <h3>{hovered.title || hovered.name}</h3>
+                    <div className="footer-meta">
+                      {hovered.year && <span>{hovered.year} • </span>}
+                      <span>{hovered.citationCount} Citations</span>
+                      {hovered.groupCount !== undefined && <span> • {hovered.groupCount} Papers</span>}
+                    </div>
+                    {hovered.authors && <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '5px' }}>{hovered.authors}</div>}
+                  </>
+                )}
               </div>
             )}
           </div>

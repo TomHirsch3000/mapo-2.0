@@ -138,14 +138,85 @@ def get_openalex_metrics(topic_name: str, email: str) -> Dict[str, Any]:
     works_by_decade = [{"decade": d, "works_count": c} for d, c in sorted_decades]
     
     # Use total from meta if available, otherwise sum of years
-    meta_count = data.get("meta", {}).get("count")
-    if meta_count:
-        total_works = meta_count
-            
+    meta_total = data.get("meta", {}).get("count")
+    if meta_total:
+        total_works = meta_total
+
+    # --- Decadal Projection (2020s) ---
+    current_year = int(time.strftime("%Y"))
+    current_decade = (current_year // 10) * 10
+    
+    if current_decade == 2020:
+        # Check if we have data for 2020s
+        for entry in works_by_decade:
+            if entry["decade"] == 2020:
+                # Naive projection: 
+                # Years elapsed (inclusive of current year partial? OpenAlex updates fast)
+                # Let's say we are in 2026 (based on user context prompt! "2026-02-05")
+                # Wait, context says 2026. If year is 2026, we have 2020, 21, 22, 23, 24, 25 full. 2026 partial.
+                # So ~6.1 years?
+                # Simple math: 10 / (current_year - 2020 + 0.2)
+                elapsed = max(1, current_year - 2020 + 0.2)
+                factor = 10.0 / elapsed
+                
+                # Apply projection (conservative)
+                projected_val = int(entry["works_count"] * factor * 0.95)
+                entry["works_count_projected"] = projected_val
+                entry["is_projected"] = True
+                entry["original_count"] = entry["works_count"] 
+                # Update main count for visual consistency (area chart will use this)
+                entry["works_count"] = projected_val
+                break
+
+    # --- Fetch Rich Metadata (First & Most Cited) ---
+    
+    # 1. First Paper
+    first_params = {
+        "filter": f"concepts.id:{concept_id}",
+        "sort": "publication_date:asc",
+        # "per_page": 1, # Actually openalex default is 25, 1 is fine
+        "per_page": 1,
+        "mailto": email
+    }
+    first_data = safe_get_json(works_url, first_params)
+    first_results = first_data.get("results", [])
+    first_paper = None
+    if first_results:
+        w = first_results[0]
+        first_paper = {
+            "title": w.get("title") or "Untitled",
+            "year": w.get("publication_year"),
+            "id": w.get("id")
+        }
+        # Refine min_year if found earlier
+        if first_paper["year"] and (min_year is None or first_paper["year"] < min_year):
+            min_year = first_paper["year"]
+
+    # 2. Most Cited Paper
+    cited_params = {
+        "filter": f"concepts.id:{concept_id}",
+        "sort": "cited_by_count:desc",
+        "per_page": 1,
+        "mailto": email
+    }
+    cited_data = safe_get_json(works_url, cited_params)
+    cited_results = cited_data.get("results", [])
+    most_cited_paper = None
+    if cited_results:
+        w = cited_results[0]
+        most_cited_paper = {
+            "title": w.get("title") or "Untitled",
+            "year": w.get("publication_year"),
+            "citations": w.get("cited_by_count"),
+            "id": w.get("id")
+        }
+
     return {
         "totalWorksCount": total_works,
         "firstPublicationYear": min_year,
         "worksByDecade": works_by_decade,
+        "oldestWork": first_paper,
+        "mostCitedWork": most_cited_paper,
         "openAlexId": concept_id
     }
 
@@ -235,10 +306,13 @@ def generate_universe_nodes(
                 'type': 'galaxy',
                 'nodeCount': galaxy.get('nodeCount', 0),
                 'edgeCount': galaxy.get('edgeCount', 0),
+                'hasPapers': galaxy.get('hasPapers', True),
                 # New metadata
                 'totalWorksCount': galaxy.get('totalWorksCount', 0),
                 'firstPublicationYear': galaxy.get('firstPublicationYear'),
                 'worksByDecade': galaxy.get('worksByDecade', []),
+                'oldestWork': galaxy.get('oldestWork'),
+                'mostCitedWork': galaxy.get('mostCitedWork'),
                 
                 'nodesFile': galaxy.get('nodesFile', f"{galaxy['id']}_nodes.json"),
                 'edgesFile': galaxy.get('edgesFile', f"{galaxy['id']}_edges.json"),
@@ -292,9 +366,12 @@ def generate_universe_nodes(
                 'type': 'galaxy',
                 'nodeCount': galaxy.get('nodeCount', 0),
                 'edgeCount': galaxy.get('edgeCount', 0),
+                'hasPapers': galaxy.get('hasPapers', True),
                 'totalWorksCount': galaxy.get('totalWorksCount', 0),
                 'firstPublicationYear': galaxy.get('firstPublicationYear'),
                 'worksByDecade': galaxy.get('worksByDecade', []),
+                'oldestWork': galaxy.get('oldestWork'),
+                'mostCitedWork': galaxy.get('mostCitedWork'),
                 'nodesFile': galaxy.get('nodesFile', f"{galaxy['id']}_nodes.json"),
                 'edgesFile': galaxy.get('edgesFile', f"{galaxy['id']}_edges.json"),
                 'metadataFile': galaxy.get('metadataFile', f"{galaxy['id']}_metadata.json"),
@@ -350,112 +427,218 @@ def generate_universe_nodes(
     return universe_nodes
 
 
+    return universe_nodes
+
+PHYSICS_CONCEPT_ID = "C121332964"
+
+# Hardcoded list since API filtering by ancestor seems unreliable
+PHYSICS_SUBFIELDS_NAMES = [
+    "Quantum mechanics",
+    "Astrophysics",
+    "Condensed matter physics",
+    "Particle physics",
+    "Nuclear physics",
+    "Atomic physics", 
+    "Optical physics", # Optics
+    "Classical mechanics",
+    "Thermodynamics",
+    "Acoustics",
+    "Biophysics",
+    "Geophysics",
+    "Statistical mechanics",
+    "Fluid dynamics",
+    "Plasma physics",
+    "Computational physics",
+    "Theoretical physics"
+]
+
+def fetch_physics_subfields(email: str) -> List[Dict[str, Any]]:
+    """Fetch specific Level 1 physics concepts by name."""
+    subfields = []
+    
+    print(f"[info] Fetching {len(PHYSICS_SUBFIELDS_NAMES)} physics subfields individually...")
+    
+    for name in PHYSICS_SUBFIELDS_NAMES:
+        # Search for exact name match at level 1
+        url = f"{OPENALEX_BASE}/concepts"
+        params = {
+            "filter": f"display_name.search:{name},level:1",
+            "per_page": 1,
+            "mailto": email
+        }
+        
+        try:
+            data = safe_get_json(url, params)
+            results = data.get("results", [])
+            
+            if results:
+                r = results[0]
+                # Basic validation: check if name is close match?
+                # OpenAlex search is fuzzy, but usually top result is good for specific terms
+                print(f"  [+] Found: {r['display_name']} ({r['id']})")
+                subfields.append({
+                    "id": r.get("id", "").split("/")[-1],
+                    "display_name": r.get("display_name"),
+                    "description": r.get("description"),
+                    "works_count": r.get("works_count", 0)
+                })
+            else:
+                print(f"  [-] Not found: {name}")
+                
+            time.sleep(0.1) # Polite delay
+        except Exception as e:
+            print(f"  [!] Error fetching {name}: {e}")
+            
+    print(f"[info] Found {len(subfields)} valid physics subfields.")
+    return subfields
+
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate universe.json from galaxy JSON files"
-    )
-    parser.add_argument("--galaxies", nargs='+', required=True,
-                        help="Galaxy definitions as: id:name:nodes_file:edges_file:metadata_file")
-    parser.add_argument("--output", type=str, default="universe.json",
-                        help="Output filename (default: universe.json)")
-    parser.add_argument("--frontend-dir", type=str, default=None,
-                        help="Optional: directory to copy JSON file into")
-    parser.add_argument("--center-distance", type=float, default=300.0,
-                        help="Base distance from center for galaxy positioning (default: 300.0)")
-    parser.add_argument("--layout", type=str, default="spiral", choices=["spiral", "cluster", "circle"],
-                        help="Layout type: 'spiral' (knowledge evolution), 'cluster' (constellation), or 'circle' (default: spiral)")
-    parser.add_argument("--email", type=str, default=None,
-                        help="Email for OpenAlex API (polite pool)")
+    parser = argparse.ArgumentParser(description="Generate universe.json from galaxy data")
+    parser.add_argument("--galaxies", nargs="+", help="Galaxy definitions in format id:name:nodesFile:edgesFile:metadataFile", default=[])
+    parser.add_argument("--output", default="universe.json", help="Output JSON file path")
+    parser.add_argument("--frontend-dir", help="Path to frontend public dir to copy universe.json to")
+    parser.add_argument("--layout", default="spiral", choices=["spiral", "cluster", "circle"], help="Layout algorithm")
+    parser.add_argument("--email", help="Email for OpenAlex API (polite pool)")
     
     args = parser.parse_args()
     
-    # Parse galaxy definitions
-    galaxies_info = []
-    print(f"[info] Parsing {len(args.galaxies)} galaxies...")
-    
-    for galaxy_def in args.galaxies:
-        parts = galaxy_def.split(':')
-        if len(parts) < 3:
-            print(f"[error] Invalid galaxy definition: {galaxy_def}")
-            print("[error] Expected format: id:name:nodes_file[:edges_file][:metadata_file]")
-            continue
-        
-        galaxy_id = parts[0]
-        galaxy_name = parts[1]
-        nodes_file = parts[2]
-        edges_file = parts[3] if len(parts) > 3 else f"{galaxy_id}_edges.json"
-        metadata_file = parts[4] if len(parts) > 4 else f"{galaxy_id}_metadata.json"
-        
-        # Load galaxy data to get node count
-        if not os.path.exists(nodes_file):
-            print(f"[warn] Nodes file not found: {nodes_file}, assuming 0 nodes")
-            galaxy_data = {'nodeCount': 0, 'edgeCount': 0, 'metadata': {}}
-        else:
-            galaxy_data = load_galaxy_data(nodes_file, metadata_file)
-            
-        # Fetch OpenAlex metrics
-        print(f"[info] Fetching OpenAlex metrics for '{galaxy_name}'...")
-        oa_metrics = get_openalex_metrics(galaxy_name, args.email)
-        
-        info = {
-            'id': galaxy_id,
-            'name': galaxy_name,
-            'nodeCount': galaxy_data['nodeCount'],
-            'edgeCount': galaxy_data['edgeCount'],
-            'nodesFile': os.path.basename(nodes_file),
-            'edgesFile': os.path.basename(edges_file),
-            'metadataFile': os.path.basename(metadata_file)
-        }
-        
-        if oa_metrics:
-            info.update(oa_metrics)
-            print(f"      -> Works: {oa_metrics.get('totalWorksCount',0)}, First Year: {oa_metrics.get('firstPublicationYear')}")
-        else:
-            print(f"      -> No OpenAlex data found")
-            
-        galaxies_info.append(info)
+    # 1. Parse User Galaxies (available locally)
+    user_galaxies_map = {}
+    if args.galaxies:
+        for g_str in args.galaxies:
+            parts = g_str.split(":")
+            if len(parts) >= 2:
+                try:
+                    g_id = parts[0]
+                    name = parts[1]
+                    nodes_file = parts[2] if len(parts) > 2 else f"{g_id}_nodes.json"
+                    edges_file = parts[3] if len(parts) > 3 else f"{g_id}_edges.json"
+                    meta_file = parts[4] if len(parts) > 4 else f"{g_id}_metadata.json"
+                    
+                    # Load local data if available
+                    node_count = 0
+                    edge_count = 0
+                    if os.path.exists(nodes_file):
+                        load_res = load_galaxy_data(nodes_file, meta_file)
+                        node_count = load_res['nodeCount']
+                        edge_count = load_res['edgeCount']
+                    
+                    user_galaxies_map[name.lower()] = {
+                        "id": g_id,
+                        "name": name,
+                        "nodesFile": nodes_file,
+                        "edgesFile": edges_file,
+                        "metadataFile": meta_file,
+                        "nodeCount": node_count,
+                        "edgeCount": edge_count,
+                        "hasPapers": True
+                    }
+                except Exception as e:
+                    print(f"[warn] Failed to parse galaxy '{g_str}': {e}")
 
-    if not galaxies_info:
-        print("[error] No valid galaxies found")
-        return
+    # 2. Fetch All Physics Subfields
+    all_subfields = fetch_physics_subfields(args.email)
     
-    # Sort galaxies by firstPublicationYear for spiral layout (Time line view)
-    # If using spiral layout, sorting by time makes the spiral a timeline.
-    if args.layout == "spiral":
-        # Sort keys: has_year (bool), year (int). Put those without year at end (or beginning?)
-        # Let's put oldest first.
-        # Put items with year=None at the end (using 9999 as sentinel)
-        galaxies_info.sort(key=lambda x: (x.get('firstPublicationYear') is None, x.get('firstPublicationYear') or 9999))
+    final_galaxies = []
+    
+    # 3. Merge and Fetch Metrics
+    for sub in all_subfields:
+        name = sub["display_name"]
+        normalized_name = name.lower()
         
-        print("[info] Sorted galaxies by first publication year for spiral layout")
+        galaxy_info = {}
+        
+        # Check if user provided this galaxy (match by name)
+        # We try strict match or partial match logic
+        found_key = None
+        if normalized_name in user_galaxies_map:
+            found_key = normalized_name
+        else:
+            # Fuzzy match: check if user provided name is a substring of OA name or vice versa
+            # e.g. "Condensed Matter" (user) in "Condensed matter physics" (OA) -> Match
+            for key in user_galaxies_map.keys():
+                if key in normalized_name or normalized_name in key:
+                    found_key = key
+                    break
+        
+        if found_key:
+            print(f"[info] Processing user galaxy: {name} (matched '{found_key}')...")
+            galaxy_info = user_galaxies_map[found_key]
+            # Update name to match OpenAlex official name if desired, or keep user name?
+            # Let's keep User name but ensure ID is correct? 
+            # Actually, we want the official OA ID.
+            galaxy_info["openAlexId"] = sub["id"] 
+            # Ensure proper ID usage. If user provided an ID, it might be arbitrary "2".
+            # The universe nodes usually use `id`. We should probably switch to OA ID if we can,
+            # BUT the frontend loads files based on the ID in universe.json.
+            # The user provided files like `condensed_matter_nodes.json`. 
+            # If we change the ID to `C...`, the frontend might look for `C..._nodes.json`?
+            # universe.json stores `nodesFile`. Frontend uses that.
+            # So `id` can be anything unique. 
+            # HOWEVER, universe views often use ID for coloring or keys.
+            
+            # Let's KEEP the user's ID for user galaxies to ensure file loading works if it relies on ID naming conventions not explicitly in nodesFile property (though nodesFile property is explicit).
+            # The issue is `hasPapers` is in `galaxy_info`.
+            galaxy_info["hasPapers"] = True
+        else:
+            print(f"[info] Processing stub galaxy: {name}...")
+            # Create stub
+            galaxy_info = {
+                "id": sub["id"], # Use OpenAlex ID as ID for stubs
+                "name": name,
+                # Set nodeCount to 0 for stubs, size comes from totalWorksCount
+                "nodeCount": 0,
+                "edgeCount": 0,
+                "hasPapers": False
+            }
+            
+        # Metrics (Universal)
+        print(f"[info] Fetching history for {name} ({sub['id']})...")
+        metrics = get_openalex_metrics(name, args.email)
+        
+        if metrics:
+            print(f"      -> Works: {metrics.get('totalWorksCount')}, First Year: {metrics.get('firstPublicationYear')}")
+            galaxy_info.update(metrics)
+            
+        final_galaxies.append(galaxy_info)
+        
+    print(f"[info] Sorted galaxies by first publication year for spiral layout")
+    final_galaxies.sort(key=lambda x: x.get("firstPublicationYear") or 2000)
 
-    # Generate universe nodes
-    universe_nodes = generate_universe_nodes(galaxies_info, args.center_distance, args.layout)
+    # 4. Generate Universe Nodes
+    universe_nodes = generate_universe_nodes(final_galaxies, layout=args.layout)
     
-    # Create universe JSON structure
-    universe_data = {
-        'nodes': universe_nodes,
-        'metadata': {
-            'galaxyCount': len(universe_nodes),
-            'totalNodes': sum(g['nodeCount'] for g in galaxies_info),
-            'totalEdges': sum(g['edgeCount'] for g in galaxies_info)
+    output_data = {
+        "nodes": universe_nodes,
+        "metadata": {
+            "galaxyCount": len(universe_nodes),
+            "generatedAt": time.strftime("%Y-%m-%d %H:%M:%S")
         }
     }
     
-    # Save universe.json
     with open(args.output, 'w', encoding='utf-8') as f:
-        json.dump(universe_data, f, indent=2, ensure_ascii=False)
-    
+        json.dump(output_data, f, indent=2)
+        
     print(f"[info] Wrote: {args.output}")
     
-    # Copy to frontend if requested
-    if args.frontend_dir:
-        os.makedirs(args.frontend_dir, exist_ok=True)
-        dst = os.path.join(args.frontend_dir, os.path.basename(args.output))
+    # Auto-detect frontend dir if not provided
+    frontend_dir = args.frontend_dir
+    if not frontend_dir:
+        # Assume standard repo structure: ../arxiv-3d-frontend/public
+        potential_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "arxiv-3d-frontend", "public")
+        if os.path.exists(potential_path):
+            frontend_dir = potential_path
+            print(f"[info] Auto-detected frontend dir: {frontend_dir}")
+
+    if frontend_dir and os.path.exists(frontend_dir):
         import shutil
-        shutil.copy(args.output, dst)
-        print(f"[info] Copied to: {dst}")
-    
+        dest = os.path.join(frontend_dir, "universe.json")
+        try:
+            shutil.copy2(args.output, dest)
+            print(f"[info] Copied to: {dest}")
+        except Exception as e:
+            print(f"[warn] Failed to copy to frontend: {e}")
+        
     print(f"\n[info] Done! Generated universe with {len(universe_nodes)} galaxies.")
 
 if __name__ == "__main__":
