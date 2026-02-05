@@ -319,7 +319,8 @@ def generate_universe_nodes(
                 'metadataFile': galaxy.get('metadataFile', f"{galaxy['id']}_metadata.json"),
                 'position': [x, y, z],
                 'size': round(size, 2),
-                'angle': round(math.degrees(angle), 2)
+                'angle': round(math.degrees(angle), 2),
+                'timeline_y': galaxy.get('timeline_y', 0)
             }
             
             universe_nodes.append(universe_node)
@@ -377,7 +378,8 @@ def generate_universe_nodes(
                 'metadataFile': galaxy.get('metadataFile', f"{galaxy['id']}_metadata.json"),
                 'position': [x, y, z],
                 'size': round(size, 2),
-                'angle': round(math.degrees(angle), 2)
+                'angle': round(math.degrees(angle), 2),
+                'timeline_y': galaxy.get('timeline_y', 0)
             }
             
             universe_nodes.append(universe_node)
@@ -419,7 +421,8 @@ def generate_universe_nodes(
                 'metadataFile': galaxy.get('metadataFile', f"{galaxy['id']}_metadata.json"),
                 'position': [x, y, z],
                 'size': round(size, 2),
-                'angle': round(math.degrees(angle), 2)
+                'angle': round(math.degrees(angle), 2),
+                'timeline_y': galaxy.get('timeline_y', 0)
             }
             
             universe_nodes.append(universe_node)
@@ -604,6 +607,68 @@ def main():
         
     print(f"[info] Sorted galaxies by first publication year for spiral layout")
     final_galaxies.sort(key=lambda x: x.get("firstPublicationYear") or 2000)
+
+    # --- Pre-calculate Absolute Timeline Y-Coordinates (Dynamic Spacing) ---
+    print(f"[info] Calculating dynamic timeline positions...")
+    
+    # 1. Find Global Max (single decade count) for scaling
+    global_max_works_single_decade = 0
+    for g in final_galaxies:
+        decade_counts = [w.get("works_count", 0) for w in g.get("worksByDecade", [])]
+        local_max = max(decade_counts) if decade_counts else 0
+        if local_max > global_max_works_single_decade:
+            global_max_works_single_decade = local_max
+    
+    global_max_works_single_decade = max(global_max_works_single_decade, 1) # Avoid div by zero
+
+    # Layout Constraints (Must match Frontend App.js logic ideally, or Frontend matches this)
+    # Frontend: BASE_HEIGHT = 200, MAX_DATA_HEIGHT = 400
+    NODE_BASE_HEIGHT = 200
+    TARGET_MAX_DATA_HEIGHT = 400
+    # Layout Constraints (Must match Frontend App.js logic ideally, or Frontend matches this)
+    # Frontend: BASE_HEIGHT = 200, MAX_DATA_HEIGHT = 400
+    NODE_BASE_HEIGHT = 200
+    TARGET_MAX_DATA_HEIGHT = 400
+    GAP = 10 # Reduced from 50 to 10 per user request ("bring them even closer")
+
+    current_y_cursor = 0
+    # timelines are centered on their Y. So we track the "bottom" of the previous node.
+    
+    # We want the whole stack centered around 0.
+    # First pass: calculate total height
+    calculated_positions = []
+    total_stack_height = 0
+    
+    for i, g in enumerate(final_galaxies):
+        decade_counts = [w.get("works_count", 0) for w in g.get("worksByDecade", [])]
+        local_max = max(decade_counts) if decade_counts else 0
+        
+        # Calculate Height
+        ratio = local_max / global_max_works_single_decade
+        data_height = ratio * TARGET_MAX_DATA_HEIGHT
+        total_node_height = NODE_BASE_HEIGHT + data_height
+        
+        calculated_positions.append({
+            "height": total_node_height,
+            "galaxy": g
+        })
+        
+        if i > 0:
+            total_stack_height += GAP
+        total_stack_height += total_node_height
+
+    # Second pass: Assign Y
+    start_y = -total_stack_height / 2
+    current_y = start_y
+
+    for item in calculated_positions:
+        h = item["height"]
+        # Center of this node is current_y + h/2
+        center_y = current_y + (h / 2)
+        item["galaxy"]["timeline_y"] = center_y
+        
+        # Advance cursor
+        current_y += h + GAP
 
     # 4. Generate Universe Nodes
     universe_nodes = generate_universe_nodes(final_galaxies, layout=args.layout)

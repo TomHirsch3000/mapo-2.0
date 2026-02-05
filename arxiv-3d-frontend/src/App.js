@@ -466,16 +466,45 @@ export default function App() {
           let minD = Infinity;
 
           universeNodes.forEach(n => {
-            // Skip menu node - don't navigate to it
             if (n.isMenuNode) return;
-            const dx = n.x - cx;
-            const dy = n.y - cy;
-            const d = Math.sqrt(dx * dx + dy * dy);
-            if (d < minD) { minD = d; closest = n; }
+
+            if (layoutMode === 'TIMELINE') {
+              // Timeline Hit Test: Vertical Slot Proximity
+              // Check if Y is within range of the node's stream area
+              const dy = Math.abs(n.y - cy);
+              // Max height is ~400, so half is 200. Add padding for easier entry.
+              const HIT_THRESHOLD = 250;
+
+              // Also check X bounds loosely (don't zoom if WAY off chart)
+              // Chart is roughly -1.5*width to 1.5*width.
+              // Just using Y is safe enough for a vertical stack.
+
+              if (dy < HIT_THRESHOLD && dy < minD) {
+                minD = dy;
+                closest = n;
+              }
+            } else {
+              // Default (Radial/Spiral) Hit Test
+              const dx = n.x - cx;
+              const dy = n.y - cy;
+              const d = Math.sqrt(dx * dx + dy * dy);
+              if (d < minD) { minD = d; closest = n; }
+            }
           });
 
-          // Threshold: expanded for easier navigation
-          if (closest && minD < (closest.val * 2.5 + 100)) {
+          // Threshold Logic
+          let trigger = false;
+          if (closest) {
+            if (layoutMode === 'TIMELINE') {
+              // Absolute threshold for timeline
+              if (minD < 250) trigger = true;
+            } else {
+              // Radius based for clusters
+              if (minD < (closest.val * 2.5 + 100)) trigger = true;
+            }
+          }
+
+          if (trigger && closest) {
             isTransitioning.current = true;
             handleGalaxyClick(closest.id);
             // Smooth transition: zoom to 0.3 scale of the galaxy view
@@ -869,6 +898,9 @@ export default function App() {
 
         el.append("text").attr("class", "label-main").attr("text-anchor", "middle").attr("dy", d => d.val * 2 + 20)
           .style("font-size", "16px").style("font-weight", "600").style("fill", "#0f172a").style("text-shadow", "0 2px 4px white");
+        el.append("text").attr("class", "label-right").attr("text-anchor", "start").attr("dy", 5) // Vertically centered roughly
+          .style("font-size", "16px").style("font-weight", "600").style("fill", "#0f172a").style("text-shadow", "0 2px 4px white")
+          .style("opacity", 0);
         el.append("text").attr("class", "label-sub").attr("text-anchor", "middle").attr("dy", d => d.val * 2 + 40)
           .style("font-size", "12px").style("fill", "#64748b");
       });
@@ -936,6 +968,10 @@ export default function App() {
         .text(d => d.isMenuNode ? "" : (d.data?.hasPapers !== false ? `${d.nodeCount} papers` : "No data"))
         .attr("dy", d => d.val * 2 + 40)
         .style("opacity", d => d.isMenuNode ? 0 : 1);
+
+      allNodes.select(".label-right")
+        .text(d => d.name)
+        .style("opacity", 0); // Default hidden
 
       // Remove Field elements if switching types
       allNodes.select("rect").remove();
@@ -1143,7 +1179,8 @@ export default function App() {
 
     // Universe Timeline Scale
     let universeXScale = null;
-    let universeYScale = null; // For ridge plot spacing
+    let universeYScale = null; // Kept for other modes/refs, though null in TIMELINE now
+    let timelineHeightScale = null;
 
     if (isUniverse && layoutMode === 'TIMELINE') {
       // Global min/max year across all galaxies
@@ -1151,26 +1188,29 @@ export default function App() {
       const minYear = d3.min(allDecades) || 1800;
       const maxYear = d3.max(allDecades) || 2025;
 
-      // Use 90% of width for timeline to maximize spread and alignment
+      // Use 300% of width for timeline to maximize spread and alignment
       universeXScale = d3.scaleLinear()
         .domain([minYear, maxYear])
-        .range([-width * 0.45, width * 0.45]);
+        .range([-width * 1.5, width * 1.5]);
 
-      // Sort nodes by first publication year
-      const sortedNodes = [...universeNodes]
-        .filter(n => !n.isMenuNode)
-        .sort((a, b) => (a.data.firstPublicationYear || 0) - (b.data.firstPublicationYear || 0));
+      // Calculate global stats for sizing
+      const validNodes = universeNodes.filter(n => !n.isMenuNode && n.data?.worksByDecade);
 
-      // Increase vertical spread to prevent overlap
-      // Use fixed height per row to guarantee separation regardless of screen size
-      const rowHeight = 70;
-      const contentHeight = sortedNodes.length * rowHeight;
-      const totalHeight = Math.max(height * 0.9, contentHeight);
+      // Find the absolute maximum papers in a single decade for a single field
+      // This will be our "maximum width funnel" anchor (e.g., Condensed Matter's peak)
+      const absMaxWorksSingleDecade = d3.max(validNodes, d => d3.max(d.data.worksByDecade, w => w.works_count) || 0) || 1000;
 
-      universeYScale = d3.scalePoint()
-        .domain(sortedNodes.map(n => n.id))
-        .range([-totalHeight / 2, totalHeight / 2])
-        .padding(0.2);
+      // Smart Layout Distribution (Unconstrained Vertical Stack):
+      // Vertical space is unlimited (scrollable).
+      // We scale the data such that the "fattest" funnel is 400px tall (leaving 400px gap in 800px slot).
+      const TARGET_MAX_DATA_HEIGHT = 400;
+
+      // Scale maps works -> variable_height_component
+      timelineHeightScale = d3.scaleLinear()
+        .domain([0, absMaxWorksSingleDecade])
+        .range([0, TARGET_MAX_DATA_HEIGHT]);
+
+      universeYScale = null; // We use dynamic positioning now
     }
 
 
@@ -1190,32 +1230,16 @@ export default function App() {
     // Universe Area Generator
     const generateAreaPath = (d) => {
       const decades = d.data.worksByDecade || [];
-      if (!decades.length || !universeXScale) return "M0,0Z";
+      if (!decades.length || !universeXScale || !timelineHeightScale) return "M0,0Z";
 
-      // We need to map decade -> x (relative to node.x)
-      // count -> y (height)
-
-      // Normalize height: find max count in this galaxy to roughly fit node size intent
-      const maxCount = d3.max(decades, x => x.works_count) || 1;
-      const heightScale = d3.scaleLinear()
-        .domain([0, maxCount])
-        .range([0, -45]); // Grow upwards 45px (Reduced from 80 to prevent overlap)
-
-      // We want to center the area chart on the node position X-wise?
-      // No, if we want a true timeline, the X position of the node should be the 'start' or 'center' of the timeline?
-      // Actually, ridge plots usually align X axes. 
-      // So node.x is the center of the screen (0), and the path is drawn using universeXScale directly.
-      // But 'd' path coords are relative to the group transform (translate(d.x, d.y)).
-      // So if node.x is 0, we can use universeXScale(year). 
-      // If node is positioned at universeXScale(startYear), we offset.
-
-      // Decision: In Timeline Layout, set node.x = 0 (or constant).
-      // Draw path relative to that.
+      // Symmetric Streamgraph
+      // Center Y is 0 (relative to node position)
+      // Top is -height/2, Bottom is +height/2
 
       const area = d3.area()
         .x(p => universeXScale(p.decade) - d.x) // Adjust for node position
-        .y0(0)
-        .y1(p => heightScale(p.works_count))
+        .y0(p => -timelineHeightScale(p.works_count) / 2)
+        .y1(p => timelineHeightScale(p.works_count) / 2)
         .curve(d3.curveBasis); // Smooth curves
 
       return area(decades);
@@ -1260,23 +1284,46 @@ export default function App() {
 
       // Update forces/positions based on layout
       // Update forces/positions based on layout
-      if (layoutMode === 'TIMELINE' && universeXScale) {
+      if (layoutMode === 'TIMELINE' && universeXScale && timelineHeightScale) {
         // Ridge Plot Layout - Robust Explicit Positioning
-        // Sort explicitly by year again to be sure (currentNodes might be unsorted/filtered)
+        // Reset ALL universe positions to handle stale state
+        currentNodes.forEach(n => {
+          if (n.field === 'Galaxy' || n.isMenuNode) {
+            n.fx = null; n.fy = null;
+          }
+        });
+
+        // Stable Sort: Year -> ID
         const sortedForLayout = [...currentNodes]
           .filter(n => !n.isMenuNode)
-          .sort((a, b) => (a.data.firstPublicationYear || 0) - (b.data.firstPublicationYear || 0));
+          .sort((a, b) => {
+            const yearDiff = (a.data.firstPublicationYear || 0) - (b.data.firstPublicationYear || 0);
+            if (yearDiff !== 0) return yearDiff;
+            return a.id.localeCompare(b.id);
+          });
 
-        const idToIndex = new Map(sortedForLayout.map((n, i) => [n.id, i]));
-        const rowHeight = 90; // Generous 90px spacing
-        const totalH = sortedForLayout.length * rowHeight;
+        // Strict Slot Layout - Absolute Positioning (Backend Driven)
+        // If data has 'timeline_y', use it. Else fallback to index-based slot.
+        const SLOT_HEIGHT = 800;
 
-        currentNodes.forEach(n => {
-          if (n.isMenuNode) return;
-          const idx = idToIndex.get(n.id);
-          if (idx !== undefined) {
-            n.fx = 0; // Center X
-            n.fy = (idx * rowHeight) - (totalH / 2); // Center Y list
+        sortedForLayout.forEach((n, i) => {
+          n.fx = 0;
+          if (typeof n.data.timeline_y === "number") {
+            n.fy = n.data.timeline_y;
+          } else {
+            // Fallback if universe.json is stale
+            const totalHeight = sortedForLayout.length * SLOT_HEIGHT;
+            const startY = -totalHeight / 2;
+            n.fy = startY + (i * SLOT_HEIGHT) + (SLOT_HEIGHT / 2);
+          }
+          // FORCE Position immediate update - Bypass D3 tick for initial placement
+          if (n.fy !== undefined) {
+            n.y = n.fy;
+            n.vy = 0;
+          }
+          if (n.fx !== undefined) {
+            n.x = n.fx;
+            n.vx = 0;
           }
         });
 
@@ -1316,7 +1363,8 @@ export default function App() {
 
     // --- RENDER UPDATE FOR UNIVERSE SHAPES ---
     if (isUniverse) {
-      const tDuration = 1000;
+      // Disable animation on first render to make it instant
+      const tDuration = (firstDataRenderRef.current && layoutMode === 'TIMELINE') ? 0 : 1000;
 
       allNodes.each(function (d) {
         const el = d3.select(this);
@@ -1354,6 +1402,16 @@ export default function App() {
             .attr("x", startX - 20)
             .attr("dy", 15)
             .attr("text-anchor", "end")
+            .style("opacity", 1);
+
+          // Right Label
+          const endYear = d.data.lastPublicationYear || 2024;
+          const endX = universeXScale ? (universeXScale(endYear) - d.fx) : 200;
+
+          d3.select(this).select(".label-right").transition().duration(tDuration)
+            .attr("x", endX + 20)
+            .attr("dy", 0)
+            .attr("text-anchor", "start")
             .style("opacity", 1);
 
         } else {
