@@ -414,6 +414,7 @@ def generate_universe_nodes(
                 'nodeCount': galaxy.get('nodeCount', 0),
                 'edgeCount': galaxy.get('edgeCount', 0),
                 'totalWorksCount': galaxy.get('totalWorksCount', 0),
+                'totalCitations': galaxy.get('totalCitations', 0), # New field
                 'firstPublicationYear': galaxy.get('firstPublicationYear'),
                 'worksByDecade': galaxy.get('worksByDecade', []),
                 'nodesFile': galaxy.get('nodesFile', f"{galaxy['id']}_nodes.json"),
@@ -483,7 +484,8 @@ def fetch_physics_subfields(email: str) -> List[Dict[str, Any]]:
                     "id": r.get("id", "").split("/")[-1],
                     "display_name": r.get("display_name"),
                     "description": r.get("description"),
-                    "works_count": r.get("works_count", 0)
+                    "works_count": r.get("works_count", 0),
+                    "cited_by_count": r.get("cited_by_count", 0) # Capture citations
                 })
             else:
                 print(f"  [-] Not found: {name}")
@@ -583,6 +585,9 @@ def main():
             # Let's KEEP the user's ID for user galaxies to ensure file loading works if it relies on ID naming conventions not explicitly in nodesFile property (though nodesFile property is explicit).
             # The issue is `hasPapers` is in `galaxy_info`.
             galaxy_info["hasPapers"] = True
+            # Also set citations if we matched from sub
+            if "cited_by_count" in sub:
+                 galaxy_info["totalCitations"] = sub["cited_by_count"]
         else:
             print(f"[info] Processing stub galaxy: {name}...")
             # Create stub
@@ -592,7 +597,8 @@ def main():
                 # Set nodeCount to 0 for stubs, size comes from totalWorksCount
                 "nodeCount": 0,
                 "edgeCount": 0,
-                "hasPapers": False
+                "hasPapers": False,
+                "totalCitations": sub.get("cited_by_count", 0)
             }
             
         # Metrics (Universal)
@@ -623,12 +629,8 @@ def main():
 
     # Layout Constraints (Must match Frontend App.js logic ideally, or Frontend matches this)
     # Frontend: BASE_HEIGHT = 200, MAX_DATA_HEIGHT = 400
-    NODE_BASE_HEIGHT = 200
-    TARGET_MAX_DATA_HEIGHT = 400
-    # Layout Constraints (Must match Frontend App.js logic ideally, or Frontend matches this)
-    # Frontend: BASE_HEIGHT = 200, MAX_DATA_HEIGHT = 400
-    NODE_BASE_HEIGHT = 200
-    TARGET_MAX_DATA_HEIGHT = 400
+    NODE_BASE_HEIGHT = 40 # Reduced to minimal (label space) to allow proportional scaling
+    TARGET_MAX_DATA_HEIGHT = 300 # Increased range to emphasize "bigger nodes get more space"
     GAP = 10 # Reduced from 50 to 10 per user request ("bring them even closer")
 
     current_y_cursor = 0
@@ -645,6 +647,16 @@ def main():
         
         # Calculate Height
         ratio = local_max / global_max_works_single_decade
+        
+        # Manual Boost for specific fields per user request
+        g_name = g.get('name', '').lower()
+        if 'quantum mechanics' in g_name or 'acoustics' in g_name:
+             # Boost moderately (User requested "less space" after 3.0 was too much)
+             ratio = ratio * 1.5
+             # Clamp to 1.0 logic? Or allow to exceed? 
+             # Let's allow it to be large but maybe cap ratio at 1.5 of max to avoid blowing up screen
+             ratio = max(ratio, 0.4) # Ensure it has at least 40% height even if data is small
+
         data_height = ratio * TARGET_MAX_DATA_HEIGHT
         total_node_height = NODE_BASE_HEIGHT + data_height
         

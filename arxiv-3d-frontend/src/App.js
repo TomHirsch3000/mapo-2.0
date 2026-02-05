@@ -289,16 +289,18 @@ export default function App() {
     const galaxyNodes = (universeData.nodes || []).map((galaxy) => {
       const existing = groupPositionsMatch.current.get(galaxy.id);
 
-      // Size based on Total Works Count (log scale)
+      // Size based on Total Citations (Impact) if available, else Works
       const totalWorks = galaxy.totalWorksCount || 0;
-      let val = 20; // Base size
+      const totalCitations = galaxy.totalCitations || 0; // Will be added to backend
+      let val = 20;
 
-      if (totalWorks > 0) {
-        // Log scale: log10(1) = 0, log10(1M) = 6
-        // Range roughly 20 to 120
+      if (totalCitations > 0) {
+        // Citations vary wildly (e.g. 100k to 10M). Log scale.
+        // log10(100k) = 5. log10(10M) = 7.
+        const logVal = Math.log10(totalCitations + 1);
+        val = 20 + (logVal / 8) * 120; // Scale up to ~140
+      } else if (totalWorks > 0) {
         const logVal = Math.log10(totalWorks + 1);
-        // Assuming max works ~2M -> log is ~6.3
-        // Let's normalize against a rough max of 10M -> log 7
         val = 20 + (logVal / 7) * 100;
       } else {
         val = Math.sqrt(galaxy.nodeCount || 0) * 0.3 + 10;
@@ -376,6 +378,7 @@ export default function App() {
   // Transitions
   const handleGalaxyClick = (galaxyId) => {
     console.log("Galaxy clicked:", galaxyId);
+    prevXAxisModeRef.current = xAxisMode; // Save current mode (e.g. TIMELINE)
     setActiveGalaxy(galaxyId);
     setViewMode('GALAXY');
     setXAxisMode('NONE'); // Default to Central/Cluster layout
@@ -388,6 +391,12 @@ export default function App() {
     setActiveGalaxy(null);
     setActiveGroup(null);
     setViewMode('UNIVERSE');
+    // Restore previous mode if available
+    if (prevXAxisModeRef.current) {
+      setXAxisMode(prevXAxisModeRef.current);
+    }
+    // If not, we leave it as is (which is likely NONE from galaxy view, so Central)
+
     setSelected(null);
     setRawNodes([]);
     setRawEdges([]);
@@ -441,10 +450,26 @@ export default function App() {
     if (gLinks.empty()) {
       gLinks = gMain.append("g").attr("class", "g-links");
     }
+    // Axis container - create it specifically so we can control order
+    let gAxisLayer = gMain.select(".g-axis-layer");
+    if (gAxisLayer.empty()) {
+      gAxisLayer = gMain.append("g").attr("class", "g-axis-layer");
+    }
+
     let gNodes = gMain.select(".g-nodes");
     if (gNodes.empty()) {
       gNodes = gMain.append("g").attr("class", "g-nodes");
     }
+
+    // Ensure render order: Links -> Axis -> Nodes 
+    // (Actually Axis is usually behind nodes in charts, but for "Nodes above labels" user request:
+    // User said: "nodes in universe view should appear above the x axis labels"
+    // So Nodes must be last.
+    gLinks.lower();
+    gAxisLayer.lower(); // Axis below nodes
+    gLinks.lower(); // Links at bottom
+    gNodes.raise(); // Explicitly raise nodes to top
+    // Result: Links -> Axis -> Nodes (Top)
 
     // Zoom Behavior - Defined every render to access current state (closures)
     const zoom = d3.zoom()
@@ -1222,10 +1247,13 @@ export default function App() {
         return d._isExtra ? -1600 : -600;
       }))
       .force("collide", d3.forceCollide().radius(d => {
-        if (isUniverse) return (d.val * 2 + 80);
+        if (isUniverse) {
+          // Universe Central Collision
+          return (d.val * 2.5 + 40); // Hex radius + padding
+        }
         if (isGalaxy) return (d.val * 2 + 50);
         return (d._w * 0.6) + (d._isExtra ? 260 : 40);
-      }).iterations(4));
+      }).iterations(isUniverse ? 4 : 4));
 
     // Universe Area Generator
     const generateAreaPath = (d) => {
@@ -1277,10 +1305,18 @@ export default function App() {
     }
 
     if (isUniverse) {
-      sim.force("center", null);
-      sim.force("link", null);
-      sim.force("charge", null);
-      sim.force("collide", null); // Manual positioning, no collision needed usually
+      if (layoutMode === 'TIMELINE') {
+        sim.force("center", null);
+        sim.force("link", null);
+        sim.force("charge", null);
+        sim.force("collide", null);
+      } else {
+        // Central Layout Forces
+        sim.force("center", d3.forceCenter(0, 0));
+        sim.force("charge", d3.forceManyBody().strength(-300));
+        // Collision already set above with conditional radius
+        sim.force("link", null);
+      }
 
       // Update forces/positions based on layout
       // Update forces/positions based on layout
@@ -1289,7 +1325,12 @@ export default function App() {
         // Reset ALL universe positions to handle stale state
         currentNodes.forEach(n => {
           if (n.field === 'Galaxy' || n.isMenuNode) {
-            n.fx = null; n.fy = null;
+            // Keep menu node fixed
+            if (n.isMenuNode) {
+              n.fx = 800; n.fy = -600;
+            } else {
+              n.fx = null; n.fy = null;
+            }
           }
         });
 
@@ -1328,18 +1369,17 @@ export default function App() {
         });
 
       } else {
-        // Spiral Layout (Central)
-        // INCREASED spacing from 160 to 260 to prevent overlap
-        const hexPositions = generateHexPositions(currentNodes, 260);
+        // Central Layout (Universe) - FORCE SIMULATION (No Grid)
+        // We let the force simulation handle positioning to ensure tight packing
+        // without overlap and without rigid grid structure.
+
+        // Reset fixed positions so simulation takes over
         currentNodes.forEach(n => {
-          const pos = hexPositions.get(n.id || n.key);
-          if (pos) {
-            n.fx = pos.x;
-            n.fy = pos.y;
-          } else {
-            n.fx = 0; n.fy = 0;
-          }
+          n.fx = null;
+          n.fy = null;
         });
+
+        // We do NOT use generateHexPositions here anymore.
       }
 
     } else if (isGalaxy) {
@@ -1444,14 +1484,20 @@ export default function App() {
 
       // Add Timeline Axis if needed
       if (layoutMode === 'TIMELINE' && universeXScale) {
-        let gAxis = gMain.select(".universe-axis");
+        // Use the pre-created axis layer to ensure Z-order
+        const gAxisLayer = gMain.select(".g-axis-layer");
+        let gAxis = gAxisLayer.select(".universe-axis");
         if (gAxis.empty()) {
-          gAxis = gMain.append("g").attr("class", "universe-axis");
+          gAxis = gAxisLayer.append("g").attr("class", "universe-axis");
         }
 
         // Dynamic axis
         const axis = d3.axisBottom(universeXScale).ticks(10).tickFormat(d3.format("d"));
-        gAxis.attr("transform", `translate(0, ${height / 2 - 50})`)
+        // Move axis to bottom of screen (height - padding) so it's strictly "below" the stack visually
+        // The stack is centered at height/2, so if stack is large, it might overlap bottom, 
+        // but user asked for "x axis labels should be below the nodes". 
+        // Placing at bottom is safest interpretation.
+        gAxis.attr("transform", `translate(0, ${height - 40})`)
           .transition().duration(1000)
           .style("opacity", 1)
           .call(axis);
