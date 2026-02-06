@@ -605,7 +605,30 @@ export default function App() {
     }
     // When returning to Universe, reset zoom
     if (viewMode === 'UNIVERSE' && prevViewMode.current !== 'UNIVERSE') {
-      svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.3));
+      if (layoutMode === 'TIMELINE') {
+        const k = 0.45;
+        const tx = width * 0.12;
+
+        // Dynamic Vertical Logic (Same as Initial - Predictive)
+        let predictedMaxY = 0;
+        const validNodes = universeNodes.filter(n => !n.isMenuNode);
+        const hasDataPositions = validNodes.some(n => typeof n.data.timeline_y === 'number');
+        if (hasDataPositions) {
+          predictedMaxY = d3.max(validNodes, n => n.data.timeline_y) || 0;
+        } else {
+          const count = validNodes.length;
+          predictedMaxY = count > 0 ? 400 * (count - 1) : 0;
+        }
+
+        const dataBottomY = predictedMaxY + 150;
+        const reservedBottom = height * 0.45;
+        const targetScreenY = height - reservedBottom;
+        const ty = targetScreenY - (dataBottomY * k);
+
+        svg.call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
+      } else {
+        svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.3));
+      }
       returnToUniverseRef.current = false;
       isTransitioning.current = false;
     }
@@ -1092,7 +1115,14 @@ export default function App() {
 
     let timelineXScale = null;
     if (layoutMode === 'TIMELINE') {
-      const years = currentNodes.map(d => isGalaxy ? d.minYear : d.year);
+      // FIX: Use ALL nodes in the group for scale domain, not just selected subset
+      // This ensures the timeline doesn't jump/rescale when selecting a node
+      let domainNodes = currentNodes;
+      if (!isGalaxy && !isUniverse && activeGroup) {
+        domainNodes = nodes.filter(n => n.group === activeGroup);
+      }
+
+      const years = domainNodes.map(d => isGalaxy ? d.minYear : d.year);
       const minYear = d3.min(years) || 1990;
       const maxYear = d3.max(years) || 2025;
       timelineXScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 1.2, width * 1.2]);
@@ -1184,7 +1214,47 @@ export default function App() {
 
     // Initial Center View (Crucial for Universe Timeline to be visible)
     if (firstDataRenderRef.current && width && height) {
-      svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2));
+      if (layoutMode === 'TIMELINE') {
+        const k = 0.45;
+        const tx = width * 0.12;
+
+        // Dynamic Vertical Positioning
+        // Goal: "Bottom right of chart fits in bottom right of screen"
+
+        // 1. Predict Data Bottom (Deterministic Layout Logic)
+        // We cannot rely on n.fy being set yet on first render.
+        // We replicate the layout logic:
+        // Logic: centerY = 0. Slots are 800px high. 
+        // Bottom-most node Y = (Count * 800 / 2) - 400 = 400 * Count - 400 = 400 * (Count - 1)
+
+        let predictedMaxY = 0;
+        const validNodes = universeNodes.filter(n => !n.isMenuNode);
+
+        // Check if we have pre-calculated positions in data
+        const hasDataPositions = validNodes.some(n => typeof n.data.timeline_y === 'number');
+
+        if (hasDataPositions) {
+          predictedMaxY = d3.max(validNodes, n => n.data.timeline_y) || 0;
+        } else {
+          const count = validNodes.length;
+          predictedMaxY = count > 0 ? 400 * (count - 1) : 0;
+        }
+
+        const dataBottomY = predictedMaxY + 150; // Axis position
+
+        // 2. Target Screen Bottom
+        // We want dataBottomY to be at screen bottom minus footer height
+        // Footer is min 30vh. User wants axis clearly visible, so reserve more space (45%).
+        const reservedBottom = height * 0.45;
+        const targetScreenY = height - reservedBottom;
+
+        // 3. Solve for ty: ScreenY = DataY * k + ty  =>  ty = ScreenY - DataY * k
+        const ty = targetScreenY - (dataBottomY * k);
+
+        svg.call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
+      } else {
+        svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2));
+      }
     }
 
     // When entering Field view, start zoomed further out
@@ -1523,13 +1593,16 @@ export default function App() {
           gAxis = gAxisLayer.append("g").attr("class", "universe-axis");
         }
 
+        // Fix Axis Position relative to Nodes (World Space)
+        // Find the bottom-most node to place axis below the stack
+        const validNodes = currentNodes.filter(n => !n.isMenuNode && typeof n.fy === 'number');
+        const maxY = d3.max(validNodes, n => n.fy) || (height / 2);
+        const axisY = maxY + 150; // Place closer to the last slot (was 450)
+
         // Dynamic axis
         const axis = d3.axisBottom(universeXScale).ticks(10).tickFormat(d3.format("d"));
-        // Move axis to bottom of screen (height - padding) so it's strictly "below" the stack visually
-        // The stack is centered at height/2, so if stack is large, it might overlap bottom, 
-        // but user asked for "x axis labels should be below the nodes". 
-        // Placing at bottom is safest interpretation.
-        gAxis.attr("transform", `translate(0, ${height - 40})`)
+
+        gAxis.attr("transform", `translate(0, ${axisY})`)
           .transition().duration(1000)
           .style("opacity", 1)
           .call(axis);
@@ -1732,10 +1805,24 @@ export default function App() {
     }
 
     if (layoutMode === 'TIMELINE' && !isUniverse) {
-      const years = currentNodes.map(d => isGalaxy ? d.minYear : d.year);
-      const minYear = d3.min(years) || 1990;
-      const maxYear = d3.max(years) || 2025;
-      const timelineScale = timelineXScale || d3.scaleLinear().domain([minYear, maxYear]).range([-width * 1.2, width * 1.2]);
+      // FIX: Re-calculate domain using stable set if needed, or use cached scale
+      let timelineScale = timelineXScale;
+      let minYear, maxYear;
+
+      if (!timelineScale) {
+        let domainNodes = currentNodes;
+        if (isGalaxy) {
+          // Galaxy view naturally has all currentNodes as the set
+        } else if (activeGroup) {
+          domainNodes = nodes.filter(n => n.group === activeGroup);
+        }
+        const years = domainNodes.map(d => isGalaxy ? d.minYear : d.year);
+        minYear = d3.min(years) || 1990;
+        maxYear = d3.max(years) || 2025;
+        timelineScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 1.2, width * 1.2]);
+      } else {
+        [minYear, maxYear] = timelineScale.domain();
+      }
 
       sim.force("x", d3.forceX(d => timelineScale(isGalaxy ? d.minYear : d.year)).strength(0.9));
       sim.force("x-band", null);
@@ -1751,14 +1838,14 @@ export default function App() {
 
       const axisGroup = gMain.insert("g", ":first-child").attr("class", "timeline-axis").attr("transform", `translate(0, ${graphCenterY + height * 0.3})`);
       axisGroup.append("line")
-        .attr("x1", timelineXScale(minYear) - 50).attr("x2", timelineXScale(maxYear) + 50).attr("y1", 0).attr("y2", 0)
+        .attr("x1", timelineScale(minYear) - 50).attr("x2", timelineScale(maxYear) + 50).attr("y1", 0).attr("y2", 0)
         .attr("stroke", "#94a3b8").attr("stroke-width", 2).attr("opacity", 0.5);
 
       const startDecade = Math.floor(minYear / 10) * 10;
       const endDecade = Math.ceil(maxYear / 10) * 10;
       for (let y = startDecade; y <= endDecade; y += 10) {
         if (y >= minYear - 5 && y <= maxYear + 5) {
-          const x = timelineXScale(y);
+          const x = timelineScale(y);
           axisGroup.append("line").attr("x1", x).attr("x2", x).attr("y1", -10).attr("y2", 10).attr("stroke", "#64748b").attr("stroke-width", 2);
           axisGroup.append("text").attr("x", x).attr("y", 30).attr("text-anchor", "middle")
             .style("fill", "#64748b").style("font-size", "14px").style("font-weight", "600").text(y);
