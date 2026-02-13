@@ -28,7 +28,16 @@ The application features a toggleable layout system that re-organizes nodes in r
 
 Views (Levels of Detail)
 
-1. Galaxy View (Macro Level)
+
+1. Universe view 
+ concept: nodes represent fields of study
+ source: universe_fields.json 
+ when layout is Central the nodes are hexagons 
+ when layout is Timeline the nodes are charts showing the number of papers per decade and they are distributed vertically 
+ on hover the bottom pannel should show total papers in the field, number of papers which are present in the map, first publication date and title of first publication, most cited paper and title of most cited paper
+
+
+2. Galaxy View (Macro Level)
     Concept: Nodes represent groups of papers.
     Grouping: Selectable via a dropdown (Field, Author, or Institution). Default is Field.
     Nodes:
@@ -42,8 +51,26 @@ Views (Levels of Detail)
         Style: Prominent and clearly visible (not too thin). Curved and directional with tapering width and fading tail (no arrowhead).
         Thickness: Determined by the volume of connections.
 
-2. Topic View (Micro Level)
+3. Topic View (Micro Level)
     Concept: Represents individual papers within a selected group (e.g., "All papers in Quantum Physics").
+    Nodes:
+        Shape: Rectangular cards with curved corners.
+        Content: Paper title (centered at top, wrapped, legible).
+        Size: Base radius scaled slightly by citation count.
+        Color: Always based on the AI Primary Field (consistent palette), regardless of Galaxy View aggregation.
+        Opacity: Modulated by z-depth for atmospheric perspective.
+    Edges:
+        Connect papers via citations and references.
+        Style: Prominent and clearly visible. Curved and directional with tapering width and fading tail (no arrowhead).
+    Interaction:
+        Highlight Mode (Hover/Select):
+            Active Elements: The selected node and its direct connections (neighbors) remain fully opaque and colored.
+            Edges: Connecting edges are highlighted and color-coded (Orange for Citations, Blue for References).
+            Background: All unrelated nodes and edges fade to grey/low opacity to focus attention on the active subgraph.
+    Bottom Panel: Displays abstract and full details of the selected paper.
+
+4. paper View (Micro Level)
+    Concept: Represents a single paper and its linked papers.
     Nodes:
         Shape: Rectangular cards with curved corners.
         Content: Paper title (centered at top, wrapped, legible).
@@ -99,23 +126,3 @@ Aesthetics
 
 
 
-
-
-
-
-
-Brief backend 
- 
-Pull papers from arxiv
-
-enrich edges from source 
-
-
-
-
-
-AI process
-
-
-
-I want to create a new python script which takes all of the papers in the database and does two things. first it checks if that paper really belongs to the field in which it is sitting (I have found a lot of papers on biology in the astrophysics field when I extracted it from openalex). It does this by calling the llm like in the proces ai metadata python code, reading the title, reading the abstract and comparing it to the database name. This will all require writing a prompt and giving it the inputs. If it finds a paper which is not relevant to the field then it creats a flag 1 in a new column called mislabelled paper. second I want it to take the list of physics fields from the AI field list column, I want to count the total number of instances of each field. Then I want it to create a subset of the fields listed with a limited number, I think 50 is the right number to try for now. then I want it to go through each row and find the closest matching field to one in the list of 50. It should do this first by reading all of that papers fields and finding the first match, if there are no matches then it should call the llm to read the abstract and try to assign it to one of the 50 fields. It should output this into the AI primary field column, even if that is already populated 

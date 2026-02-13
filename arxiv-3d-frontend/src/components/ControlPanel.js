@@ -1,0 +1,85 @@
+
+import React from 'react';
+import '../styles/Galaxy.css'; // Ensure proper styling
+
+export const ControlPanel = ({
+    viewMode,
+    layout,
+    grouping,
+    selected,
+    activeGroupLabel,
+    onBackToUniverse,
+    onBackToGalaxy,
+    onLayoutChange,
+    onGroupingChange
+}) => {
+
+    const layoutOptions = [
+        { label: "Central", value: "CENTRAL" },
+        { label: "Timeline", value: "TIMELINE" }
+    ];
+
+    const groupingOptions = [
+        { label: "Field", value: "FIELD" },
+        { label: "Author", value: "AUTHOR" },
+        { label: "Institution", value: "INSTITUTION" }
+    ];
+
+    // Header Title Logic
+    let headerTitle = "Map of Physics";
+    if (viewMode === 'UNIVERSE') {
+        headerTitle = "Map of Physics";
+    } else if (viewMode === 'GALAXY') {
+        // Here we could use the Galaxy Name if we had it passed down, or a generic "Physics"
+        headerTitle = "Galaxy View"; // TODO: Pass actual Galaxy Name (e.g., "Physics")
+    } else if (viewMode === 'FIELD' || viewMode === 'DETAIL') {
+        headerTitle = selected ? selected.title : (activeGroupLabel || "Detail View");
+    }
+
+    return (
+        <div className="galaxy-header">
+            <div className="controls-row" style={{ display: 'flex', gap: '20px', alignItems: 'center', position: 'absolute', top: 20, left: 20, pointerEvents: 'auto' }}>
+                {viewMode === 'GALAXY' && <button className="back-to-galaxy" onClick={onBackToUniverse}>← Back</button>}
+                {viewMode !== 'GALAXY' && viewMode !== 'UNIVERSE' && <button className="back-to-galaxy" onClick={onBackToGalaxy}>← Back</button>}
+
+                {/* Layout Toggles - Always Visible or depending on view? */}
+                <div className="control-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <strong style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Layout</strong>
+                    <div className="toggle-group">
+                        {layoutOptions.map(opt => (
+                            <button
+                                key={opt.value}
+                                className={`toggle-btn ${layout === opt.value ? 'active' : ''}`}
+                                onClick={() => onLayoutChange(opt.value)}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Grouping Toggles - Only in Galaxy View */}
+                {viewMode === 'GALAXY' && (
+                    <div className="control-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <strong style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Grouping</strong>
+                        <div className="toggle-group">
+                            {groupingOptions.map(opt => (
+                                <button
+                                    key={opt.value}
+                                    className={`toggle-btn ${grouping === opt.value ? 'active' : ''}`}
+                                    onClick={() => onGroupingChange(opt.value)}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+            </div>
+            <div className="galaxy-title">
+                {headerTitle}
+            </div>
+        </div>
+    );
+};
