@@ -402,13 +402,170 @@ export const Graph = ({
 
         // Reveal
         allNodes.transition().duration(500).style("opacity", 1);
-        gLinks.selectAll(".d3-link").transition().duration(500).attr("stroke-opacity", isGalaxy ? 0.55 : 0.8);
+
+        // GALAXY EDGE RENDERING & HOVER EFFECTS
+        if (isGalaxy) {
+            const linkJoin = gLinks.selectAll(".d3-link").data(currentEdges, getEdgeKey);
+            linkJoin.exit().remove();
+
+            const linkEnter = linkJoin.enter().append("path")
+                .attr("class", "d3-link type-galaxy-link")
+                .attr("fill", "none")
+                .attr("stroke-linecap", "round")
+                .attr("stroke-opacity", 0);
+
+            const links = linkEnter.merge(linkJoin);
+
+            links.attr("stroke-width", d => Math.max(1, Math.sqrt(d.weight || 1)))
+                .attr("stroke", "#cbd5e1") // Default grey for galaxy edges
+                .transition().duration(500)
+                .attr("stroke-opacity", 0.4); // Base opacity
+
+            // Handle Hover Effects
+            if (hovered) {
+                const connectedEdgeIds = new Set();
+                const connectedNodeIds = new Set();
+                connectedNodeIds.add(hovered.id);
+
+                currentEdges.forEach(e => {
+                    // Check if edge is connected to hovered node
+                    // d3 force replaces source/target with objects, so check id
+                    const sourceId = typeof e.source === 'object' ? e.source.id : e.source;
+                    const targetId = typeof e.target === 'object' ? e.target.id : e.target;
+
+                    if (sourceId === hovered.id || targetId === hovered.id) {
+                        connectedEdgeIds.add(getEdgeKey(e));
+                        connectedNodeIds.add(sourceId);
+                        connectedNodeIds.add(targetId);
+                    }
+                });
+
+                // Update Links
+                links.transition().duration(200)
+                    .attr("stroke-opacity", d => connectedEdgeIds.has(getEdgeKey(d)) ? 0.8 : 0.05)
+                    .attr("stroke", d => connectedEdgeIds.has(getEdgeKey(d)) ? "#64748b" : "#cbd5e1")
+                    .attr("stroke-width", d => connectedEdgeIds.has(getEdgeKey(d)) ? Math.max(2, Math.sqrt(d.weight || 1) + 1) : Math.max(1, Math.sqrt(d.weight || 1)));
+
+                // Update Nodes (Optional: Dim unconnected nodes?)
+                gNodes.selectAll(".d3-node")
+                    .transition().duration(200)
+                    .style("opacity", d => connectedNodeIds.has(d.id) ? 1 : 0.3);
+
+            } else {
+                // Reset
+                links.transition().duration(200)
+                    .attr("stroke-opacity", 0.4)
+                    .attr("stroke", "#cbd5e1")
+                    .attr("stroke-width", d => Math.max(1, Math.sqrt(d.weight || 1)));
+
+                gNodes.selectAll(".d3-node")
+                    .transition().duration(200)
+                    .style("opacity", 1);
+            }
+        } else {
+            // Universe / Field Edge Rendering (Existing logic preserved or updated if needed)
+            gLinks.selectAll(".d3-link").transition().duration(500).attr("stroke-opacity", 0.8);
+        }
 
         return () => {
             sim.stop();
         };
 
     }, [nodes, edges, viewMode, layoutMode, groupingMode, activeGroup, selected, width, height, scales]);
+
+    // --- HOVER EFFECT (Visual Only) ---
+    useEffect(() => {
+        if (!svgRef.current) return;
+        const svg = d3.select(svgRef.current);
+        const isGalaxy = viewMode === 'GALAXY';
+
+        // Only apply heavy hover logic in Galaxy view for now (as requested)
+        if (isGalaxy) {
+            const gLinks = svg.select(".g-links");
+            const gNodes = svg.select(".g-nodes");
+            const currentEdges = edges; // We need access to edges to map connections
+
+            if (hovered) {
+                const connectedEdgeIds = new Set();
+                const connectedNodeIds = new Set();
+                connectedNodeIds.add(hovered.id);
+
+                // Helper to get edge key (must match main render key)
+                const getEdgeKey = (d) => `G|${d.source.id || d.source}|${d.target.id || d.target}`;
+
+                currentEdges.forEach(e => {
+                    // Check if edge is connected to hovered node
+                    // The 'edges' prop might still have string IDs or object references depending on if simulation ran
+                    // BUT, simulation mutates the objects. The 'edges' passed to THIS effect might be the raw ones if they haven't updated?
+                    // Actually, 'edges' comes from useGraphData. The simulation mutates them IN PLACE if they are the same objects.
+                    // The main effect runs and mutates. 
+
+                    const sId = (e.source && e.source.id) ? e.source.id : e.source;
+                    const tId = (e.target && e.target.id) ? e.target.id : e.target;
+
+                    if (sId === hovered.id || tId === hovered.id) {
+                        // We need to match the key format used in main render
+                        // transform IDs to string just in case
+                        connectedEdgeIds.add(`G|${sId}|${tId}`);
+                        connectedNodeIds.add(sId);
+                        connectedNodeIds.add(tId);
+                    }
+                });
+
+                // Update Links
+                gLinks.selectAll(".d3-link")
+                    .transition().duration(200)
+                    .attr("stroke-opacity", function () {
+                        // d3 data binding is preserved on the element
+                        const d = d3.select(this).datum();
+                        // Re-construct keys or check if we can rely on datum
+                        // Datum is the edge object.
+                        const s = (d.source.id || d.source);
+                        const t = (d.target.id || d.target);
+                        const key = `G|${s}|${t}`;
+                        return connectedEdgeIds.has(key) ? 0.8 : 0.05;
+                    })
+                    .attr("stroke", function () {
+                        const d = d3.select(this).datum();
+                        const s = (d.source.id || d.source);
+                        const t = (d.target.id || d.target);
+                        const key = `G|${s}|${t}`;
+                        return connectedEdgeIds.has(key) ? "#64748b" : "#cbd5e1";
+                    })
+                    .attr("stroke-width", function () {
+                        const d = d3.select(this).datum();
+                        const s = (d.source.id || d.source);
+                        const t = (d.target.id || d.target);
+                        const key = `G|${s}|${t}`;
+                        const weight = d.weight || 1;
+                        return connectedEdgeIds.has(key) ? Math.max(2, Math.sqrt(weight) + 1) : Math.max(1, Math.sqrt(weight));
+                    });
+
+                // Update Nodes
+                gNodes.selectAll(".d3-node")
+                    .transition().duration(200)
+                    .style("opacity", function () {
+                        const d = d3.select(this).datum();
+                        return connectedNodeIds.has(d.id) ? 1 : 0.3;
+                    });
+
+            } else {
+                // Reset
+                gLinks.selectAll(".d3-link")
+                    .transition().duration(200)
+                    .attr("stroke-opacity", 0.4)
+                    .attr("stroke", "#cbd5e1")
+                    .attr("stroke-width", function () {
+                        const d = d3.select(this).datum();
+                        return Math.max(1, Math.sqrt(d.weight || 1));
+                    });
+
+                gNodes.selectAll(".d3-node")
+                    .transition().duration(200)
+                    .style("opacity", 1);
+            }
+        }
+    }, [hovered, viewMode, edges]); // Dependencies specific to visual updates
 
     return <svg ref={svgRef} className="galaxy-canvas" width={width} height={height} />;
 };

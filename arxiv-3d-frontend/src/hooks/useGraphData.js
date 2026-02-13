@@ -219,7 +219,8 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
             field: g.xGroup, // For color
             xGroup: g.xGroup,
             yGroup: g.yGroup,
-            minYear: g.minYear,
+            minYear: g.minYear, // Ensure this exists for sorting/timeline
+            year: g.minYear,    // Alias for consistency with Universe nodes
             citationCount: g.totalCitations
         }));
     }, [groupStats, viewMode]);
@@ -239,7 +240,8 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
 
     // Process Edges - Filter based on Active Nodes
     const edges = useMemo(() => {
-        if (viewMode !== 'FIELD') return []; // Only show paper edges in Field View
+        if (viewMode === 'GALAXY') return groupEdges; // Return aggregated edges for Galaxy View
+        if (viewMode !== 'FIELD') return []; // Only show paper edges in Field View (and now Galaxy)
 
         // Create a set of active node IDs for fast lookup
         const activeIds = new Set(activeNodes.map(n => n.id));
@@ -251,7 +253,7 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
                 importance: e.importance ?? 1
             }))
             .filter(e => activeIds.has(e.source) && activeIds.has(e.target) && e.source !== e.target);
-    }, [rawEdges, activeNodes, viewMode]);
+    }, [rawEdges, activeNodes, viewMode, groupEdges]);
 
     // Helper to clear data
     const clearData = () => {

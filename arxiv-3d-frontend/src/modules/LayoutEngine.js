@@ -77,6 +77,7 @@ export class LayoutEngine {
             });
 
         sortedForLayout.forEach((n, i) => {
+            // Set Target positions
             n.fx = 0;
 
             if (typeof n.data.timeline_y === "number") {
@@ -87,23 +88,27 @@ export class LayoutEngine {
                 n.fy = startY + (i * SLOT_HEIGHT) + (SLOT_HEIGHT / 2);
             }
 
-            // Force immediate position update
-            if (n.fy !== undefined) {
-                n.y = n.fy;
-                n.vy = 0;
-            }
-            if (n.fx !== undefined) {
+            // SMOOTH TRANSITION LOGIC:
+            // If node already has a position (e.g. from Central layout), leave x/y alone 
+            // so the simulation/transition pulls it to fx/fy.
+            // Only force set x/y if it's undefined (initial load).
+            if (n.x === undefined || n.y === undefined) {
                 n.x = n.fx;
-                n.vx = 0;
+                n.y = n.fy;
             }
+            // Reset velocity to prevent shooting off
+            n.vx = 0;
+            n.vy = 0;
         });
 
         const menuNode = nodes.find(n => n.isMenuNode);
         if (menuNode) {
             menuNode.fx = 800;
             menuNode.fy = -600;
-            menuNode.x = 800;
-            menuNode.y = -600;
+            if (menuNode.x === undefined) {
+                menuNode.x = 800;
+                menuNode.y = -600;
+            }
         }
 
         sim.force("center", null)
@@ -135,7 +140,9 @@ export class LayoutEngine {
 
             const minYear = d3.min(nodes, d => d.minYear) || 1990;
             const maxYear = d3.max(nodes, d => d.maxYear || d.minYear) || 2025;
-            const xScale = d3.scaleLinear().domain([minYear, maxYear]).range([-this.width * 0.4, this.width * 0.4]);
+            // Widen the scale to fill space better (3x wider as requested)
+            const widthFactor = 2.4; // 0.8 * 3 = 2.4
+            const xScale = d3.scaleLinear().domain([minYear, maxYear]).range([-this.width * widthFactor, this.width * widthFactor]);
 
             // Y-Axis Sorting (Stream)
             // Sort by size (desc) to put largest in middle
@@ -143,27 +150,52 @@ export class LayoutEngine {
             sorted.forEach((d, i) => {
                 // Alternating placement: 0, 1, -1, 2, -2...
                 const sign = i % 2 === 0 ? 1 : -1;
-                const offset = Math.ceil(i / 2) * 60; // 60px step
+                const offset = Math.ceil(i / 2) * (d.val * 1.5 + 40); // Dynamic step based on size
                 d._targetY = offset * sign;
             });
 
             sim.force("x", d3.forceX(d => xScale(d.minYear)).strength(0.8))
                 .force("y", d3.forceY(d => d._targetY + this.graphCenterY).strength(0.5))
-                .force("collide", d3.forceCollide().radius(d => d.val * 2 + 30).iterations(2))
-                .force("charge", d3.forceManyBody().strength(-100))
+                .force("collide", d3.forceCollide().radius(d => d.val * 1.2 + 20).iterations(2))
+                .force("charge", d3.forceManyBody().strength(-50))
                 .force("link", d3.forceLink(edges).id(d => d.id).strength(0.01)); // Weak links
 
         } else {
-            // CENTRAL: Spiral Layout (Gap-less packing preferably)
+            // CENTRAL: Spiral Layout (Gap-less packing)
+            // Sort by value (desc) then ID (asc) for stability and center-heavy packing
+            const sorted = [...nodes].sort((a, b) => (b.val || 0) - (a.val || 0) || a.id.localeCompare(b.id));
 
-            sim.force("link", d3.forceLink(edges).id(d => d.id).distance(200).strength(0.05));
+            sorted.forEach((n, i) => {
+                n.fx = null;
+                n.fy = null;
 
-            // Radial / Spiral
-            // Maximize centrality for large nodes
-            sim.force("x", d3.forceX(0).strength(0.05))
-                .force("y", d3.forceY(this.graphCenterY).strength(0.05))
-                .force("charge", d3.forceManyBody().strength(d => -200 - (d.val * 10)))
-                .force("collide", d3.forceCollide().radius(d => (d.val * 2 + 40)).iterations(4));
+                // Archimedean Spiral / Phyllotaxis
+                const theta = i * 2.39996; // Golden angle approx
+                // Tighter packing factor:
+                const spread = 35;
+                const r = spread * Math.sqrt(i) + (n.val * 0.5);
+
+                // Deterministic initial position target
+                const tx = Math.cos(theta) * r;
+                const ty = Math.sin(theta) * r + this.graphCenterY;
+
+                // If node has no position, snap it there
+                if (!n.x && !n.y) {
+                    n.x = tx;
+                    n.y = ty;
+                }
+
+                n._targetX = tx;
+                n._targetY = ty;
+            });
+
+            sim.force("link", d3.forceLink(edges).id(d => d.id).strength(0.05)); // Keep edges visible but weak
+
+            // Pull towards spiral target
+            sim.force("x", d3.forceX(d => d._targetX).strength(0.3))
+                .force("y", d3.forceY(d => d._targetY).strength(0.3))
+                .force("collide", d3.forceCollide().radius(d => (d.val * 1.5 + 15)).iterations(3))
+                .force("charge", d3.forceManyBody().strength(d => -30 - (d.val * 2))); // Gentle repulsion to prevent overlap
         }
 
         return sim;

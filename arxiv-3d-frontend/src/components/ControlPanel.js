@@ -8,6 +8,7 @@ export const ControlPanel = ({
     grouping,
     selected,
     activeGroupLabel,
+    galaxyName,
     onBackToUniverse,
     onBackToGalaxy,
     onLayoutChange,
@@ -30,8 +31,7 @@ export const ControlPanel = ({
     if (viewMode === 'UNIVERSE') {
         headerTitle = "Map of Physics";
     } else if (viewMode === 'GALAXY') {
-        // Here we could use the Galaxy Name if we had it passed down, or a generic "Physics"
-        headerTitle = "Galaxy View"; // TODO: Pass actual Galaxy Name (e.g., "Physics")
+        headerTitle = galaxyName || "Galaxy View";
     } else if (viewMode === 'FIELD' || viewMode === 'DETAIL') {
         headerTitle = selected ? selected.title : (activeGroupLabel || "Detail View");
     }

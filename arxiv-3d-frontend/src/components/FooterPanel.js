@@ -109,9 +109,9 @@ export const FooterPanel = ({ selected, hovered, layoutMode }) => {
                             <>
                                 <h3>{hovered.title || hovered.name}</h3>
                                 <div className="footer-meta">
-                                    {hovered.year && <span>{hovered.year} • </span>}
+                                    {hovered.year && <span>First Published: {hovered.year} • </span>}
                                     <span>{hovered.citationCount} Citations</span>
-                                    {hovered.groupCount !== undefined && <span> • {hovered.groupCount} Papers</span>}
+                                    {hovered.nodeCount !== undefined && <span> • Papers: {hovered.nodeCount}</span>}
                                 </div>
                                 {hovered.authors && <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '5px' }}>{hovered.authors}</div>}
                             </>
