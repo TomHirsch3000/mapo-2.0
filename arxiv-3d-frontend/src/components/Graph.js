@@ -33,7 +33,8 @@ export const Graph = ({
     const nodePositionsCache = useRef(new Map());
     const groupPositionsMatch = useRef(new Map());
     const layoutPositionCacheRef = useRef(new Map());
-    const isTransitioning = useRef(false);
+    // Ref to track if we are currently handling a view transition to prevent ghosting
+    const isTransitioningView = useRef(false);
 
     // Previous State Refs
     const prevViewMode = useRef(viewMode);
@@ -51,7 +52,7 @@ export const Graph = ({
 
     // --- MAIN RENDER EFFECT ---
     useEffect(() => {
-        isTransitioning.current = false;
+        isTransitioningView.current = false;
         if (!svgRef.current || !width || !height) return;
 
         const svg = d3.select(svgRef.current);
@@ -83,7 +84,7 @@ export const Graph = ({
             .scaleExtent([0.1, 8])
             .on("zoom", (event) => {
                 gMain.attr("transform", event.transform);
-                if (isTransitioning.current) return;
+                if (isTransitioningView.current) return;
 
                 // Semantic Zoom Logic
                 const k = event.transform.k;
@@ -126,8 +127,14 @@ export const Graph = ({
 
         const defs = svg.select("defs").empty() ? svg.append("defs") : svg.select("defs");
 
-        // Cleanup if selected changed
-        if (!isGalaxy && prevSelectedIdRef.current !== (selected?.id || null)) {
+        // Cleanup if view changed or selected changed
+        if (prevViewMode.current !== viewMode) {
+            // Force clear all links and defs when switching views to prevent ghosting
+            gLinks.selectAll("*").interrupt().remove();
+            gNodes.selectAll("*").interrupt().remove(); // We can be aggressive here as data join will re-create
+            defs.selectAll("*").remove();
+            nodePositionsCache.current.clear();
+        } else if (!isGalaxy && prevSelectedIdRef.current !== (selected?.id || null)) {
             gLinks.selectAll(".d3-link").interrupt().remove();
             defs.selectAll(".link-gradient").remove();
             nodePositionsCache.current.clear();
@@ -146,22 +153,40 @@ export const Graph = ({
                 .attr("stroke-linecap", "round")
                 .attr("stroke-opacity", 0);
 
+            // Merged Update
             linkEnter.merge(linkJoin)
-                .attr("stroke-width", d => isGalaxy ? Math.max(1.6, Math.sqrt(d.weight || 1) + 0.8) : 6)
                 .each(function (d) {
                     const id = getGradientId(d);
+                    const colorScale = scales.colorScale || d3.scaleOrdinal(d3.schemeTableau10);
+
+                    // Determine Source and Target Colors for Gradient
+                    // Galaxy View: Use different colors for direction
+                    let sourceColor = EDGE_COLORS.default;
+                    let targetColor = EDGE_COLORS.default;
+
+                    if (isGalaxy) {
+                        // Use group/node colors
+                        const srcNode = currentNodes.find(n => n.id === (d.source.id || d.source));
+                        const tgtNode = currentNodes.find(n => n.id === (d.target.id || d.target));
+
+                        if (srcNode) sourceColor = colorScale(srcNode.xGroup || srcNode.id);
+                        if (tgtNode) targetColor = colorScale(tgtNode.xGroup || tgtNode.id);
+                    }
+
                     let grad = defs.select(`#${id}`);
                     if (grad.empty()) {
                         grad = defs.append("linearGradient").attr("id", id).attr("gradientUnits", "userSpaceOnUse");
                         grad.append("stop").attr("offset", "0%").attr("class", "grad-stop-start");
                         grad.append("stop").attr("offset", "100%").attr("class", "grad-stop-end");
                     }
-                    const color = getBaseEdgeColor(d);
-                    grad.select(".grad-stop-start").attr("stop-color", color).attr("stop-opacity", 0.1);
-                    grad.select(".grad-stop-end").attr("stop-color", color).attr("stop-opacity", 0.6);
 
-                    d3.select(this).attr("stroke", `url(#${id})`);
-                });
+                    grad.select(".grad-stop-start").attr("stop-color", sourceColor).attr("stop-opacity", isGalaxy ? 0.6 : 0.1);
+                    grad.select(".grad-stop-end").attr("stop-color", targetColor).attr("stop-opacity", isGalaxy ? 0.6 : 0.6);
+
+                    const el = d3.select(this);
+                    el.attr("stroke", `url(#${id})`);
+                })
+                .attr("stroke-width", d => isGalaxy ? Math.max(2, Math.sqrt(d.weight || 1)) : 6);
         }
 
         // Nodes
@@ -215,31 +240,64 @@ export const Graph = ({
                 if (!d.isMenuNode) {
                     if (layoutMode === 'TIMELINE' && scales.universeXScale && scales.timelineHeightScale) {
                         // Generator for Area Path
+                        // Generator for Area Path
                         const generateAreaPath = (d) => {
-                            const decades = d.data.worksByDecade || [];
-                            if (!decades.length) return "M0,0Z";
+                            let rawDecades = d.data.worksByDecade || [];
+                            if (!rawDecades.length) return "M0,0Z";
+
+                            // Ensure sorted order
+                            let decades = [...rawDecades].sort((a, b) => a.decade - b.decade);
+
+                            // Extend to Max Year to align with right-anchored label
+                            const maxYear = scales.universeXScale.domain()[1];
+                            const lastDecade = decades[decades.length - 1];
+
+                            // Extend IF the last point is strictly before maxYear
+                            if (lastDecade && lastDecade.decade < maxYear) {
+                                decades.push({ decade: maxYear, works_count: lastDecade.works_count });
+                            }
+
                             const area = d3.area()
-                                .x(p => scales.universeXScale(p.decade) - d.x)
+                                .x(p => scales.universeXScale(p.decade)) // Remove - d.x (Assume Group X -> 0)
                                 .y0(p => -scales.timelineHeightScale(p.works_count) / 2)
                                 .y1(p => scales.timelineHeightScale(p.works_count) / 2)
-                                .curve(d3.curveBasis);
+                                .curve(d3.curveMonotoneX);
                             return area(decades);
                         };
 
                         const areaPath = generateAreaPath(d);
-                        el.select(".orbit").transition().duration(1000).attr("d", areaPath).attr("fill-opacity", 0.4).attr("stroke-width", 2);
-                        el.select(".core").transition().duration(1000).attr("d", areaPath).attr("fill-opacity", 0.1).style("filter", "none");
+                        const hasData = (d.nodeCount || 0) > 0;
+                        const nodeColor = hasData ? colorScale(d.id) : "#475569"; // Slate 600 for empty
 
-                        // Labels for Timeline
-                        const startYear = d.data.firstPublicationYear || 1900;
-                        const startX = scales.universeXScale(startYear) - d.x;
-                        el.select(".label-main").transition().duration(1000).attr("x", startX - 20).attr("dy", 0).style("text-anchor", "end").style("font-size", "14px");
-                        el.select(".label-sub").transition().duration(1000).attr("x", startX - 20).attr("dy", 15).style("text-anchor", "end").style("opacity", 1);
+                        el.select(".orbit").transition().duration(1000)
+                            .attr("d", areaPath)
+                            .attr("fill", nodeColor)
+                            .attr("fill-opacity", hasData ? 0.4 : 0.2)
+                            .attr("stroke", nodeColor)
+                            .attr("stroke-width", 2);
 
-                        // Right Label
-                        const endYear = d.data.lastPublicationYear || 2024;
-                        const endX = scales.universeXScale(endYear) - d.x;
-                        el.select(".label-right").transition().duration(1000).text(d.name).attr("x", endX + 20).attr("dy", 0).style("text-anchor", "start").style("opacity", 1);
+                        el.select(".core").transition().duration(1000)
+                            .attr("d", areaPath)
+                            .attr("fill", nodeColor)
+                            .attr("fill-opacity", 0.1)
+                            .style("filter", "none");
+
+                        // Labels for Timeline: Clear Left Labels
+                        el.select(".label-main").transition().duration(1000).style("opacity", 0);
+                        el.select(".label-sub").transition().duration(1000).style("opacity", 0);
+
+                        // Right Label: Align to Grid Right (Max Year)
+                        // In Timeline layout, nodes gravitate to x=0 (Center).
+                        const maxYear = scales.universeXScale.domain()[1];
+                        const rightX = scales.universeXScale(maxYear); // Absolute (Assumes group x -> 0)
+
+                        el.select(".label-right").transition().duration(1000)
+                            .text(d.name)
+                            .attr("x", rightX + 20)
+                            .attr("dy", 5) // Centered vertically
+                            .style("text-anchor", "start")
+                            .style("font-size", "14px")
+                            .style("opacity", 1);
 
                     } else {
                         // Default Hexagon
@@ -258,11 +316,14 @@ export const Graph = ({
                 el.select(".label-main").text(d.name);
                 el.select(".label-sub").text(d.nodeCount ? `${d.nodeCount} papers` : "");
             } else if (isGalaxy) {
-                el.select(".orbit").attr("r", d.val * 2.5).attr("fill", colorScale(d.xGroup)).attr("fill-opacity", 0.15);
-                el.select(".core").attr("r", d.val * 0.8).attr("fill", colorScale(d.xGroup));
+                // Galaxy View Nodes - Smaller size, bigger labels
+                const val = d.val || 20;
+                const radius = val * 0.16; // Reduced to ~1/3 of previous 0.5
+                el.select(".orbit").attr("r", radius).attr("fill", colorScale(d.xGroup)).attr("fill-opacity", 0.15);
+                el.select(".core").attr("r", radius * 0.6).attr("fill", colorScale(d.xGroup));  // increased core ratio slightly for visibility
                 // Larger Labels
-                el.select(".label-main").text((d.name || d.title || "").substring(0, 25)).attr("dy", d.val * 2 + 24).style("text-anchor", "middle").style("font-size", "14px").style("font-weight", "600");
-                el.select(".label-sub").text(d.nodeCount ? `${d.nodeCount} papers` : "").attr("dy", d.val * 2 + 38).style("text-anchor", "middle").style("font-size", "11px");
+                el.select(".label-main").text((d.name || d.title || "").substring(0, 25)).attr("dy", radius + 25).style("text-anchor", "middle").style("font-size", "28px").style("font-weight", "600");
+                el.select(".label-sub").text(d.nodeCount ? `${d.nodeCount} papers` : "").attr("dy", radius + 45).style("text-anchor", "middle").style("font-size", "16px");
             } else {
                 // Field View (Papers)
                 // Ensure rects are visible
@@ -327,7 +388,7 @@ export const Graph = ({
                     .style("opacity", 1)
                     .call(axisBottom);
 
-                gAxisLayer.selectAll("text").style("fill", "#64748b").style("font-size", "12px");
+                gAxisLayer.selectAll("text").style("fill", "#64748b").style("font-size", "18px"); // Larger Timeline Font
                 gAxisLayer.selectAll("line").style("stroke", "#cbd5e1");
                 gAxisLayer.selectAll("path").style("stroke", "#cbd5e1");
             }
@@ -380,13 +441,51 @@ export const Graph = ({
             // If simulation running, update.
             allNodes.attr("transform", d => `translate(${d.x}, ${d.y})`);
 
-            if (!isUniverse) {
+            if (isGalaxy) {
                 gLinks.selectAll(".d3-link").attr("d", d => {
                     const s = d.source;
                     const t = d.target;
-                    return `M${s.x},${s.y} L${t.x},${t.y}`; // Simplified straight lines for now
+
+                    // Curve Logic
+                    const dx = t.x - s.x;
+                    const dy = t.y - s.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist === 0) return `M${s.x},${s.y} L${t.x},${t.y}`;
+
+                    // Always curve to the right to separate A->B and B->A
+                    // Offset determined by distance + constant
+                    // Normal vector (rot 90 deg)
+                    const nx = -dy / dist;
+                    const ny = dx / dist;
+
+                    const curvature = 0.2; // Adjust for more/less curve
+                    const offset = dist * curvature;
+
+                    const midX = (s.x + t.x) / 2;
+                    const midY = (s.y + t.y) / 2;
+
+                    const cx = midX + nx * offset;
+                    const cy = midY + ny * offset;
+
+                    return `M${s.x},${s.y} Q${cx},${cy} ${t.x},${t.y}`;
                 });
-                // Update gradients positions
+
+                // Update gradients positions - Need to follow the curve? 
+                // Linear gradient works on bounding box usually, but for paths it uses userSpaceOnUse.
+                // We set x1,y1,x2,y2 which defines the gradient vector. 
+                // For a curved line, a straight gradient vector generally looks fine.
+                defs.selectAll(".link-gradient")
+                    .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+
+            } else if (!isUniverse) {
+                // Field view (straight lines)
+                gLinks.selectAll(".d3-link").attr("d", d => {
+                    const s = d.source;
+                    const t = d.target;
+                    return `M${s.x},${s.y} L${t.x},${t.y}`;
+                });
                 defs.selectAll(".link-gradient")
                     .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
                     .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
@@ -416,10 +515,14 @@ export const Graph = ({
 
             const links = linkEnter.merge(linkJoin);
 
-            links.attr("stroke-width", d => Math.max(1, Math.sqrt(d.weight || 1)))
-                .attr("stroke", "#cbd5e1") // Default grey for galaxy edges
+            // Re-assert styles for merged selection to ensure updates happen
+            links.each(function (d) {
+                const el = d3.select(this);
+                // Update width based on weight
+                el.attr("stroke-width", Math.max(2, Math.sqrt(d.weight || 1)));
+            })
                 .transition().duration(500)
-                .attr("stroke-opacity", 0.4); // Base opacity
+                .attr("stroke-opacity", 0.6); // Higher base opacity (was 0.4)
 
             // Handle Hover Effects
             if (hovered) {
@@ -442,9 +545,11 @@ export const Graph = ({
 
                 // Update Links
                 links.transition().duration(200)
-                    .attr("stroke-opacity", d => connectedEdgeIds.has(getEdgeKey(d)) ? 0.8 : 0.05)
-                    .attr("stroke", d => connectedEdgeIds.has(getEdgeKey(d)) ? "#64748b" : "#cbd5e1")
-                    .attr("stroke-width", d => connectedEdgeIds.has(getEdgeKey(d)) ? Math.max(2, Math.sqrt(d.weight || 1) + 1) : Math.max(1, Math.sqrt(d.weight || 1)));
+                    .attr("stroke-opacity", d => connectedEdgeIds.has(getEdgeKey(d)) ? 0.9 : 0.05)
+                    // Note: Stroke color is handled by gradient now, but we can override if needed or rely on opacity.
+                    // If we want to highlight, we could change the filter or just opacity.
+                    // For now, opacity is the main driver. Gradient handles color.
+                    .attr("stroke-width", d => connectedEdgeIds.has(getEdgeKey(d)) ? Math.max(3, Math.sqrt(d.weight || 1) + 2) : Math.max(2, Math.sqrt(d.weight || 1)));
 
                 // Update Nodes (Optional: Dim unconnected nodes?)
                 gNodes.selectAll(".d3-node")
@@ -454,9 +559,9 @@ export const Graph = ({
             } else {
                 // Reset
                 links.transition().duration(200)
-                    .attr("stroke-opacity", 0.4)
-                    .attr("stroke", "#cbd5e1")
-                    .attr("stroke-width", d => Math.max(1, Math.sqrt(d.weight || 1)));
+                    .attr("stroke-opacity", 0.6)
+                    // Reset color is implicit via gradient
+                    .attr("stroke-width", d => Math.max(2, Math.sqrt(d.weight || 1)));
 
                 gNodes.selectAll(".d3-node")
                     .transition().duration(200)
@@ -466,6 +571,11 @@ export const Graph = ({
             // Universe / Field Edge Rendering (Existing logic preserved or updated if needed)
             gLinks.selectAll(".d3-link").transition().duration(500).attr("stroke-opacity", 0.8);
         }
+
+        // Update Previous State Refs for next render
+        prevViewMode.current = viewMode;
+        prevLayoutMode.current = layoutMode;
+        prevSelectedIdRef.current = selected?.id || null;
 
         return () => {
             sim.stop();
@@ -543,6 +653,7 @@ export const Graph = ({
 
                 // Update Nodes
                 gNodes.selectAll(".d3-node")
+                    .classed("node-shimmer", d => d.id === hovered.id)
                     .transition().duration(200)
                     .style("opacity", function () {
                         const d = d3.select(this).datum();
@@ -561,6 +672,7 @@ export const Graph = ({
                     });
 
                 gNodes.selectAll(".d3-node")
+                    .classed("node-shimmer", false)
                     .transition().duration(200)
                     .style("opacity", 1);
             }

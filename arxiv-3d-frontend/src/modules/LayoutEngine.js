@@ -66,7 +66,9 @@ export class LayoutEngine {
     applyUniverseTimelineLayout(nodes, sim, universeXScale, timelineHeightScale) {
         // ... (Existing implementation preserved) ...
         // Rigid Grid / Streamgraph Layout
-        const SLOT_HEIGHT = 800;
+        // Rigid Grid / Streamgraph Layout
+        // Dynamic Grid / Streamgraph Layout
+        // 35 + Dynamic Component based on Node Size
 
         const sortedForLayout = [...nodes]
             .filter(n => !n.isMenuNode)
@@ -76,31 +78,47 @@ export class LayoutEngine {
                 return a.id.localeCompare(b.id);
             });
 
-        sortedForLayout.forEach((n, i) => {
-            // Set Target positions
-            n.fx = 0;
+        // Calculate heights
+        let totalHeight = 0;
+        const nodeHeights = new Map();
 
-            if (typeof n.data.timeline_y === "number") {
-                n.fy = n.data.timeline_y;
-            } else {
-                const totalHeight = sortedForLayout.length * SLOT_HEIGHT;
-                const startY = -totalHeight / 2;
-                n.fy = startY + (i * SLOT_HEIGHT) + (SLOT_HEIGHT / 2);
+        sortedForLayout.forEach(n => {
+            let dynamicSize = 0;
+            if (timelineHeightScale && n.data && n.data.worksByDecade) {
+                const maxWorks = d3.max(n.data.worksByDecade, w => w.works_count) || 0;
+                dynamicSize = timelineHeightScale(maxWorks);
             }
+            // Fallback size if data missing
+            if (!dynamicSize) dynamicSize = 10;
+
+            // Slot Height = 35 + Dynamic Size
+            const slotH = 35 + dynamicSize;
+            nodeHeights.set(n.id, slotH);
+            totalHeight += slotH;
+        });
+
+        // Anchor relative to Axis Position (height/2 - 40)
+        // We want the lowest node to be significantly above the axis.
+        const bottomY = (this.height / 2) - 75;
+        let currentY = bottomY - totalHeight;
+
+        sortedForLayout.forEach((n, i) => {
+            n.fx = 0; // Anchor at center
+
+            const h = nodeHeights.get(n.id);
+            n.fy = currentY + (h / 2);
+            currentY += h;
 
             // SMOOTH TRANSITION LOGIC:
-            // If node already has a position (e.g. from Central layout), leave x/y alone 
-            // so the simulation/transition pulls it to fx/fy.
-            // Only force set x/y if it's undefined (initial load).
             if (n.x === undefined || n.y === undefined) {
                 n.x = n.fx;
                 n.y = n.fy;
             }
-            // Reset velocity to prevent shooting off
             n.vx = 0;
             n.vy = 0;
         });
 
+        // Menu Node
         const menuNode = nodes.find(n => n.isMenuNode);
         if (menuNode) {
             menuNode.fx = 800;
@@ -115,8 +133,8 @@ export class LayoutEngine {
             .force("link", null)
             .force("charge", null)
             .force("collide", null)
-            .force("x", null)
-            .force("y", null);
+            .force("x", d3.forceX(0).strength(1))
+            .force("y", d3.forceY(d => d.fy).strength(1));
 
         return sim;
     }
@@ -141,7 +159,7 @@ export class LayoutEngine {
             const minYear = d3.min(nodes, d => d.minYear) || 1990;
             const maxYear = d3.max(nodes, d => d.maxYear || d.minYear) || 2025;
             // Widen the scale to fill space better (3x wider as requested)
-            const widthFactor = 2.4; // 0.8 * 3 = 2.4
+            const widthFactor = 8.0; // Increased to 8.0 from 2.4 (roughly 3.3x)
             const xScale = d3.scaleLinear().domain([minYear, maxYear]).range([-this.width * widthFactor, this.width * widthFactor]);
 
             // Y-Axis Sorting (Stream)
@@ -172,8 +190,8 @@ export class LayoutEngine {
                 // Archimedean Spiral / Phyllotaxis
                 const theta = i * 2.39996; // Golden angle approx
                 // Tighter packing factor:
-                const spread = 35;
-                const r = spread * Math.sqrt(i) + (n.val * 0.5);
+                const spread = 8; // Reduced from 35 (approx 20%)
+                const r = spread * Math.sqrt(i) + (n.val * 0.2); // Reduced val impact
 
                 // Deterministic initial position target
                 const tx = Math.cos(theta) * r;
@@ -194,8 +212,10 @@ export class LayoutEngine {
             // Pull towards spiral target
             sim.force("x", d3.forceX(d => d._targetX).strength(0.3))
                 .force("y", d3.forceY(d => d._targetY).strength(0.3))
-                .force("collide", d3.forceCollide().radius(d => (d.val * 1.5 + 15)).iterations(3))
-                .force("charge", d3.forceManyBody().strength(d => -30 - (d.val * 2))); // Gentle repulsion to prevent overlap
+                // Collide Radius drastically reduced: val portion ~0.3 (matches visual roughly), padding 5
+                .force("collide", d3.forceCollide().radius(d => (d.val * 0.3 + 5)).iterations(3))
+                // Charge reduced to allow closer packing
+                .force("charge", d3.forceManyBody().strength(d => -5 - (d.val * 0.5)));
         }
 
         return sim;

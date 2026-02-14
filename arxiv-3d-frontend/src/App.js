@@ -119,18 +119,19 @@ export default function App() {
       // We need access to universe nodes from hook - wait, hook returns `nodes` which ARE the universe nodes in UNIVERSE mode
       const allDecades = nodes.flatMap(n => n.data?.worksByDecade?.map(d => d.decade) || []);
       const minYear = d3.min(allDecades) || 1800;
-      const maxYear = d3.max(allDecades) || 2025;
+      const maxYear = 2026; // Force end year to 2026 as requested
 
-      universeXScale = d3.scaleLinear()
-        .domain([minYear, maxYear])
-        .range([-width * 1.5, width * 1.5]);
+      universeXScale = d3.scalePow()
+        .exponent(3)
+        .domain([1900, maxYear])
+        .range([-width * 0.40, width * 0.40]); // Fit comfortably within screen width (centered at 0)
 
       const validNodes = nodes.filter(n => !n.isMenuNode && n.data?.worksByDecade);
       const absMaxWorksSingleDecade = d3.max(validNodes, d => d3.max(d.data.worksByDecade, w => w.works_count) || 0) || 1000;
 
       timelineHeightScale = d3.scaleLinear()
         .domain([0, absMaxWorksSingleDecade])
-        .range([0, 400]); // Target Max Height
+        .range([0, 320]); // Increased for bigger nodes
     }
 
     // Galaxy/Field Scales

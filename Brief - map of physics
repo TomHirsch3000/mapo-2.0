@@ -3,6 +3,8 @@ Brief - Map of Physics
 Overview
 An interactive 2D visualization of academic papers arranged in a graph form. The visualization feels immersive, smooth, and data-driven, blending scientific clarity with spatial depth to invite exploration of the citation landscape.
 
+In order to keep a managable amount of data on the screen at any one time there are 3 layers of the map, universe view, galaxy view and topic view. There is also a paper view which is activated in the topic view when a node is selected.
+
 Core Interface
     Canvas: A 2D chart rendered on a large white background (~f0f0f0).
     Navigation: Pannable and zoomable (horizontally and vertically) with smooth transitions and inertial motion. Zoom is centered around the mouse pointer.
