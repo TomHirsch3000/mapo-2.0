@@ -77,7 +77,7 @@ export const FooterPanel = ({ selected, hovered, layoutMode }) => {
                         {hovered.field === "Galaxy" ? (
                             // Rich Galaxy Metadata
                             <>
-                                <h3>{hovered.title}</h3>
+                                <h3>{hovered.title || hovered.name}</h3>
                                 <div className="footer-meta" style={{ marginBottom: '8px' }}>
                                     <strong>{d3.format(",")(hovered.totalWorksCount || hovered.totalWorks || 0)}</strong> known works
                                     <span style={{ color: '#94a3b8' }}> • </span>

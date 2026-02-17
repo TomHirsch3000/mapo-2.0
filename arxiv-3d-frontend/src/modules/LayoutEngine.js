@@ -85,7 +85,15 @@ export class LayoutEngine {
         sortedForLayout.forEach(n => {
             let dynamicSize = 0;
             if (timelineHeightScale && n.data && n.data.worksByDecade) {
-                const maxWorks = d3.max(n.data.worksByDecade, w => w.works_count) || 0;
+                // Apply Projection (scaling up 2020s) to match Renderer
+                // Factor updated to 2.0 based on user feedback
+                const projectedData = n.data.worksByDecade.map(w => {
+                    if (w.decade === 2020) {
+                        return { ...w, works_count: w.works_count * 2.0 };
+                    }
+                    return w;
+                });
+                const maxWorks = d3.max(projectedData, w => w.works_count) || 0;
                 dynamicSize = timelineHeightScale(maxWorks);
             }
             // Fallback size if data missing
@@ -94,6 +102,7 @@ export class LayoutEngine {
             // Slot Height = 35 + Dynamic Size
             const slotH = 35 + dynamicSize;
             nodeHeights.set(n.id, slotH);
+            n._height = slotH; // Store for rendering
             totalHeight += slotH;
         });
 

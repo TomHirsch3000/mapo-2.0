@@ -124,7 +124,7 @@ export default function App() {
       universeXScale = d3.scalePow()
         .exponent(3)
         .domain([1900, maxYear])
-        .range([-width * 0.40, width * 0.40]); // Fit comfortably within screen width (centered at 0)
+        .range([-width * 1.2, width * 1.2]); // 3x wider (was 0.4)
 
       const validNodes = nodes.filter(n => !n.isMenuNode && n.data?.worksByDecade);
       const absMaxWorksSingleDecade = d3.max(validNodes, d => d3.max(d.data.worksByDecade, w => w.works_count) || 0) || 1000;

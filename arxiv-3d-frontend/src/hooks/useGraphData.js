@@ -164,6 +164,11 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
             // Initial Position Logic handled in LayoutEngine, but we pass properties needed
             const position = galaxy.position || [0, 0, 0];
 
+            // Ensure worksByDecade is sorted for Area Chart
+            if (galaxy.worksByDecade && Array.isArray(galaxy.worksByDecade)) {
+                galaxy.worksByDecade.sort((a, b) => a.decade - b.decade);
+            }
+
             return {
                 id: galaxy.id,
                 key: galaxy.id,

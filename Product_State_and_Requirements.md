@@ -54,24 +54,27 @@ the source of this data is the universe json file which is created by the backen
     -   **Shape**: **Hexagons**.
     -   **Size**: Scaled by `totalWorksCount` (total papers in the field).
     -   **Color**: Distinct color per field ID.
+    -   **Shimmer**: node body color should shimmer when they are hovered
 -   **Physics/Logic**:
-    -   Nodes gravitate toward the center (Radial force).
+    -   placement is deterministic
+    Nodes gravitate toward the center (Radial force).
     -   Larger nodes (more papers) are pulled closer to the center.
     -   Collision detection prevents overlapping.
     -   **Status**:
-        -   [x] Hexagon Shapes
+        -   [] Hexagon Shapes - need work the colours look bland
         -   [x] Spiral/Central Packing
-        -   [x] Size based on volume
+        -   [] Size based on volume - needs work nodes are too big
 
 ### Layout Mode: Timeline (Chronological)
 -   **Description**: Broad historical view of when fields emerged and evolved.
 -   **Structure**:
     -   **X-Axis**: Represents Time (Year). Oldest on the left, newest on the right.
-    -   **Y-Axis**: Vertical distribution to minimize overlap.
-    -   **Projection**: Timeline must extend to **2026** to show current data without visual "drop-off".
+    -   **Y-Axis**: Vertical distribution to have no overlap and leave the same amount of white space between nodes regardless of node size. 
+    -   **Projection**: Timeline must extend to **2026** to show current data without visual "drop-off". this makes it look like there are more papers in this decade than last despite only being half way through the decade. 
 -   **Node Appearance**:
     -   **Shape**: **Area Charts** (or "Stream shapes") showing the number of papers per decade.
     -   **Labeling**: Labels should appear to the right of the node (most recent data point).
+    -   **Shimmer**: node body color should shimmer when they are hovered
 -   **Status**:
     -   [x] Timeline Axis (Years)
     -   [x] Area Chart rendering for nodes
@@ -91,6 +94,20 @@ the source of this data is the universe json file which is created by the backen
 
 ## 3. Galaxy View (Meso Level)
 **Concept**: A specific Field of Study (e.g., "Computer Science"). Nodes represent **Groups** of papers.
+### UI Layout 
+    - title should show the name of the galaxy we're in 
+    - buttons should show layout options and grouping options 
+    - button poitioning should be on the left 
+    - Footer pannel:   
+        - should remain as per general specification and show specific data on hover: 
+        - title of the group 
+        - total number of papers and total citations of papers in the group 
+        - paper title, publising date and abstract from earliest paper in the group 
+ - **Status**
+    -   [ ] **Requirement**: Galaxy View must show title currently just says 'galaxy view'
+    -   [x]  Galaxy View must show layout and grouping controls
+    -   [ ] **Requirement**: controls should be positioned on the left
+    -   [ ] **Requirement**: Footer pannel should show specific data
 
 ### Grouping Controls
 -   **Description**: Users can dynamically regroup the data.
@@ -109,20 +126,27 @@ the source of this data is the universe json file which is created by the backen
     -   **Shape**: **Circles**.
     -   **Size**: Proportional to the number of papers in the group.
     -   **Color**: Determined by the active grouping category.
+    -   **Shimmer**: on hover node colour should shimmer and other nodes should fade to low opacity (0.1)
 -   **Logic**:
     -   Use a "Spiral" or center-weighted force layout.
-    -   Largest groups in the center.
+    -   Largest groups in the center. !! not sure about this???
     -   **Status**:
-        -   [x] Circle nodes
-        -   [x] Center-weighted spiral layout
+        -   [x] Circle nodes - needs work, they look a bit basic
+        -   [] Center-weighted spiral layout - layout is a bit random
 
 ### Layout Mode: Timeline (Streamgraph)
 -   **Description**: Shows the evolution of these groups over time.
+-   **Node Appearance**:
+    -   **Shape**: **Area Charts** (or "Stream shapes") showing the number of papers per decade.
+    -   **Labeling**: Labels should appear to the right of the node (most recent data point).
 -   **Structure**:
-    -   **X-Axis**: Publication Year.
+    -   **X-Axis**: First publication Year defines the left most point, last publication year defines the right most point.
+    -   **Y-Axis size**: defines the height of the graph in any 
     -   **Y-Axis**: "Stream" centered. Largest groups positioned closest to Y=0 (center horizontal line), smaller ones further out.
 -   **Status**:
-    -   [x] Stream/River Layout sorting (Largest at center)
+    -   [ ] Stream/River Layout sorting (Largest at center)
+    -   [ ] shapes
+    -   [ ] alignment with x axis - needs work nodes 
 
 ### Edges & Connections
 -   **Description**: Visualizing the flow of citations between groups.
@@ -135,8 +159,8 @@ the source of this data is the universe json file which is created by the backen
     -   **Hover**: Hovering a node highlights ALL its connections. Unrelated nodes/edges fade to low opacity (0.1).
     -   **Status**:
         -   [x] Bi-directional curved edges
-        -   [x] Weighted thickness
-        -   [x] Color by Source
+        -   [] Weighted thickness - needs work, thickness is not giving the right effect 
+        -   [] Color by Source - needs work, colour is disappearing after one hover
         -   [x] Hover highlighting
 
 ---
@@ -170,14 +194,37 @@ The "feel" of the application is defined by how things move.
 ### Transitions
 -   **View Switching (Universe <-> Galaxy)**:
     -   **Zoom In**:
-        -   **Animation**: Nodes should "fly in". Start at scale `0.05` at the target position and animate to `1.0`.
+        -   **Animation**: Node position shouldbe determined before anything is shown so there is no positioning animation. However, Nodes should "fly in" towards the screen by starting very small and getting bigger until they reach their final size. Once they reach their final size, all nodes should be visible and the camera should be adjusted to fit all nodes in the view.
         -   **Trigger**: triggered by clicking a node in the universe view or by scrolling in close enough to a node in the universe view
-            **Action**: transition to galaxy view of the selected node, with default grouping (field) already selected and maintain current layout selection (central or timeline)
+        -   **Action**: transition to galaxy view of the selected node, with default grouping (field) already selected and maintain current layout selection (central or timeline)
+        -   **Sequence**:
+            1. remove all nodes from the view, blank screen 
+            2. set camera to high zoom level
+            3. load the list of nodes to be shown in the galaxy view but don't show them
+            4. calculate the node positions for each node by running the simulation in the background, still nothing is showing
+            5. once the simulation is finished, add all nodes to the view at size 0
+            6. animate all nodes to their final size
+            7. adjust camera to fit all nodes in the view
+            8. calculate the edges points and colours
+            9. fade in the edges 
+            10. fade in the labels
+
+
     -   **Zoom Out**:
         -   **Animation**: Nodes should appear instantly or fade in at their final positions. No "flying backwards" which can be disorienting.
         -   **Trigger**: triggered by clicking the "Zoom Out" button in the galaxy view or by scrolling far enough away from the center of the galaxy view
         -   **Action**: transition to universe view with the galaxy node the user has just come from at the center of the universe view and zoomed in, maintain current layout selection (central or timeline)
-
+        -   **Sequence**:
+            1. remove all nodes from the view, blank screen 
+            2. set camera to high zoom level
+            3. load the list of nodes to be shown in the galaxy view but don't show them
+            4. calculate the node positions for each node by running the simulation in the background, still nothing is showing
+            5. once the simulation is finished, add all nodes to the view at size 0
+            6. animate all nodes to their final size
+            7. adjust camera to fit all nodes in the view
+            8. calculate the edges points and colours
+            9. fade in the edges 
+            10. fade in the labels
     -   **Status**:
         -   [] Zoom In "Fly" Effect
         -   [] Zoom Out Static/Fade
