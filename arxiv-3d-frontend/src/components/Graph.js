@@ -68,6 +68,20 @@ export const Graph = ({
         const currentNodes = nodes.map(n => ({ ...n })); // Shallow copy to prevent mutation issues between runs/views if needed, though d3 mutates inplace usually fine if we reset
         const currentEdges = edges.map(e => ({ ...e })); // Same for edges
 
+        // --- PRE-CALCULATE DIMENSIONS (FIELD VIEW) ---
+        // Ensure dimensions are available BEFORE simulation runs
+        if (isField) {
+            currentNodes.forEach(n => {
+                const cites = n.citationCount || 0;
+                // Sizing based on citations (Square root scale for better distribution)
+                // Min width 80px, grows with citations.
+                // Example: 0 cites = 80px, 100 cites = 80 + 10*3 = 110px, 1000 cites = 80 + 31*3 = 173px
+                n._w = 80 + Math.sqrt(cites) * 3;
+                // Height allows for title wrapping. Base 50px.
+                n._h = 50 + Math.sqrt(cites) * 1.5;
+            });
+        }
+
         // --- SETUP GROUPS ---
         let gMain = svg.select(".g-main");
         if (gMain.empty()) {
@@ -250,18 +264,28 @@ export const Graph = ({
                     el.append("circle").attr("class", "orbit");
                     el.append("circle").attr("class", "core");
                 }
+
             } else if (isField) {
                 // Topic/Field View (Papers)
                 el.append("rect").attr("class", "node-paper-card");
 
                 const fo = el.append("foreignObject")
                     .attr("class", "node-fo")
-                    .attr("width", 1) // Set placeholder, updated in loop below
+                    .attr("width", 1) // Placeholder
                     .attr("height", 1);
 
                 fo.append("xhtml:div")
                     .attr("class", "node-paper-content")
-                    .html(d => `<div class="node-paper-title">${d.title || d.name || 'Untitled'}</div>`);
+                    // Inline styles to force wrapping logic if CSS fails
+                    .style("width", "100%")
+                    .style("height", "100%")
+                    .style("display", "flex")
+                    .style("align-items", "center")
+                    .style("justify-content", "center")
+                    .style("text-align", "center")
+                    .style("overflow", "hidden")
+                    .html(d => `<div class="node-paper-title" style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.1;">${d.title || d.name || 'Untitled'}</div>`);
+
 
             } else {
                 // Field (Fallback or Universe non-menu nodes not covered above?? Actually Universe covered in first block)
@@ -419,13 +443,9 @@ export const Graph = ({
                 }
             } else if (isField) {
                 // Field View Styling
-                // Size: Base size scaled by citations
-                const width = 60 + (d.val * 1.5); // Wider cards
-                const height = 40 + (d.val * 0.5); // Taller cards
-
-                // Store dims for collision
-                d._w = width;
-                d._h = height;
+                // Use pre-calculated dimensions
+                const width = d._w || 80;
+                const height = d._h || 50;
 
                 el.select(".node-paper-card")
                     .attr("x", -width / 2)
@@ -440,6 +460,11 @@ export const Graph = ({
                     .attr("y", -height / 2)
                     .attr("width", width)
                     .attr("height", height);
+
+                // Adjust font size based on size?
+                // Larger cards can have slightly larger fonts, but keep it readable
+                el.select(".node-paper-title")
+                    .style("font-size", `${Math.min(12, Math.max(8, width / 12))}px`);
             }
         });
 
