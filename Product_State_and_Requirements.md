@@ -95,19 +95,14 @@ the source of this data is the universe json file which is created by the backen
 ## 3. Galaxy View (Meso Level)
 **Concept**: A specific Field of Study (e.g., "Computer Science"). Nodes represent **Groups** of papers.
 ### UI Layout 
-    - title should show the name of the galaxy we're in 
-    - buttons should show layout options and grouping options 
-    - button poitioning should be on the left 
-    - Footer pannel:   
-        - should remain as per general specification and show specific data on hover: 
-        - title of the group 
-        - total number of papers and total citations of papers in the group 
-        - paper title, publising date and abstract from earliest paper in the group 
- - **Status**
-    -   [ ] **Requirement**: Galaxy View must show title currently just says 'galaxy view'
-    -   [x]  Galaxy View must show layout and grouping controls
-    -   [ ] **Requirement**: controls should be positioned on the left
-    -   [ ] **Requirement**: Footer pannel should show specific data
+- title should show the name of the galaxy we're in 
+- buttons should show layout options and grouping options 
+- button poitioning should be on the left 
+- Footer pannel:   
+    - should remain as per general specification and show specific data on hover: 
+    - title of the group 
+    - total number of papers and total citations of papers in the group 
+    - paper title, publising date and abstract from earliest paper in the group 
 
 ### Grouping Controls
 -   **Description**: Users can dynamically regroup the data.
@@ -116,9 +111,6 @@ the source of this data is the universe json file which is created by the backen
     -   **Author**: Groups papers by primary author.
     -   **Institution**: Groups papers by institution.
 -   **Behavior**: Changing grouping triggers a smooth re-layout/transition.
-    -   **Status**:
-        -   [x] Grouping UI Controls (Control Panel)
-        -   [x] Toggling functionality
 
 ### Layout Mode: Central (Cluster)
 -   **Description**: Overview of the groups within this galaxy.
@@ -130,12 +122,9 @@ the source of this data is the universe json file which is created by the backen
 -   **Logic**:
     -   Use a "Spiral" or center-weighted force layout.
     -   Largest groups in the center. !! not sure about this???
-    -   **Status**:
-        -   [x] Circle nodes - needs work, they look a bit basic
-        -   [] Center-weighted spiral layout - layout is a bit random
 
 ### Layout Mode: Timeline (Streamgraph)
--   **Description**: Shows the evolution of these groups over time.
+-   **Description**: Shows the evolution of these groups over time. Nodes should be positioned with their left most point at the correct date on the timeline. They should be spread out from the vertical center so they do not overlap. The shape of the nodes in this view should be long and thin so they represent when papers were being published in this area. The right most point should be the date of the last paper being published. 
 -   **Node Appearance**:
     -   **Shape**: **Area Charts** (or "Stream shapes") showing the number of papers per decade.
     -   **Labeling**: Labels should appear to the right of the node (most recent data point).
@@ -143,10 +132,7 @@ the source of this data is the universe json file which is created by the backen
     -   **X-Axis**: First publication Year defines the left most point, last publication year defines the right most point.
     -   **Y-Axis size**: defines the height of the graph in any 
     -   **Y-Axis**: "Stream" centered. Largest groups positioned closest to Y=0 (center horizontal line), smaller ones further out.
--   **Status**:
-    -   [ ] Stream/River Layout sorting (Largest at center)
-    -   [ ] shapes
-    -   [ ] alignment with x axis - needs work nodes 
+
 
 ### Edges & Connections
 -   **Description**: Visualizing the flow of citations between groups.
@@ -157,38 +143,73 @@ the source of this data is the universe json file which is created by the backen
     -   **Color**: Gradient or solid color matching the **Source** node.
 -   **Interaction**:
     -   **Hover**: Hovering a node highlights ALL its connections. Unrelated nodes/edges fade to low opacity (0.1).
-    -   **Status**:
-        -   [x] Bi-directional curved edges
-        -   [] Weighted thickness - needs work, thickness is not giving the right effect 
-        -   [] Color by Source - needs work, colour is disappearing after one hover
-        -   [x] Hover highlighting
+
+### Status
+    -   [ ] Galaxy View must show title currently just says 'galaxy view'
+    -   [x] layout and grouping controls
+    -   [ ] Footer pannel should show specific data
+    -   [x] Node appearance central - needs work, they look a bit basic
+    -   [x] Node appearance timeline - needs work, they look a bit basic   
+    -   [] Node layout Central- Center-weighted spiral layout - layout is a bit random
+    -   [] Node layout Timeline - Center-weighted spiral layout - layout is a bit random
+    -   [x] Edges: Bi-directional curved edges
 
 ---
 
 ## 4. Topic View (Micro Level)
-**Concept**: Viewing individual **Papers** within a selected Group or Topic.
+**Concept**: Viewing individual **Papers** within a selected Group or Topic according to the layout and grouping options selected in the galaxy view.
 
 ### Node Appearance
 -   **Shape**: **Rectangular Cards** (rounded corners).
 -   **Content**: Paper Title (legible, wrapped).
 -   **Size**: Base size, slightly scaled by citation count.
 -   **Color**: Consistent with the paper's primary field.
-    -   **Status**:
-        -   [x] Rectangular "Card" Nodes
-        -   [x] Title Text Rendering
+
+
+### Edges
+ - **Description**: Visualizing the flow of citations between papers.
+- **Appearance**:
+    -   **Directional**: visual cue as to which way the citation is going
+    -   **Curved**: Smooth quadratic bezier curves.
+    -   **Style**: Tapering width (optional) or varying thickness based on connection weight.
+    -   **Color**: Gradient or solid color matching the **Source** node.
+- **Interaction**:
+    -   **Hover**: Hovering a node highlights ALL its connections. Unrelated nodes/edges fade to low opacity (0.1).
 
 ### Layouts
 -   **Timeline**: Papers arranged by specific publication year (X) and citation impact (Y-Center).
--   **Central**: Force-directed network.
-    -   **Focused Mode**: If a specific paper is selected, it moves to the center. Connected papers "orbit" around it.
-    -   **Orbit Logic**: Larger/More cited papers orbit *closer* to the center.
-    -   **Status**:
-        -   [x] Timeline placement
-        -   [x] Central/focused force layout
+-   **Central**: larger nodes in the center with smaller nodes radiating away. no overlapping. 
+    
+### Status
+    -   [] Node appearance Rectangular "Card" Nodes
+    -   [] Node layout Central
+    -   [] Node layout Timeline
+    -   [] Edges: directional curved edges
+    -   [] Hover highlighting
+
+---
+## 5. Paper view 
+-   **Description**: When a specific paper is selected, it moves to the center of view. All connected papers "orbit" around it, including papers from other galaxy groupings. All non connected papers are no longer visible (removed)
+-   **Orbit Logic**: Larger/More cited papers orbit *closer* to the center.
+- **Appearance** as per topic view
+### Layouts
+-   **Timeline**: Papers arranged by specific publication year (X) and citation impact (Y-Center).
+-   **Central**: larger nodes in the center with smaller nodes radiating away. no overlapping. 
+### actions
+-   **Hover**: Hovering a node highlights ALL its connections. Unrelated nodes/edges fade to low opacity (0.1).
+-   **Click**: Clicking a node moves it to the center of view and all connected papers "orbit" around it, including papers from other galaxy groupings. All non connected papers are no longer visible (removed)
+
+### Status
+        -   [] Node appearance Rectangular "Card" Nodes
+        -   [] Node layout Central
+        -   [] Node layout Timeline
+        -   [] Edges: directional curved edges
+        -   [] Hover highlighting
+        -   [] Click to transition to next paper view 
 
 ---
 
-## 5. Visual Physics & Transitions
+## 6. Visual Physics & Transitions
 The "feel" of the application is defined by how things move.
 
 ### Transitions

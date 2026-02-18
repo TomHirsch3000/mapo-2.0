@@ -155,37 +155,127 @@ export class LayoutEngine {
         const { yScale, xGroupScale, yTimelineScale } = scales;
 
         if (layoutMode === 'TIMELINE') {
-            // Stream Layout
-            // X = Year, Y = Centered Stream
+            // Updated Galaxy Timeline View:
+            // - Left Aligned to Start Date
+            // - Width based on End Date
+            // - Vertically Centered with no overlaps (Lane Packing)
+            // - Long and thin shapes (Handled in Graph.js via _width/_height props set here)
 
-            // X-Axis Force
-            // We need a scale for the years if not provided. 
-            // In Galaxy view, 'yTimelineScale' was actually used for Y-banding in old implementation. 
-            // Now we need X-scale for years. 
-            // We can reuse 'yTimelineScale' if it covers the years, but mapped to X? 
-            // Or create a new local scale if missing.
-
+            // 1. Determine Time Scale
             const minYear = d3.min(nodes, d => d.minYear) || 1990;
             const maxYear = d3.max(nodes, d => d.maxYear || d.minYear) || 2025;
-            // Widen the scale to fill space better (3x wider as requested)
-            const widthFactor = 8.0; // Increased to 8.0 from 2.4 (roughly 3.3x)
-            const xScale = d3.scaleLinear().domain([minYear, maxYear]).range([-this.width * widthFactor, this.width * widthFactor]);
 
-            // Y-Axis Sorting (Stream)
-            // Sort by size (desc) to put largest in middle
-            const sorted = [...nodes].sort((a, b) => (b.val || 0) - (a.val || 0));
-            sorted.forEach((d, i) => {
-                // Alternating placement: 0, 1, -1, 2, -2...
-                const sign = i % 2 === 0 ? 1 : -1;
-                const offset = Math.ceil(i / 2) * (d.val * 1.5 + 40); // Dynamic step based on size
-                d._targetY = offset * sign;
+            // Padding for the timeline
+            const paddingX = this.width * 0.05;
+            const effectiveWidth = this.width - (paddingX * 2);
+
+            // X Scale based on Years
+            const xScale = d3.scaleLinear()
+                .domain([minYear, maxYear])
+                .range([-effectiveWidth / 2, effectiveWidth / 2]);
+
+            // 2. Lane Assignment Logic
+            // Sort nodes by start year first to optimize packing from left to right
+            const sorted = [...nodes].sort((a, b) => {
+                const startA = a.minYear || d3.min(nodes, n => n.minYear);
+                const startB = b.minYear || d3.min(nodes, n => n.minYear);
+                const valA = startA;
+                const valB = startB;
+                if (valA !== valB) return valA - valB;
+                return (b.val || 0) - (a.val || 0);
             });
 
-            sim.force("x", d3.forceX(d => xScale(d.minYear)).strength(0.8))
-                .force("y", d3.forceY(d => d._targetY + this.graphCenterY).strength(0.5))
-                .force("collide", d3.forceCollide().radius(d => d.val * 1.2 + 20).iterations(2))
-                .force("charge", d3.forceManyBody().strength(-50))
-                .force("link", d3.forceLink(edges).id(d => d.id).strength(0.01)); // Weak links
+            // Calculate Height Scale
+            const maxVal = d3.max(nodes, d => d.val || 0) || 50;
+            const heightScale = d3.scaleLinear().domain([0, maxVal]).range([5, 40]); // Min 5px, Max 40px height based on 'val'
+
+            // Track lanes. Each lane tracks the right-most X coordinate (end time).
+            const lanes = [];
+
+            // Dynamic Row Calculation?
+            // "Vertical spacing logic to prevent overlaps from center".
+            // If we have variable heights, we can't just use discrete lanes 0,1,2... with fixed offset.
+            // UNLESS we use a fixed step that is large enough for the max height.
+            // Let's use a fixed step based on the max possible height to ensure alignment and no overlap.
+            const MAX_ROW_HEIGHT = 40;
+            const LANE_PADDING = 8;
+            const ROW_SPACE = MAX_ROW_HEIGHT + LANE_PADDING;
+
+            sorted.forEach(node => {
+                const startYear = node.minYear !== undefined ? node.minYear : minYear;
+                const endYear = node.maxYear !== undefined ? node.maxYear : startYear;
+
+                // Calculate visual dimensions
+                const xStart = xScale(startYear);
+                const xEnd = xScale(endYear);
+
+                // Ensure min width
+                let width = xEnd - xStart;
+                if (width < 30) width = 30; // Minimum px width for visibility
+
+                // Visual X End
+                const visualXEnd = xStart + width;
+
+                // Calculate Height
+                const height = heightScale(node.val || 0);
+
+                // Find a lane where this node fits
+                let assignedLaneIndex = -1;
+                const X_BUFFER = 10;
+
+                for (let i = 0; i < lanes.length; i++) {
+                    if (lanes[i] + X_BUFFER < xStart) {
+                        assignedLaneIndex = i;
+                        lanes[i] = visualXEnd; // Update lane's end
+                        break;
+                    }
+                }
+
+                if (assignedLaneIndex === -1) {
+                    // Create new lane
+                    assignedLaneIndex = lanes.length;
+                    lanes.push(visualXEnd);
+                }
+
+                // Store placement
+                node._laneIndex = assignedLaneIndex;
+                node._layoutX = xStart;
+                node._layoutWidth = width;
+                node._layoutHeight = height;
+            });
+
+            // 3. Map Lanes to centered Y
+            sorted.forEach(node => {
+                const lane = node._laneIndex;
+                let laneOffset = 0;
+
+                // Alternating from center logic
+                if (lane > 0) {
+                    const sign = lane % 2 !== 0 ? -1 : 1;
+                    const multiplier = Math.ceil(lane / 2);
+                    laneOffset = sign * multiplier * ROW_SPACE;
+                }
+
+                const centerX = node._layoutX + (node._layoutWidth / 2);
+                const centerY = this.graphCenterY + laneOffset;
+
+                node.fx = centerX;
+                node.fy = centerY;
+
+                // Instant snap
+                node.x = centerX;
+                node.y = centerY;
+
+                node.vx = 0;
+                node.vy = 0;
+            });
+
+            // Stop other forces relative to movement, BUT keep link force active (strength 0) to resolve IDs
+            sim.force("x", null)
+                .force("y", null)
+                .force("collide", null)
+                .force("charge", null)
+                .force("link", d3.forceLink(edges).id(d => d.id).strength(0)); // Critical Fix: Initialize links
 
         } else {
             // CENTRAL: Spiral Layout (Gap-less packing)
@@ -251,7 +341,7 @@ export class LayoutEngine {
 
             sim.force("x", d3.forceX(d => xScale(d.year)).strength(0.9))
                 .force("y", d3.forceY(d => d._targetY + this.graphCenterY).strength(0.6))
-                .force("collide", d3.forceCollide().radius(30).iterations(2))
+                .force("collide", d3.forceCollide().radius(d => (d._w ? d._w / 1.8 : 35)).iterations(2))
                 .force("charge", d3.forceManyBody().strength(-50))
                 .force("link", d3.forceLink(edges).id(d => d.id).strength(0.1));
 

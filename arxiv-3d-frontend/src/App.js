@@ -213,7 +213,7 @@ export default function App() {
         grouping={grouping}
         selected={selected}
         activeGroupLabel={activeGroup} // Simplified label
-        galaxyName={activeGalaxy ? (nodes.find(n => n.id === activeGalaxy)?.name || "Galaxy View") : "Galaxy View"}
+        galaxyName={activeGalaxy && universeData ? (universeData.nodes?.find(n => n.id === activeGalaxy)?.name || "Galaxy View") : "Galaxy View"}
         onBackToUniverse={handleBackToUniverse}
         onBackToGalaxy={handleBackToGalaxy}
         onLayoutChange={setLayout}

@@ -62,6 +62,7 @@ export const Graph = ({
         const svg = d3.select(svgRef.current);
         const isUniverse = viewMode === 'UNIVERSE';
         const isGalaxy = viewMode === 'GALAXY';
+        const isField = viewMode === 'FIELD';
 
         // --- DATA PREP ---
         const currentNodes = nodes.map(n => ({ ...n })); // Shallow copy to prevent mutation issues between runs/views if needed, though d3 mutates inplace usually fine if we reset
@@ -105,8 +106,8 @@ export const Graph = ({
         // --- LAYOUT SIMULATION (HYBRID APPROACH) ---
         if (simulationRef.current) simulationRef.current.stop();
 
-        // 1. CLEAR PREVIOUS STATE if View Changed
-        if (prevViewMode.current !== viewMode) {
+        // 1. CLEAR PREVIOUS STATE if View Changed OR Layout Changed
+        if (prevViewMode.current !== viewMode || prevLayoutMode.current !== layoutMode) {
             gLinks.selectAll("*").remove();
             gNodes.selectAll("*").interrupt().remove();
             // Reset opacity to hidden for Fly-in
@@ -130,9 +131,8 @@ export const Graph = ({
         }
 
         // 3. EXECUTE DRY RUN (The "Function")
-        // If Galaxy View, we run it visibly? NO, we want it pre-calculated.
-        // Actually for ALL views we can do this for stability, but mostly crucial for Galaxy.
-        const DRY_RUN_TICKS = isGalaxy ? 300 : (isUniverse ? 120 : 300);
+        // If Galaxy/Field View, we run it visibly? NO, we want it pre-calculated.
+        const DRY_RUN_TICKS = (isGalaxy || isField) ? 300 : 120;
 
         sim.stop(); // Don't run timer yet
         sim.alpha(1);
@@ -144,7 +144,7 @@ export const Graph = ({
 
         // D3 JOIN - Links
         // Filter edges for rendering (Galaxy uses gradients)
-        const getEdgeKey = (d) => `${isGalaxy ? "G" : "P"}|${d.source.id || d.source}|${d.target.id || d.target}`;
+        const getEdgeKey = (d) => `${(isGalaxy || isField) ? "G" : "P"}|${d.source.id || d.source}|${d.target.id || d.target}`;
         const getGradientId = (d) => `link-gradient-${sanitizeId(getEdgeKey(d))}`;
         const defs = svg.select("defs").empty() ? svg.append("defs") : svg.select("defs");
 
@@ -155,7 +155,7 @@ export const Graph = ({
             s.attr("d", d => {
                 const src = d.source;
                 const tgt = d.target;
-                if (isGalaxy) {
+                if (isGalaxy || isField) {
                     // Curve Logic from prev implementation
                     const dx = tgt.x - src.x;
                     const dy = tgt.y - src.y;
@@ -186,14 +186,14 @@ export const Graph = ({
         const linkJoin = gLinks.selectAll(".d3-link").data(currentEdges, getEdgeKey);
         linkJoin.exit().remove();
         const linkEnter = linkJoin.enter().append("path")
-            .attr("class", `d3-link ${isGalaxy ? 'type-galaxy-link' : 'type-paper-link'}`)
+            .attr("class", `d3-link ${(isGalaxy || isField) ? 'type-galaxy-link' : 'type-paper-link'}`)
             .attr("fill", "none")
             .attr("stroke-linecap", "round");
 
         const allLinks = linkEnter.merge(linkJoin);
 
-        // Gradients (Galaxy)
-        if (isGalaxy) {
+        // Gradients (Galaxy & Field)
+        if (isGalaxy || isField) {
             allLinks.each(function (d) {
                 const id = getGradientId(d);
                 let grad = defs.select(`#${id}`);
@@ -206,15 +206,19 @@ export const Graph = ({
                 const tgtNode = currentNodes.find(n => n.id === (d.target.id || d.target));
                 const cScale = scales.colorScale || d3.scaleOrdinal(d3.schemeTableau10);
 
-                grad.select(".grad-stop-start").attr("stop-color", srcNode ? cScale(srcNode.xGroup || srcNode.id) : "#ccc").attr("stop-opacity", 0.6);
-                grad.select(".grad-stop-end").attr("stop-color", tgtNode ? cScale(tgtNode.xGroup || tgtNode.id) : "#ccc").attr("stop-opacity", 0.6);
+                // For Field view, use field color or xGroup
+                const srcColor = srcNode ? (srcNode.groupColor || cScale(srcNode.xGroup || srcNode.id)) : "#ccc";
+                const tgtColor = tgtNode ? (tgtNode.groupColor || cScale(tgtNode.xGroup || tgtNode.id)) : "#ccc";
+
+                grad.select(".grad-stop-start").attr("stop-color", srcColor).attr("stop-opacity", 0.6);
+                grad.select(".grad-stop-end").attr("stop-color", tgtColor).attr("stop-opacity", 0.6);
 
                 d3.select(this).attr("stroke", `url(#${id})`);
             });
         }
 
         updateLinkPaths(allLinks); // Set final paths immediately
-        allLinks.attr("stroke-width", d => isGalaxy ? Math.max(2, Math.sqrt(d.weight || 1)) : 1)
+        allLinks.attr("stroke-width", d => (isGalaxy || isField) ? Math.max(2, Math.sqrt(d.weight || 1)) : 1)
             .attr("stroke-opacity", 0); // Start hidden for fly-in
 
         // D3 JOIN - Nodes
@@ -235,10 +239,34 @@ export const Graph = ({
                 el.append("path").attr("class", "orbit");
                 el.append("path").attr("class", "core");
             } else if (isGalaxy) {
-                el.append("circle").attr("class", "orbit");
-                el.append("circle").attr("class", "core");
+                // Check if Galaxy Timeline
+                if (layoutMode === 'TIMELINE') {
+                    // Timeline Rect
+                    // Use 'rect' for strict rectangle
+                    el.append("rect").attr("class", "orbit");
+                    // Core unused or maybe a marker?
+                    el.append("rect").attr("class", "core").attr("display", "none");
+                } else {
+                    el.append("circle").attr("class", "orbit");
+                    el.append("circle").attr("class", "core");
+                }
+            } else if (isField) {
+                // Topic/Field View (Papers)
+                el.append("rect").attr("class", "node-paper-card");
+
+                const fo = el.append("foreignObject")
+                    .attr("class", "node-fo")
+                    .attr("width", 1) // Set placeholder, updated in loop below
+                    .attr("height", 1);
+
+                fo.append("xhtml:div")
+                    .attr("class", "node-paper-content")
+                    .html(d => `<div class="node-paper-title">${d.title || d.name || 'Untitled'}</div>`);
+
             } else {
-                // Field
+                // Field (Fallback or Universe non-menu nodes not covered above?? Actually Universe covered in first block)
+                // This block was originally labelled "Field" but might have been Galaxy? 
+                // Let's assume this handles unknown types.
                 el.append("rect").attr("class", "node-rect").attr("rx", 6);
                 el.append("foreignObject").attr("class", "fo-content").append("xhtml:div").attr("class", "node-fo");
             }
@@ -258,12 +286,45 @@ export const Graph = ({
             const el = d3.select(this);
             // ... Apply Styles ...
             if (isGalaxy) {
-                const val = d.val || 20;
-                const radius = val * 0.16;
-                el.select(".orbit").attr("r", radius).attr("fill", cScale(d.xGroup)).attr("fill-opacity", 0.15);
-                el.select(".core").attr("r", radius * 0.6).attr("fill", cScale(d.xGroup));
-                el.select(".label-main").text((d.name || "").substring(0, 25)).attr("dy", radius + 25).style("font-size", "28px");
-                el.select(".label-sub").text(d.nodeCount ? `${d.nodeCount} papers` : "").attr("dy", radius + 45);
+                if (layoutMode === 'TIMELINE') {
+                    const width = d._layoutWidth || 30;
+                    const height = d._layoutHeight || 14;
+
+                    // Position rect centered at 0,0 via x,y offset
+                    // width/height applied to rect
+                    el.select(".orbit")
+                        .attr("x", -width / 2)
+                        .attr("y", -height / 2)
+                        .attr("width", width)
+                        .attr("height", height)
+                        .attr("rx", height / 2) // Rounded pills
+                        .attr("fill", cScale(d.xGroup))
+                        .attr("fill-opacity", 0.6)
+                        .attr("stroke", "none")
+                        .attr("r", null); // Remove radius from previous circle
+
+                    // Label above center
+                    el.select(".label-main")
+                        .text((d.name || "").substring(0, 30))
+                        .attr("x", 0)
+                        .attr("y", -height / 2 - 5)
+                        .attr("dy", 0)
+                        .attr("text-anchor", "middle")
+                        .style("font-size", "14px") // Smaller font for dense timeline
+                        .style("fill", "#64748b")
+                        .style("pointer-events", "none");
+
+                    el.select(".label-sub").text(""); // No sub-label needed for now
+
+                } else {
+                    const val = d.val || 20;
+                    const radius = val * 0.16;
+                    el.select(".orbit").attr("r", radius).attr("fill", cScale(d.xGroup)).attr("fill-opacity", 0.15)
+                        .attr("width", null).attr("height", null); // Clear rect attrs
+                    el.select(".core").attr("r", radius * 0.6).attr("fill", cScale(d.xGroup));
+                    el.select(".label-main").text((d.name || "").substring(0, 25)).attr("dy", radius + 25).style("font-size", "28px");
+                    el.select(".label-sub").text(d.nodeCount ? `${d.nodeCount} papers` : "").attr("dy", radius + 45);
+                }
             } else if (isUniverse) {
                 const val = d.val || 20;
                 if (!d.isMenuNode) {
@@ -275,14 +336,6 @@ export const Graph = ({
 
                         const height = d._height || 60; // Default if missing
                         const halfH = height / 2;
-
-                        // Local Y scale for this node's slot
-                        // We want the area to grow UP from the bottom of the slot (or center?)
-                        // Let's center it. The slot is centered at d.y. 
-                        // d.y is the center of the slot.
-                        // We want the baseline at y + halfH? No, rendering is relative to (0,0) which is d.x,d.y
-                        // So baseline is at +halfH (bottom of slot relative to center)
-                        // Peak is at -halfH (top of slot relative to center)
 
                         // PROJECTION LOGIC:
                         // Scale up the last data point (2020) assuming significant growth.
@@ -364,8 +417,30 @@ export const Graph = ({
                 } else {
                     el.select(".orbit").attr("r", val * 2.5);
                 }
+            } else if (isField) {
+                // Field View Styling
+                // Size: Base size scaled by citations
+                const width = 60 + (d.val * 1.5); // Wider cards
+                const height = 40 + (d.val * 0.5); // Taller cards
+
+                // Store dims for collision
+                d._w = width;
+                d._h = height;
+
+                el.select(".node-paper-card")
+                    .attr("x", -width / 2)
+                    .attr("y", -height / 2)
+                    .attr("width", width)
+                    .attr("height", height)
+                    .attr("fill", "#ffffff") // White card
+                    .style("stroke", cScale(d.xGroup || d.field)); // Border color by field
+
+                el.select(".node-fo")
+                    .attr("x", -width / 2)
+                    .attr("y", -height / 2)
+                    .attr("width", width)
+                    .attr("height", height);
             }
-            // Field view styles skipped for brevity in this replace block, assume similar structure
         });
 
 
@@ -402,7 +477,7 @@ export const Graph = ({
         }
 
         // 5. ANIMATION SEQUENCE (Fly-in)
-        if (prevViewMode.current !== viewMode && viewMode === 'GALAXY') {
+        if (prevViewMode.current !== viewMode && (viewMode === 'GALAXY' || viewMode === 'FIELD')) {
 
             // A. "Blank Screen" / Start State
             // Already set opacity 0 above.
@@ -457,97 +532,87 @@ export const Graph = ({
 
     }, [nodes, edges, viewMode, layoutMode, groupingMode, activeGroup, selected, width, height, scales]);
 
-    // --- HOVER EFFECT (Visual Only) ---
+    // --- VISUAL HIGHLIGHT EFFECT (Hover & Selection) ---
     useEffect(() => {
         if (!svgRef.current) return;
         const svg = d3.select(svgRef.current);
         const isGalaxy = viewMode === 'GALAXY';
+        const isField = viewMode === 'FIELD';
         const isUniverseTimeline = viewMode === 'UNIVERSE' && layoutMode === 'TIMELINE';
         const isUniverseCentral = viewMode === 'UNIVERSE' && layoutMode === 'CENTRAL';
 
-        // Apply hover logic in Galaxy view OR Universe view (Timeline or Central)
-        if (isGalaxy || isUniverseTimeline || isUniverseCentral) {
+        if (isGalaxy || isField || isUniverseTimeline || isUniverseCentral) {
             const gLinks = svg.select(".g-links");
             const gNodes = svg.select(".g-nodes");
-            const currentEdges = edges; // We need access to edges to map connections
+            const currentEdges = edges;
 
-            if (hovered) {
+            // Determine Focus Object (Hover takes precedence, then Selection in Field/Detail modes)
+            const focusNode = hovered || ((isField && selected && !isReturning) ? selected : null);
+            const isHovering = !!hovered;
+
+            if (focusNode) {
                 const connectedEdgeIds = new Set();
                 const connectedNodeIds = new Set();
-                connectedNodeIds.add(hovered.id);
+                connectedNodeIds.add(focusNode.id);
 
-                if (isGalaxy) {
-                    // Helper to get edge key (must match main render key)
-                    const getEdgeKey = (d) => `G|${d.source.id || d.source}|${d.target.id || d.target}`;
+                if (isGalaxy || isField) {
+                    const prefix = isField ? "P" : "G";
+                    const keyFn = (s, t) => `${prefix}|${s}|${t}`;
 
                     currentEdges.forEach(e => {
                         const sId = (e.source && e.source.id) ? e.source.id : e.source;
                         const tId = (e.target && e.target.id) ? e.target.id : e.target;
-
-                        if (sId === hovered.id || tId === hovered.id) {
-                            connectedEdgeIds.add(`G|${sId}|${tId}`);
+                        if (sId === focusNode.id || tId === focusNode.id) {
+                            connectedEdgeIds.add(keyFn(sId, tId));
                             connectedNodeIds.add(sId);
                             connectedNodeIds.add(tId);
                         }
                     });
-                } else if (isUniverseTimeline || isUniverseCentral) {
-                    // In Universe view, we might not show links, but we want the node to shimmer
-                    // No link logic needed for now
                 }
 
-                // Update Links (Galaxy Only for now)
-                if (isGalaxy) {
+                // Update Links
+                if (isGalaxy || isField) {
+                    const prefix = isField ? "P" : "G";
                     gLinks.selectAll(".d3-link")
                         .transition().duration(200)
                         .attr("stroke-opacity", function () {
                             const d = d3.select(this).datum();
                             const s = (d.source.id || d.source);
                             const t = (d.target.id || d.target);
-                            const key = `G|${s}|${t}`;
+                            const key = `${prefix}|${s}|${t}`;
+                            // Highlight if connected, otherwise fade
                             return connectedEdgeIds.has(key) ? 0.8 : 0.05;
-                        })
-                        .attr("stroke", function () {
-                            const d = d3.select(this).datum();
-                            const s = (d.source.id || d.source);
-                            const t = (d.target.id || d.target);
-                            const key = `G|${s}|${t}`;
-                            return connectedEdgeIds.has(key) ? "#64748b" : "#cbd5e1";
                         })
                         .attr("stroke-width", function () {
                             const d = d3.select(this).datum();
                             const s = (d.source.id || d.source);
                             const t = (d.target.id || d.target);
-                            const key = `G|${s}|${t}`;
+                            const key = `${prefix}|${s}|${t}`;
                             const weight = d.weight || 1;
                             return connectedEdgeIds.has(key) ? Math.max(2, Math.sqrt(weight) + 1) : Math.max(1, Math.sqrt(weight));
                         });
                 }
 
-
                 // Update Nodes
                 gNodes.selectAll(".d3-node")
-                    .classed("node-shimmer", d => d.id === hovered.id)
+                    .classed("node-shimmer", d => d.id === focusNode.id && isHovering) // Only shimmer on hover
                     .transition().duration(200)
                     .style("opacity", function () {
                         const d = d3.select(this).datum();
-                        if (d.id === hovered.id) return 1;
-                        // In Universe Timeline, don't fade others? Or do we?
-                        // Brief says "nodes should shimmer on hover". Usually implies others fade or stay.
-                        // Let's keep others visible for Timeline as context is important, or slight fade.
-                        // Galaxy view fades others largely.
-                        if (isGalaxy) {
-                            return connectedNodeIds.has(d.id) ? 1 : 0.3;
+                        if (d.id === focusNode.id) return 1;
+
+                        if (isGalaxy || isField) {
+                            return connectedNodeIds.has(d.id) ? 1 : 0.1;
                         }
-                        return 1; // Don't fade others in Timeline for now, just shimmer target
+                        return 1;
                     });
 
             } else {
-                // Reset
-                if (isGalaxy) {
+                // Reset State
+                if (isGalaxy || isField) {
                     gLinks.selectAll(".d3-link")
                         .transition().duration(200)
-                        .attr("stroke-opacity", 0.4)
-                        .attr("stroke", "#cbd5e1")
+                        .attr("stroke-opacity", 0.4) // Default opacity
                         .attr("stroke-width", function () {
                             const d = d3.select(this).datum();
                             return Math.max(1, Math.sqrt(d.weight || 1));
@@ -560,7 +625,7 @@ export const Graph = ({
                     .style("opacity", 1);
             }
         }
-    }, [hovered, viewMode, edges, layoutMode]); // Dependencies specific to visual updates
+    }, [hovered, selected, viewMode, edges, layoutMode, isReturning]);
 
     return <svg ref={svgRef} className="galaxy-canvas" width={width} height={height} />;
 };
