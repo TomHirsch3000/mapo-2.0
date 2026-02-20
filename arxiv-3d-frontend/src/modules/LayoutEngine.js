@@ -329,7 +329,8 @@ export class LayoutEngine {
             // X = Year
             const minYear = d3.min(nodes, d => d.year) || 1990;
             const maxYear = d3.max(nodes, d => d.year) || 2025;
-            const xScale = d3.scaleLinear().domain([minYear, maxYear]).range([-this.width * 0.4, this.width * 0.4]);
+            // Topic/Paper timeline width is 2x wider (0.8 instead of 0.4)
+            const xScale = d3.scaleLinear().domain([minYear, maxYear]).range([-this.width * 0.8, this.width * 0.8]);
 
             // Y = Stream (Largest citations at center)
             const sorted = [...nodes].sort((a, b) => (b.citationCount || 0) - (a.citationCount || 0));

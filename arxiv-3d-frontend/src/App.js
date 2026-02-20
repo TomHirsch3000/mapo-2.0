@@ -39,7 +39,7 @@ export default function App() {
   const isReturningRef = useRef(false);
 
   // --- Data Hook ---
-  const { nodes, edges, groupStats, xGroups, yGroups, universeData, rawNodes, rawEdges } = useGraphData(viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup);
+  const { nodes, edges, groupStats, xGroups, yGroups, universeData, rawNodes, rawEdges } = useGraphData(viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected);
 
   // --- Handlers ---
   const handleGalaxyClick = (galaxyId) => {

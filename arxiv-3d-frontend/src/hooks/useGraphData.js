@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import * as d3 from 'd3';
 
-export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup) => {
+export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected) => {
     const [universeData, setUniverseData] = useState(null);
     const [rawNodes, setRawNodes] = useState([]);
     const [rawEdges, setRawEdges] = useState([]);
@@ -235,13 +235,26 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         if (viewMode === 'UNIVERSE') return universeNodes;
         if (viewMode === 'GALAXY') return aggregatedNodes;
         if (viewMode === 'FIELD') {
-            if (activeGroup) {
-                return nodes.filter(n => n.group === activeGroup);
+            if (!activeGroup) return nodes;
+
+            // If a node is selected, show ONLY the selected node and its connected nodes (even from other fields).
+            if (selected) {
+                const connectedIndices = new Set();
+                connectedIndices.add(selected.id);
+                // Find all nodes connected to the selected node
+                rawEdges.forEach(e => {
+                    const src = String(e.source.id || e.source);
+                    const tgt = String(e.target.id || e.target);
+                    if (src === selected.id) connectedIndices.add(tgt);
+                    if (tgt === selected.id) connectedIndices.add(src);
+                });
+                return nodes.filter(n => connectedIndices.has(n.id));
             }
-            return nodes;
+
+            return nodes.filter(n => n.group === activeGroup);
         }
         return nodes; // Default/Detail
-    }, [viewMode, universeNodes, aggregatedNodes, nodes, activeGroup]);
+    }, [viewMode, universeNodes, aggregatedNodes, nodes, activeGroup, selected, rawEdges]);
 
     // Process Edges - Filter based on Active Nodes
     const edges = useMemo(() => {

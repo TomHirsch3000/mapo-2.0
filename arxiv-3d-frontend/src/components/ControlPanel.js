@@ -38,7 +38,7 @@ export const ControlPanel = ({
 
     return (
         <div className="galaxy-header">
-            <div className="controls-row" style={{ display: 'flex', gap: '20px', alignItems: 'center', position: 'absolute', top: 20, left: 20, pointerEvents: 'auto' }}>
+            <div className="controls-row" style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'flex-start', position: 'absolute', top: 20, left: 20, pointerEvents: 'auto' }}>
                 {viewMode === 'GALAXY' && <button className="back-to-galaxy" onClick={onBackToUniverse}>← Back</button>}
                 {viewMode !== 'GALAXY' && viewMode !== 'UNIVERSE' && <button className="back-to-galaxy" onClick={onBackToGalaxy}>← Back</button>}
 

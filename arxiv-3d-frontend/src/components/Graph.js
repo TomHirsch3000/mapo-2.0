@@ -169,7 +169,8 @@ export const Graph = ({
             s.attr("d", d => {
                 const src = d.source;
                 const tgt = d.target;
-                if (isGalaxy || isField) {
+
+                if (isGalaxy) {
                     // Curve Logic from prev implementation
                     const dx = tgt.x - src.x;
                     const dy = tgt.y - src.y;
@@ -185,6 +186,77 @@ export const Graph = ({
                     const cx = midX + nx * offset;
                     const cy = midY + ny * offset;
                     return `M${src.x},${src.y} Q${cx},${cy} ${tgt.x},${tgt.y}`;
+                } else if (isField) {
+                    // Tapered Curved Edge Logic
+                    // Source (Citing) -> Target (Cited)
+                    // Narrow -> Wide
+                    const dx = tgt.x - src.x;
+                    const dy = tgt.y - src.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist === 0) return "";
+
+                    // 1. Calculate Control Point (Same as Galaxy for consistency)
+                    const curvature = 0.2;
+                    const offset = dist * curvature;
+                    const midX = (src.x + tgt.x) / 2;
+                    const midY = (src.y + tgt.y) / 2;
+
+                    // Chord Normal
+                    const nx = -dy / dist;
+                    const ny = dx / dist;
+
+                    const cx = midX + nx * offset;
+                    const cy = midY + ny * offset;
+
+                    // 2. Define Widths
+                    const wStart = 2;  // Citing (Narrow)
+                    const wEnd = 8;   // Cited (Wide)
+
+                    // 3. Vector Math for Offsets
+                    // To get smooth tapering, we need normals at specific points on the curve:
+                    // Start Normal (perp to S->C)
+                    const dx1 = cx - src.x;
+                    const dy1 = cy - src.y;
+                    const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1) || 1;
+                    const nx1 = -dy1 / len1;
+                    const ny1 = dx1 / len1;
+
+                    // End Normal (perp to C->T)
+                    const dx2 = tgt.x - cx;
+                    const dy2 = tgt.y - cy;
+                    const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1;
+                    const nx2 = -dy2 / len2;
+                    const ny2 = dx2 / len2;
+
+                    // Control Normal (Approximate as Chord Normal or average of start/end normals)
+                    // Using Chord Normal (nx, ny) is usually sufficient for symmetric curves
+
+                    // 4. Calculate Offset Points
+                    // Start Points
+                    const s1x = src.x + nx1 * (wStart / 2);
+                    const s1y = src.y + ny1 * (wStart / 2);
+                    const s2x = src.x - nx1 * (wStart / 2);
+                    const s2y = src.y - ny1 * (wStart / 2);
+
+                    // End Points
+                    const t1x = tgt.x + nx2 * (wEnd / 2);
+                    const t1y = tgt.y + ny2 * (wEnd / 2);
+                    const t2x = tgt.x - nx2 * (wEnd / 2);
+                    const t2y = tgt.y - ny2 * (wEnd / 2);
+
+                    // Control Points for the Outer/Inner Curves
+                    // We offset the main control point. 
+                    // The width at the control point (t=0.5) is approx (wStart + wEnd)/2
+                    const wMid = (wStart + wEnd) / 2;
+                    // Use chord normal for control point offset direction
+                    const c1x = cx + nx * (wMid / 2);
+                    const c1y = cy + ny * (wMid / 2);
+                    const c2x = cx - nx * (wMid / 2);
+                    const c2y = cy - ny * (wMid / 2);
+
+                    // 5. Build Path
+                    // Move to Start1 -> Quad to End1 -> Line to End2 -> Quad to Start2 -> Close
+                    return `M${s1x},${s1y} Q${c1x},${c1y} ${t1x},${t1y} L${t2x},${t2y} Q${c2x},${c2y} ${s2x},${s2y} Z`;
                 } else {
                     return `M${src.x},${src.y} L${tgt.x},${tgt.y}`;
                 }
@@ -201,7 +273,7 @@ export const Graph = ({
         linkJoin.exit().remove();
         const linkEnter = linkJoin.enter().append("path")
             .attr("class", `d3-link ${(isGalaxy || isField) ? 'type-galaxy-link' : 'type-paper-link'}`)
-            .attr("fill", "none")
+            .attr("fill", isField ? "#999" : "none") // Fill provided by styles or update loop. Field needs fill for tapered shape.
             .attr("stroke-linecap", "round");
 
         const allLinks = linkEnter.merge(linkJoin);
@@ -224,10 +296,15 @@ export const Graph = ({
                 const srcColor = srcNode ? (srcNode.groupColor || cScale(srcNode.xGroup || srcNode.id)) : "#ccc";
                 const tgtColor = tgtNode ? (tgtNode.groupColor || cScale(tgtNode.xGroup || tgtNode.id)) : "#ccc";
 
-                grad.select(".grad-stop-start").attr("stop-color", srcColor).attr("stop-opacity", 0.6);
-                grad.select(".grad-stop-end").attr("stop-color", tgtColor).attr("stop-opacity", 0.6);
+                grad.select(".grad-stop-start").attr("stop-color", srcColor).attr("stop-opacity", isField ? 0.8 : 0.6);
+                grad.select(".grad-stop-end").attr("stop-color", tgtColor).attr("stop-opacity", isField ? 0.2 : 0.6);
 
-                d3.select(this).attr("stroke", `url(#${id})`);
+                if (isField) {
+                    // For tapered wedge, we fill the shape with the gradient
+                    d3.select(this).attr("fill", `url(#${id})`).attr("stroke", "none");
+                } else {
+                    d3.select(this).attr("stroke", `url(#${id})`).attr("fill", "none");
+                }
             });
         }
 
@@ -267,12 +344,22 @@ export const Graph = ({
 
             } else if (isField) {
                 // Topic/Field View (Papers)
-                el.append("rect").attr("class", "node-paper-card");
+                const width = d._w || 80;
+                const height = d._h || 50;
+
+                el.append("rect")
+                    .attr("class", "node-paper-card")
+                    .attr("x", -width / 2)
+                    .attr("y", -height / 2)
+                    .attr("width", width)
+                    .attr("height", height);
 
                 const fo = el.append("foreignObject")
-                    .attr("class", "node-fo")
-                    .attr("width", 1) // Placeholder
-                    .attr("height", 1);
+                    .attr("class", "node-fo-wrapper")
+                    .attr("x", -width / 2)
+                    .attr("y", -height / 2)
+                    .attr("width", width)
+                    .attr("height", height);
 
                 fo.append("xhtml:div")
                     .attr("class", "node-paper-content")
@@ -284,7 +371,9 @@ export const Graph = ({
                     .style("justify-content", "center")
                     .style("text-align", "center")
                     .style("overflow", "hidden")
-                    .html(d => `<div class="node-paper-title" style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.1;">${d.title || d.name || 'Untitled'}</div>`);
+                    .style("padding", "4px")
+                    .style("box-sizing", "border-box")
+                    .html(d => `<div class="node-paper-title" style="width: 100%; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.2; text-align: center;">${d.title || d.name || 'Untitled'}</div>`);
 
 
             } else {
@@ -452,10 +541,12 @@ export const Graph = ({
                     .attr("y", -height / 2)
                     .attr("width", width)
                     .attr("height", height)
-                    .attr("fill", "#ffffff") // White card
-                    .style("stroke", cScale(d.xGroup || d.field)); // Border color by field
+                    .attr("fill", cScale(d.xGroup || d.field)) // Color by field
+                    .attr("fill-opacity", 0.2) // Light background
+                    .style("stroke", cScale(d.xGroup || d.field)) // Border color by field
+                    .style("stroke-width", 2);
 
-                el.select(".node-fo")
+                el.select(".node-fo-wrapper")
                     .attr("x", -width / 2)
                     .attr("y", -height / 2)
                     .attr("width", width)
@@ -464,32 +555,49 @@ export const Graph = ({
                 // Adjust font size based on size?
                 // Larger cards can have slightly larger fonts, but keep it readable
                 el.select(".node-paper-title")
-                    .style("font-size", `${Math.min(12, Math.max(8, width / 12))}px`);
+                    .style("font-size", `${Math.min(12, Math.max(9, width / 12))}px`)
+                    .style("width", "100%") // Ensure it takes full width for centering
+                    .style("word-wrap", "break-word")
+                    .style("white-space", "normal")
+                    .style("text-align", "center")
+                    .style("overflow-wrap", "anywhere"); // Break long words if needed
             }
         });
 
 
 
         // --- AXIS RENDERING (Timeline) ---
-        if ((isUniverse || isGalaxy) && layoutMode === 'TIMELINE') {
+        if ((isUniverse || isGalaxy || isField) && layoutMode === 'TIMELINE') {
             // Determine scale
             let xAxisScale = null;
             if (isUniverse) {
                 xAxisScale = scales.universeXScale;
-            } else {
+            } else if (isGalaxy) {
                 // Galaxy Timeline Scale (Calculated locally if not passed)
                 // LayoutEngine calculated it, but we need it here for rendering.
                 // Re-calculate based on currentNodes (safe enough for display)
                 const minYear = d3.min(currentNodes, d => d.minYear) || 1990;
                 const maxYear = d3.max(currentNodes, d => d.maxYear || d.minYear) || 2025;
-                const padding = width * 0.1;
+                const padding = width * 0.05; // Matches LayoutEngine padding
                 const effectiveWidth = width - (padding * 2);
                 xAxisScale = d3.scaleLinear().domain([minYear, maxYear]).range([-effectiveWidth / 2, effectiveWidth / 2]);
+            } else if (isField) {
+                // Topic/Field Scale mapping the wider range from LayoutEngine
+                const minYear = d3.min(currentNodes, d => d.year) || 1990;
+                const maxYear = d3.max(currentNodes, d => d.year) || 2025;
+                xAxisScale = d3.scaleLinear().domain([minYear, maxYear]).range([-width * 0.8, width * 0.8]);
             }
 
             if (xAxisScale) {
                 const axisBottom = d3.axisBottom(xAxisScale).tickFormat(d3.format("d")).ticks(10); // Decades/Years
-                gAxisLayer.attr("transform", `translate(0, ${height / 2 - 40})`)
+
+                // Dynamically position the axis below the elements based on Y extent
+                const yExtent = d3.extent(currentNodes, d => d.y);
+                const lowestY = (yExtent[1] !== undefined && !isNaN(yExtent[1])) ? yExtent[1] : (height / 2 - 40);
+                // Add a small buffer (e.g., 60px) below the lowest node edge
+                const axisY = isUniverse ? (height / 2 - 40) : (lowestY + 60);
+
+                gAxisLayer.attr("transform", `translate(0, ${axisY})`)
                     .style("opacity", 1)
                     .call(axisBottom);
 
@@ -601,12 +709,22 @@ export const Graph = ({
                     gLinks.selectAll(".d3-link")
                         .transition().duration(200)
                         .attr("stroke-opacity", function () {
+                            if (isField) return null; // Let style("opacity") handle it for Field
                             const d = d3.select(this).datum();
                             const s = (d.source.id || d.source);
                             const t = (d.target.id || d.target);
                             const key = `${prefix}|${s}|${t}`;
                             // Highlight if connected, otherwise fade
                             return connectedEdgeIds.has(key) ? 0.8 : 0.05;
+                        })
+                        .style("opacity", function () {
+                            if (!isField) return null; // Let stroke-opacity handle it for Galaxy
+                            const d = d3.select(this).datum();
+                            const s = (d.source.id || d.source);
+                            const t = (d.target.id || d.target);
+                            const key = `${prefix}|${s}|${t}`;
+                            // Highlight if connected, otherwise fade
+                            return connectedEdgeIds.has(key) ? 1 : 0.05;
                         })
                         .attr("stroke-width", function () {
                             const d = d3.select(this).datum();
@@ -637,7 +755,8 @@ export const Graph = ({
                 if (isGalaxy || isField) {
                     gLinks.selectAll(".d3-link")
                         .transition().duration(200)
-                        .attr("stroke-opacity", 0.4) // Default opacity
+                        .attr("stroke-opacity", isField ? null : 0.6) // Reset stroke-opacity for Galaxy (was 0.6 previously on load)
+                        .style("opacity", isField ? 1 : null) // Reset opacity for Field
                         .attr("stroke-width", function () {
                             const d = d3.select(this).datum();
                             return Math.max(1, Math.sqrt(d.weight || 1));
