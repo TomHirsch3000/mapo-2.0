@@ -62,6 +62,8 @@ export const FooterPanel = ({ selected, hovered, layoutMode }) => {
                             <span>{selected.year}</span> • <span>{selected.citationCount} Citations</span>
                             {selected.field && <span> • {selected.field}</span>}
                         </div>
+                        {selected.authors && <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '8px' }}><strong>Authors:</strong> {selected.authors}</div>}
+                        {selected.institutions && <div style={{ fontSize: '0.85rem', color: '#64748b' }}><strong>Institution:</strong> {selected.institutions}</div>}
                         <div className="footer-abstract">
                             <strong>Abstract</strong>
                             <p>{selected.abstract}</p>
@@ -114,6 +116,12 @@ export const FooterPanel = ({ selected, hovered, layoutMode }) => {
                                     {hovered.nodeCount !== undefined && <span> • Papers: {hovered.nodeCount}</span>}
                                 </div>
                                 {hovered.authors && <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '5px' }}>{hovered.authors}</div>}
+                                {hovered.abstract && (
+                                    <div className="footer-abstract" style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(0, 0, 0, 0.05)' }}>
+                                        <strong>Abstract</strong>
+                                        <p style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>{hovered.abstract}</p>
+                                    </div>
+                                )}
                             </>
                         )}
                     </div>

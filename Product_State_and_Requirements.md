@@ -13,9 +13,7 @@ The application is an interactive 2D visualization of academic papers arranged i
 -   **Description**: A clean, expansive 2D chart rendered on a soft white/light grey background (~#f0f0f0).
 -   **Grid**: The canvas must be free of visible gridlines to maintain an organic feel.
 -   **Visual Style**: High-quality rendering with anti-aliasing.
-    -   **Status**:
-        -   [x] White/Grey Background
-        -   [x] No visual gridlines
+
 
 ### Navigation & Camera
 -   **Description**: Users navigate the space using standard pan and zoom controls (d3-zoom).
@@ -24,10 +22,7 @@ The application is an interactive 2D visualization of academic papers arranged i
     -   **Zooming**: Centered around the mouse pointer.
     -   **Constraints**: Zoom extent should allow seeing the whole specific view or zooming in to card details.
     -   **Stats**: A debug/info overlay in the bottom-right corner must show the current Zoom Level (`k`) and Center Coordinates (`x`, `y`).
-    -   **Status**:
-        -   [x] Panning & Zooming
-        -   [x] Smooth Transitions
-        -   [ ] **Requirement**: Navigation Stats Overlay (Zoom/X/Y readout) working in real-time.
+
 
 ### Footer Panel (HUD)
 -   **Description**: A persistent bottom panel taking up approximately 20% of the screen height.
@@ -35,12 +30,17 @@ The application is an interactive 2D visualization of academic papers arranged i
     -   **Default**: Shows general map info or "Hover to explore".
     -   **Hover/Selection**: updates instantly to show summary details of the specific node (Field, Galaxy, or Paper).
     -   **Content**: Title, citations, year, and abstract (for papers).
-    -   **Status**:
+
+### Status
+        -   [x] White/Grey Background
+        -   [x] No visual gridlines
+        -   [x] Panning & Zooming
+        -   [] Smooth Transitions between views and layouts with animations
+        -   [ ] **Requirement**: Navigation Stats Overlay (Zoom/X/Y readout) working in real-time.
         -   [x] Always visible bottom panel
         -   [x] Dynamic content updating on Hover/Select
-        -   [ ] **Requirement**: Footer Panel must show paper abstracts
-        -   [ ] **Requirement**: Footer Panel must show title of galaxies in universe view
-
+        -   [x] **Requirement**: Footer Panel must show paper abstracts
+        -   [x] **Requirement**: Footer Panel must show title of galaxies in universe view
 
 ---
 
@@ -60,10 +60,6 @@ the source of this data is the universe json file which is created by the backen
     Nodes gravitate toward the center (Radial force).
     -   Larger nodes (more papers) are pulled closer to the center.
     -   Collision detection prevents overlapping.
-    -   **Status**:
-        -   [] Hexagon Shapes - need work the colours look bland
-        -   [x] Spiral/Central Packing
-        -   [] Size based on volume - needs work nodes are too big
 
 ### Layout Mode: Timeline (Chronological)
 -   **Description**: Broad historical view of when fields emerged and evolved.
@@ -75,20 +71,20 @@ the source of this data is the universe json file which is created by the backen
     -   **Shape**: **Area Charts** (or "Stream shapes") showing the number of papers per decade.
     -   **Labeling**: Labels should appear to the right of the node (most recent data point).
     -   **Shimmer**: node body color should shimmer when they are hovered
--   **Status**:
-    -   [x] Timeline Axis (Years)
-    -   [x] Area Chart rendering for nodes
-    -   [x] Projection to 2026
-    -   [x] Labels aligned to the right
 
 ### Stub Galaxies
 -   **Description**: Not all fields have detailed map data available locally.
 -   **Behavior**: Fields with `!hasPapers` (no local data) must be:
     -   Visually distinct (Greyed out / Ghosted).
     -   **Non-interactive**: Clicking them does **not** enter Galaxy View.
-    -   **Status**:
-        -   [x] Greyed out visual style
-        -   [x] Interaction disabled
+
+### Status
+    -   [] central node appearance -Hexagon Shapes - need work the colours look bland and nodes are too big
+    -   [x] Central layoutSpiral/Central Packing
+    -   [x] Timeline Axis (decades)
+    -   [x] Timeline node appearance - Area Chart rendering for nodes
+    -   [x] Projection to 2026
+    -   [x] timeline layout
 
 ---
 
@@ -249,7 +245,7 @@ The "feel" of the application is defined by how things move.
             8. calculate the edges points and colours
             9. fade in the edges 
             10. fade in the labels
-    -   **Status**:
+    ### Status
         -   [] Zoom In "Fly" Effect
         -   [] Zoom Out Static/Fade
 
@@ -262,28 +258,28 @@ The "feel" of the application is defined by how things move.
         -   **Trigger**: triggered by clicking the "Zoom Out" button in the topic view or by scrolling far enough away from the center of the topic view
         -   **Action**: transition to galaxy view with the topic node the user has just come from at the center of the galaxy view and zoomed in, maintain current layout selection (central or timeline)
         -   **Animation**: transition to galaxy view with the topic node the user has just come from at the center of the galaxy view and zoomed in, maintain current layout selection (central or timeline)
-    -   **Status**:
+    ### Status
         -   [] Zoom In "Fly" Effect
         -   [] Zoom Out Static/Fade
     
 -   **Layout Switching Universe view (Central <-> Timeline)**:
     -   **Movement**: morphing animation between hexagons and timeline graphs, slow interpolation (~1000ms) 
     -   **Behavior**: Nodes slide to new positions.
-    -   **Status**:
+    ### Status
         -   [x] functioning
         -   [] animation - needs work
 
 -   **Layout Switching galaxy view (Central <-> Timeline)**:
     -   **Movement**: Deterministic, slow interpolation (~1000ms).
     -   **Behavior**: Nodes slide to new positions.
-    -   **Status**:
+    ### Status
         -   [x] functioning
         -   [] Smooth interpolation
 
 ### Determinism
 -   **Requirement**: The map must be **Deterministic**.
 -   **Definition**: If I leave a view and come back, every node must be in the **exact same pixel position** as before. No random jitter on re-entry.
-    -   **Status**:
+    ### Status
         -   [x] Seeded random number generators
         -   [x] Cached layout positions
 
@@ -296,6 +292,6 @@ The "feel" of the application is defined by how things move.
 
 ### Styling
 -   **Theme**: Light Mode / Premium. match `Galaxy.css`.
--   **Status**:
+### Status
     -   [ ] **Verification Needed**: Ensure all UI components (dropdowns, panels) strictly adhere to the premium aesthetics defined in `Galaxy.css`.
 

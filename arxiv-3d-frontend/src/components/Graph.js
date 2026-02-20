@@ -723,8 +723,9 @@ export const Graph = ({
                             const s = (d.source.id || d.source);
                             const t = (d.target.id || d.target);
                             const key = `${prefix}|${s}|${t}`;
-                            // Highlight if connected, otherwise fade
-                            return connectedEdgeIds.has(key) ? 1 : 0.05;
+                            // Highlight if connected, otherwise fade/hide
+                            if (connectedEdgeIds.has(key)) return 1;
+                            return (isField && selected && !isHovering) ? 0 : 0.05;
                         })
                         .attr("stroke-width", function () {
                             const d = d3.select(this).datum();
@@ -745,7 +746,8 @@ export const Graph = ({
                         if (d.id === focusNode.id) return 1;
 
                         if (isGalaxy || isField) {
-                            return connectedNodeIds.has(d.id) ? 1 : 0.1;
+                            if (connectedNodeIds.has(d.id)) return 1;
+                            return (isField && selected && !isHovering) ? 0 : 0.1;
                         }
                         return 1;
                     });
