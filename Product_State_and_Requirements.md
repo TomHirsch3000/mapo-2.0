@@ -152,8 +152,7 @@ the source of this data is the universe json file which is created by the backen
     -   [x] Node appearance timeline - needs work, they look a bit basic   
     -   [] Node layout Central- Center-weighted spiral layout - layout is a bit random
     -   [] Node layout Timeline - Center-weighted spiral layout - layout is a bit random
-    -   [x] Edges: Bi-directional curved edges
-    there's a bug when I go back to galaxy view from topic view that the nodes all load very small (see the picture), but after I toggle the layout they become normal size again. lets fix it. the other thing is that the nodes in galaxy view in timeline layout are still showing as short shapes, they dont seem to appear to span the x axis in the right way. each node should have a first published date and a last published date and the node should span the x axis between those dates, this will make some of them quite long and other short. their width, in the y dimension, should be determined by the number of papers, the more papers, the wider the node. 
+    -   [x] Edges: Bi-directional curved edges 
 
 ---
 

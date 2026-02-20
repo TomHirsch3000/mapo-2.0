@@ -410,7 +410,7 @@ export const Graph = ({
                         .attr("y", -height / 2)
                         .attr("width", width)
                         .attr("height", height)
-                        .attr("rx", height / 2) // Rounded pills
+                        .attr("rx", 6) // Rounded corners for timeline blocks
                         .attr("fill", cScale(d.xGroup))
                         .attr("fill-opacity", 0.6)
                         .attr("stroke", "none")
@@ -638,12 +638,12 @@ export const Graph = ({
             }
 
             // C. Fly-In Animation
-            allNodes.transition().duration(800).ease(d3.easeBackOut.overshoot(0.8))
+            allNodes.transition("flyin").duration(800).ease(d3.easeBackOut.overshoot(0.8))
                 .attr("transform", d => `translate(${d.x}, ${d.y}) scale(1)`);
 
             // D. Reveal Links & Labels
-            gLinks.transition().delay(600).duration(500).style("opacity", 1);
-            allLinks.transition().delay(600).duration(500).attr("stroke-opacity", 0.6);
+            gLinks.transition("flyin-links").delay(600).duration(500).style("opacity", 1);
+            allLinks.transition("flyin-links-stroke").delay(600).duration(500).attr("stroke-opacity", 0.6);
 
         } else {
             // No transition (e.g. initial load or same view), just show
@@ -707,7 +707,7 @@ export const Graph = ({
                 if (isGalaxy || isField) {
                     const prefix = isField ? "P" : "G";
                     gLinks.selectAll(".d3-link")
-                        .transition().duration(200)
+                        .transition("highlight").duration(200)
                         .attr("stroke-opacity", function () {
                             if (isField) return null; // Let style("opacity") handle it for Field
                             const d = d3.select(this).datum();
@@ -739,7 +739,7 @@ export const Graph = ({
                 // Update Nodes
                 gNodes.selectAll(".d3-node")
                     .classed("node-shimmer", d => d.id === focusNode.id && isHovering) // Only shimmer on hover
-                    .transition().duration(200)
+                    .transition("highlight").duration(200)
                     .style("opacity", function () {
                         const d = d3.select(this).datum();
                         if (d.id === focusNode.id) return 1;
@@ -754,7 +754,7 @@ export const Graph = ({
                 // Reset State
                 if (isGalaxy || isField) {
                     gLinks.selectAll(".d3-link")
-                        .transition().duration(200)
+                        .transition("highlight").duration(200)
                         .attr("stroke-opacity", isField ? null : 0.6) // Reset stroke-opacity for Galaxy (was 0.6 previously on load)
                         .style("opacity", isField ? 1 : null) // Reset opacity for Field
                         .attr("stroke-width", function () {
@@ -765,7 +765,7 @@ export const Graph = ({
 
                 gNodes.selectAll(".d3-node")
                     .classed("node-shimmer", false)
-                    .transition().duration(200)
+                    .transition("highlight").duration(200)
                     .style("opacity", 1);
             }
         }

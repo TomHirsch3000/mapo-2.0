@@ -185,9 +185,9 @@ export class LayoutEngine {
                 return (b.val || 0) - (a.val || 0);
             });
 
-            // Calculate Height Scale
-            const maxVal = d3.max(nodes, d => d.val || 0) || 50;
-            const heightScale = d3.scaleLinear().domain([0, maxVal]).range([5, 40]); // Min 5px, Max 40px height based on 'val'
+            // Calculate Height Scale based on number of papers (y-axis width)
+            const maxPapers = d3.max(nodes, d => d.nodeCount || 0) || 50;
+            const heightScale = d3.scaleLinear().domain([1, maxPapers]).range([10, 60]); // Min 10px, Max 60px height
 
             // Track lanes. Each lane tracks the right-most X coordinate (end time).
             const lanes = [];
@@ -197,7 +197,7 @@ export class LayoutEngine {
             // If we have variable heights, we can't just use discrete lanes 0,1,2... with fixed offset.
             // UNLESS we use a fixed step that is large enough for the max height.
             // Let's use a fixed step based on the max possible height to ensure alignment and no overlap.
-            const MAX_ROW_HEIGHT = 40;
+            const MAX_ROW_HEIGHT = 60;
             const LANE_PADDING = 8;
             const ROW_SPACE = MAX_ROW_HEIGHT + LANE_PADDING;
 
@@ -216,8 +216,8 @@ export class LayoutEngine {
                 // Visual X End
                 const visualXEnd = xStart + width;
 
-                // Calculate Height
-                const height = heightScale(node.val || 0);
+                // Calculate Height based on number of papers
+                const height = heightScale(node.nodeCount || 1);
 
                 // Find a lane where this node fits
                 let assignedLaneIndex = -1;

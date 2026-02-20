@@ -84,12 +84,13 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
             nodeIdToGroup.set(n.id, groupKey);
 
             if (!gMap.has(groupKey)) {
-                gMap.set(groupKey, { key: groupKey, name: displayName, xGroup, yGroup, count: 0, totalCitations: 0, minYear: Infinity });
+                gMap.set(groupKey, { key: groupKey, name: displayName, xGroup, yGroup, count: 0, totalCitations: 0, minYear: Infinity, maxYear: -Infinity });
             }
             const g = gMap.get(groupKey);
             g.count += 1;
             g.totalCitations += cites;
             g.minYear = Math.min(g.minYear, yr);
+            g.maxYear = Math.max(g.maxYear, yr);
 
             return n;
         });
@@ -98,7 +99,8 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
 
         const gStats = Array.from(gMap.values()).map(g => ({
             ...g,
-            minYear: g.minYear === Infinity ? 2000 : g.minYear
+            minYear: g.minYear === Infinity ? 2000 : g.minYear,
+            maxYear: g.maxYear === -Infinity ? 2025 : g.maxYear
         })).sort((a, b) => b.totalCitations - a.totalCitations);
 
         const finalGroupStats = (groupingMode === 'FIELD') ? gStats : gStats.slice(0, 150);
@@ -133,7 +135,7 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         const calculatedGroupEdges = Array.from(groupEdgeMap.entries()).map(([key, count]) => {
             const { source, target } = decodeEdgeKey(key);
             return { source, target, weight: count };
-        });
+        }).sort((a, b) => b.weight - a.weight).slice(0, 100);
 
         return {
             nodes: ns,
@@ -225,6 +227,7 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
             xGroup: g.xGroup,
             yGroup: g.yGroup,
             minYear: g.minYear, // Ensure this exists for sorting/timeline
+            maxYear: g.maxYear, // For timeline right bound
             year: g.minYear,    // Alias for consistency with Universe nodes
             citationCount: g.totalCitations
         }));
