@@ -208,6 +208,27 @@ export const Graph = ({
                     const cx = midX + nx * offset;
                     const cy = midY + ny * offset;
 
+                    // Compute start and end points at node borders
+                    const getT = (w, h, pX, pY) => {
+                        let tx = pX === 0 ? Infinity : Math.abs((w / 2) / pX);
+                        let ty = pY === 0 ? Infinity : Math.abs((h / 2) / pY);
+                        return Math.min(tx, ty);
+                    };
+
+                    const dirXs = cx - src.x;
+                    const dirYs = cy - src.y;
+                    let ts = getT(src._w || 80, src._h || 50, dirXs, dirYs);
+                    ts = Math.min(ts, 0.95); // Don't exceed control point
+                    const nsx = src.x + dirXs * ts;
+                    const nsy = src.y + dirYs * ts;
+
+                    const dirXt = cx - tgt.x;
+                    const dirYt = cy - tgt.y;
+                    let tt = getT(tgt._w || 80, tgt._h || 50, dirXt, dirYt);
+                    tt = Math.min(tt, 0.95);
+                    const ntx = tgt.x + dirXt * tt;
+                    const nty = tgt.y + dirYt * tt;
+
                     // 2. Define Widths
                     const wStart = 2;  // Citing (Narrow)
                     const wEnd = 8;   // Cited (Wide)
@@ -215,34 +236,31 @@ export const Graph = ({
                     // 3. Vector Math for Offsets
                     // To get smooth tapering, we need normals at specific points on the curve:
                     // Start Normal (perp to S->C)
-                    const dx1 = cx - src.x;
-                    const dy1 = cy - src.y;
+                    const dx1 = cx - nsx;
+                    const dy1 = cy - nsy;
                     const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1) || 1;
                     const nx1 = -dy1 / len1;
                     const ny1 = dx1 / len1;
 
                     // End Normal (perp to C->T)
-                    const dx2 = tgt.x - cx;
-                    const dy2 = tgt.y - cy;
+                    const dx2 = ntx - cx;
+                    const dy2 = nty - cy;
                     const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1;
                     const nx2 = -dy2 / len2;
                     const ny2 = dx2 / len2;
 
-                    // Control Normal (Approximate as Chord Normal or average of start/end normals)
-                    // Using Chord Normal (nx, ny) is usually sufficient for symmetric curves
-
                     // 4. Calculate Offset Points
                     // Start Points
-                    const s1x = src.x + nx1 * (wStart / 2);
-                    const s1y = src.y + ny1 * (wStart / 2);
-                    const s2x = src.x - nx1 * (wStart / 2);
-                    const s2y = src.y - ny1 * (wStart / 2);
+                    const s1x = nsx + nx1 * (wStart / 2);
+                    const s1y = nsy + ny1 * (wStart / 2);
+                    const s2x = nsx - nx1 * (wStart / 2);
+                    const s2y = nsy - ny1 * (wStart / 2);
 
                     // End Points
-                    const t1x = tgt.x + nx2 * (wEnd / 2);
-                    const t1y = tgt.y + ny2 * (wEnd / 2);
-                    const t2x = tgt.x - nx2 * (wEnd / 2);
-                    const t2y = tgt.y - ny2 * (wEnd / 2);
+                    const t1x = ntx + nx2 * (wEnd / 2);
+                    const t1y = nty + ny2 * (wEnd / 2);
+                    const t2x = ntx - nx2 * (wEnd / 2);
+                    const t2y = nty - ny2 * (wEnd / 2);
 
                     // Control Points for the Outer/Inner Curves
                     // We offset the main control point. 
@@ -347,12 +365,23 @@ export const Graph = ({
                 const width = d._w || 80;
                 const height = d._h || 50;
 
+                // Opaque background to hide links passing behind
+                el.append("rect")
+                    .attr("class", "node-paper-bg")
+                    .attr("x", -width / 2)
+                    .attr("y", -height / 2)
+                    .attr("width", width)
+                    .attr("height", height)
+                    .attr("fill", "#ffffff")
+                    .attr("rx", 6); // Add rounded corners to match the card (if any, see below)
+
                 el.append("rect")
                     .attr("class", "node-paper-card")
                     .attr("x", -width / 2)
                     .attr("y", -height / 2)
                     .attr("width", width)
-                    .attr("height", height);
+                    .attr("height", height)
+                    .attr("rx", 6); // Also round the card itself for better appearance
 
                 const fo = el.append("foreignObject")
                     .attr("class", "node-fo-wrapper")
@@ -535,6 +564,12 @@ export const Graph = ({
                 // Use pre-calculated dimensions
                 const width = d._w || 80;
                 const height = d._h || 50;
+
+                el.select(".node-paper-bg")
+                    .attr("x", -width / 2)
+                    .attr("y", -height / 2)
+                    .attr("width", width)
+                    .attr("height", height);
 
                 el.select(".node-paper-card")
                     .attr("x", -width / 2)
