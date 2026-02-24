@@ -3,6 +3,12 @@ import React from 'react';
 import * as d3 from 'd3';
 
 export const FooterPanel = ({ selected, hovered, layoutMode }) => {
+    const formatAbstract = (text) => {
+        if (!text) return '';
+        // Removes namespace prefixes from XML tags, e.g. <o:math> to <math> so browsers can render them
+        return text.replace(/<(\/?)[a-zA-Z0-9]+:([a-zA-Z0-9-]+)/g, '<$1$2');
+    };
+
     if (!selected && !hovered) {
         return (
             <div className="galaxy-footer" style={{ transform: 'translateY(0)', opacity: 1, pointerEvents: 'none' }}>
@@ -62,12 +68,12 @@ export const FooterPanel = ({ selected, hovered, layoutMode }) => {
                             <span>{selected.year}</span> • <span>{selected.citationCount} Citations</span>
                             {selected.field && <span> • {selected.field}</span>}
                         </div>
+                        <div className="footer-abstract" style={{ marginBottom: '12px' }}>
+                            <strong>Abstract</strong>
+                            <p dangerouslySetInnerHTML={{ __html: formatAbstract(selected.abstract) }}></p>
+                        </div>
                         {selected.authors && <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '8px' }}><strong>Authors:</strong> {selected.authors}</div>}
                         {selected.institutions && <div style={{ fontSize: '0.85rem', color: '#64748b' }}><strong>Institution:</strong> {selected.institutions}</div>}
-                        <div className="footer-abstract">
-                            <strong>Abstract</strong>
-                            <p>{selected.abstract}</p>
-                        </div>
                     </div>
                 )}
 
@@ -115,13 +121,13 @@ export const FooterPanel = ({ selected, hovered, layoutMode }) => {
                                     <span>{hovered.citationCount} Citations</span>
                                     {hovered.nodeCount !== undefined && <span> • Papers: {hovered.nodeCount}</span>}
                                 </div>
-                                {hovered.authors && <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '5px' }}>{hovered.authors}</div>}
                                 {hovered.abstract && (
-                                    <div className="footer-abstract" style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(0, 0, 0, 0.05)' }}>
+                                    <div className="footer-abstract" style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(0, 0, 0, 0.05)', marginBottom: '8px' }}>
                                         <strong>Abstract</strong>
-                                        <p style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>{hovered.abstract}</p>
+                                        <p style={{ fontSize: '0.9rem', lineHeight: '1.5' }} dangerouslySetInnerHTML={{ __html: formatAbstract(hovered.abstract) }}></p>
                                     </div>
                                 )}
+                                {hovered.authors && <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '5px' }}>{hovered.authors}</div>}
                             </>
                         )}
                     </div>
