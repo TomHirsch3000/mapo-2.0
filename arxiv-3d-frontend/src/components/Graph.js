@@ -650,6 +650,34 @@ export const Graph = ({
             gNodes.style("opacity", 1);
             gLinks.style("opacity", 1);
             allLinks.attr("stroke-opacity", 0.6);
+
+            // Auto-fit for Universe Central on initial load or layout change
+            if (viewMode === 'UNIVERSE' && layoutMode === 'CENTRAL' && (firstDataRenderRef.current || prevLayoutMode.current !== layoutMode)) {
+                const layoutNodes = currentNodes.filter(n => !n.isMenuNode);
+                const xExtent = d3.extent(layoutNodes, d => d.x);
+                const yExtent = d3.extent(layoutNodes, d => d.y);
+                const padding = 100;
+
+                if (xExtent[0] !== undefined && yExtent[0] !== undefined) {
+                    const gw = xExtent[1] - xExtent[0];
+                    const gh = yExtent[1] - yExtent[0];
+                    const scale = Math.min(width / (gw + padding * 2), height / (gh + padding * 2), 2);
+                    const cx = (xExtent[0] + xExtent[1]) / 2;
+                    const cy = (yExtent[0] + yExtent[1]) / 2;
+
+                    if (firstDataRenderRef.current) {
+                        // Instant zoom on first load
+                        svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy));
+                    } else {
+                        // Animate if layout changed
+                        svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy));
+                    }
+                }
+            }
+        }
+
+        if (firstDataRenderRef.current && currentNodes.length > 0) {
+            firstDataRenderRef.current = false;
         }
 
         // Update Refs

@@ -46,7 +46,7 @@ The application is an interactive 2D visualization of academic papers arranged i
 
 ## 2. Universe View (Macro Level)
 **Concept**: The highest level of abstraction. Nodes represent entire **Fields of Study** (e.g., "Quantum Mechanics", "Astrophysics").
-the source of this data is the universe json file which is created by the backend process build_universe_json.py
+the source of this data is the universe json file which is created by the backend process build_universe_json.py. This is the landing page of the application.
 
 ### Layout Mode: Central (Cluster)
 -   **Description**: Nodes are arranged in a packed spiral or cluster, emphasizing the "center of gravity" of physics.
@@ -212,6 +212,10 @@ the source of this data is the universe json file which is created by the backen
 The "feel" of the application is defined by how things move.
 
 ### Transitions
+ - Landing page Universe view central layout
+ No animations 
+ All hexagons should be visible and the camera should be adjusted to fit all nodes in the view.
+
 -   **View Switching (Universe <-> Galaxy)**:
     -   **Zoom In**:
         -   **Animation**: Node position shouldbe determined before anything is shown so there is no positioning animation. However, Nodes should "fly in" towards the screen by starting very small and getting bigger until they reach their final size. Once they reach their final size, all nodes should be visible and the camera should be adjusted to fit all nodes in the view.
