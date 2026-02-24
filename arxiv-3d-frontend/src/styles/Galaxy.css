@@ -312,11 +312,6 @@
     line-height: 1.6;
 }
 
-/* Compact hover panel (when both are shown) */
-.footer-panel.hover-panel .footer-abstract {
-    display: none;
-    /* Hide abstract in hover panel to save space */
-}
 
 /* Scrollbar styling for light mode */
 .galaxy-footer::-webkit-scrollbar {

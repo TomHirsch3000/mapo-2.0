@@ -63,7 +63,7 @@ export const FooterPanel = ({ selected, hovered, layoutMode }) => {
                 {selected && !selected.isMenuNode && (
                     <div className="footer-panel selected-panel">
                         <h4>Selected</h4>
-                        <h3>{selected.title}</h3>
+                        <h3 dangerouslySetInnerHTML={{ __html: formatAbstract(selected.title) }}></h3>
                         <div className="footer-meta">
                             <span>{selected.year}</span> • <span>{selected.citationCount} Citations</span>
                             {selected.field && <span> • {selected.field}</span>}
@@ -81,11 +81,12 @@ export const FooterPanel = ({ selected, hovered, layoutMode }) => {
                 {hovered && !hovered.isMenuNode && hovered.id !== selected?.id && (
                     <div className="footer-panel hover-panel" style={!selected ? { gridColumn: '1 / -1' } : {}}>
                         <h4>Hovering</h4>
+                        {console.log("Hovered Data:", hovered)}
 
                         {hovered.field === "Galaxy" ? (
                             // Rich Galaxy Metadata
                             <>
-                                <h3>{hovered.title || hovered.name}</h3>
+                                <h3 dangerouslySetInnerHTML={{ __html: formatAbstract(hovered.title || hovered.name) }}></h3>
                                 <div className="footer-meta" style={{ marginBottom: '8px' }}>
                                     <strong>{d3.format(",")(hovered.totalWorksCount || hovered.totalWorks || 0)}</strong> known works
                                     <span style={{ color: '#94a3b8' }}> • </span>
@@ -115,10 +116,10 @@ export const FooterPanel = ({ selected, hovered, layoutMode }) => {
                         ) : (
                             // Standard Paper/Group Metadata
                             <>
-                                <h3>{hovered.title || hovered.name}</h3>
+                                <h3 dangerouslySetInnerHTML={{ __html: formatAbstract(hovered.title || hovered.name) }}></h3>
                                 <div className="footer-meta">
                                     {hovered.year && <span>First Published: {hovered.year} • </span>}
-                                    <span>{hovered.citationCount} Citations</span>
+                                    {hovered.citationCount !== undefined && <span>{hovered.citationCount} Citations</span>}
                                     {hovered.nodeCount !== undefined && <span> • Papers: {hovered.nodeCount}</span>}
                                 </div>
                                 {hovered.abstract && (

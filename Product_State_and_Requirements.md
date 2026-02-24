@@ -195,8 +195,8 @@ the source of this data is the universe json file which is created by the backen
 -   **Timeline**: Papers arranged by specific publication year (X) and citation impact (Y-Center).
 -   **Central**: larger nodes in the center with smaller nodes radiating away. no overlapping. 
 ### actions
--   **Hover**: Hovering a node highlights ALL its connections. Unrelated nodes/edges fade to low opacity (0.1).
--   **Click**: Clicking a node moves it to the center of view and all connected papers "orbit" around it, including papers from other galaxy groupings. All non connected papers are no longer visible (removed)
+-   **Hover**: Hovering a node highlights ALL its connections. Unrelated nodes/edges fade to low opacity (0.1). It also displayes the title, authors, citation count, abstract, authors and institutions in the footer panel. 
+-   **Click**: Clicking a node moves it to the center of view and all connected papers "orbit" around it, including papers from other galaxy groupings. All non connected papers are no longer visible (removed). It also displayes the title, authors, citation count, abstract, authors and institutions in the footer panel. 
 
 ### Status
         -   [] Node appearance Rectangular "Card" Nodes

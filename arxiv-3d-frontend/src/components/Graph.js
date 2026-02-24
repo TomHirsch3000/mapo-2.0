@@ -786,9 +786,26 @@ export const Graph = ({
                             const s = (d.source.id || d.source);
                             const t = (d.target.id || d.target);
                             const key = `${prefix}|${s}|${t}`;
-                            // Highlight if connected, otherwise fade/hide
-                            if (connectedEdgeIds.has(key)) return 1;
-                            return (isField && selected && !isHovering) ? 0 : 0.05;
+
+                            // In Field view, if a node is selected, ONLY show edges connected to it,
+                            // EVEN if we are hovering over another connected node.
+                            if (isField && selected) {
+                                // Check if this edge is connected to the SELECTED node specifically
+                                const isConnectedToSelected = s === selected.id || t === selected.id;
+                                if (!isConnectedToSelected) return 0;
+
+                                // If hovering, we might want to highlight the hovered node's edges MORE
+                                // but we still only show them if they are also connected to the selected node
+                                if (isHovering && !connectedEdgeIds.has(key)) return 0.2; // Dim others
+                                return 1;
+                            }
+
+                            // If not selected but hovering in Field view
+                            if (isField && isHovering) {
+                                return connectedEdgeIds.has(key) ? 1 : 0.05;
+                            }
+
+                            return connectedEdgeIds.has(key) ? 1 : 0; // Default fallback, though should be covered
                         })
                         .attr("stroke-width", function () {
                             const d = d3.select(this).datum();
