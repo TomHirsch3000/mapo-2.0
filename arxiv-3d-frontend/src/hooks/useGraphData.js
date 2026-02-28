@@ -2,10 +2,12 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import * as d3 from 'd3';
 
-export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected) => {
+export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected, detailFilter, setShowTimeoutPrompt) => {
     const [universeData, setUniverseData] = useState(null);
     const [rawNodes, setRawNodes] = useState([]);
     const [rawEdges, setRawEdges] = useState([]);
+    const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+    const abortControllerRef = useRef(null);
 
     const nodeByIdRef = useRef(new Map());
 
@@ -36,6 +38,57 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
             })
             .catch(err => console.error("Failed to load galaxy data:", err));
     }, [activeGalaxy, universeData]);
+
+    // --- NEW: Load Detail Data (Flask API) ---
+    useEffect(() => {
+        if (viewMode !== 'DETAIL' || !detailFilter) return;
+
+        setIsLoadingDetail(true);
+        if (abortControllerRef.current) abortControllerRef.current.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        const { id, minCitations, maxPapers } = detailFilter;
+        // Use environment variable for backend URL if provided, fallback to localhost:5000
+        const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const url = `${backendUrl}/api/paper/${id}/details?min_citations=${minCitations}&max_papers=${maxPapers}`;
+
+        const timeoutId = setTimeout(() => {
+            if (setShowTimeoutPrompt) setShowTimeoutPrompt(true);
+        }, 10000); // 10 seconds timeout warning
+
+        fetch(url, { signal: controller.signal })
+            .then(res => {
+                clearTimeout(timeoutId);
+                if (!res.ok) throw new Error("API request failed");
+                return res.json();
+            })
+            .then(data => {
+                console.log("DETAIL API RESPONSE:", data);
+                if (setShowTimeoutPrompt) setShowTimeoutPrompt(false);
+                setRawNodes(data.nodes || []);
+                setRawEdges(data.edges || []);
+                setIsLoadingDetail(false);
+            })
+            .catch(err => {
+                if (err.name !== 'AbortError') {
+                    console.error("Failed to fetch detailed paper view:", err);
+                    clearTimeout(timeoutId);
+                    setIsLoadingDetail(false);
+                }
+            });
+
+        return () => {
+            clearTimeout(timeoutId);
+        };
+    }, [viewMode, detailFilter, setShowTimeoutPrompt]);
+
+    const cancelDetailFetch = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            setIsLoadingDetail(false);
+        }
+    };
 
     // Process Nodes & Groups
     const { nodes, groupStats, xGroups, groupEdges, yGroups } = useMemo(() => {
@@ -91,6 +144,12 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
             g.totalCitations += cites;
             g.minYear = Math.min(g.minYear, yr);
             g.maxYear = Math.max(g.maxYear, yr);
+
+            // In Detail mode, we might want to force the group to be the activeGroup 
+            // so that color mappings work based on the central node's group.
+            if (viewMode === 'DETAIL' && activeGroup) {
+                n.group = activeGroup;
+            }
 
             return n;
         });
@@ -256,13 +315,18 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
 
             return nodes.filter(n => n.group === activeGroup);
         }
-        return nodes; // Default/Detail
+        if (viewMode === 'DETAIL') {
+            // API returns exactly the connected nodes + central node, so we show all of them.
+            // We just ensure we return the processed `nodes` array.
+            return nodes;
+        }
+        return nodes; // Default
     }, [viewMode, universeNodes, aggregatedNodes, nodes, activeGroup, selected, rawEdges]);
 
     // Process Edges - Filter based on Active Nodes
     const edges = useMemo(() => {
         if (viewMode === 'GALAXY') return groupEdges; // Return aggregated edges for Galaxy View
-        if (viewMode !== 'FIELD') return []; // Only show paper edges in Field View (and now Galaxy)
+        if (viewMode !== 'FIELD' && viewMode !== 'DETAIL') return []; // Only show paper edges in Field and Detail View
 
         // Create a set of active node IDs for fast lookup
         const activeIds = new Set(activeNodes.map(n => n.id));
@@ -293,6 +357,8 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         rawNodes,
         rawEdges,
         nodeByIdRef,
-        clearData
+        clearData,
+        isLoadingDetail,
+        cancelDetailFetch
     };
 };

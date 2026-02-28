@@ -208,6 +208,15 @@ the source of this data is the universe json file which is created by the backen
 
 ---
 
+## Detailed paper view
+description - when a specific paper is selected and double clicked the map shows all connected papers, including papers from the database which are not in the json files. This requires a function in the backend to get the connected papers from the database and return them to the frontend. It should query the database edges table for a list of papers connected to the selected paper and then query the database nodes table for the details of those papers. It should return the papers to the frontend and be presented as nodes in the same way as the normal paper view. 
+There is currently only 1 valid database file with all the papers within that field and its papers_particle_physics_all.db 
+There should be a popup whne double clicking that asks the user to confirm the details of the request including the minimum number of citations and the maximum number of papers to display. 
+And there should be a timeout asking for confirmation to continue if the request is taking longer than 10 seconds. 
+The popups should be themed along with the rest of the website, neutral colours. 
+
+
+
 ## 6. Visual Physics & Transitions
 The "feel" of the application is defined by how things move.
 

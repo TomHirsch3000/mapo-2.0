@@ -23,7 +23,9 @@ export const Graph = ({
     scales, // { xScale, yScale, xGroupScale, yTimelineScale, universeXScale, timelineHeightScale }
     isReturning,
     width,
-    height
+    height,
+    onNodeDoubleClick,
+    isLoadingDetail
 }) => {
     const svgRef = useRef(null);
     const layoutEngine = useRef(new LayoutEngine(width, height));
@@ -45,8 +47,8 @@ export const Graph = ({
     const firstDataRenderRef = useRef(true);
 
     // Callbacks Ref (to avoid re-running effect on handler change)
-    const handlersRef = useRef({ onNodeClick, onNodeHover, onBackgroundClick, onGalaxyClick, onGroupClick });
-    handlersRef.current = { onNodeClick, onNodeHover, onBackgroundClick, onGalaxyClick, onGroupClick };
+    const handlersRef = useRef({ onNodeClick, onNodeHover, onBackgroundClick, onGalaxyClick, onGroupClick, onNodeDoubleClick });
+    handlersRef.current = { onNodeClick, onNodeHover, onBackgroundClick, onGalaxyClick, onGroupClick, onNodeDoubleClick };
 
     // Update Layout Engine dimensions
     useEffect(() => {
@@ -62,7 +64,7 @@ export const Graph = ({
         const svg = d3.select(svgRef.current);
         const isUniverse = viewMode === 'UNIVERSE';
         const isGalaxy = viewMode === 'GALAXY';
-        const isField = viewMode === 'FIELD';
+        const isField = viewMode === 'FIELD' || viewMode === 'DETAIL';
 
         // --- DATA PREP ---
         const currentNodes = nodes.map(n => ({ ...n })); // Shallow copy to prevent mutation issues between runs/views if needed, though d3 mutates inplace usually fine if we reset
@@ -338,6 +340,7 @@ export const Graph = ({
             .attr("class", "d3-node")
             .attr("cursor", "pointer")
             .on("click", (e, d) => { e.stopPropagation(); onNodeClick(d); })
+            .on("dblclick", (e, d) => { e.stopPropagation(); if (onNodeDoubleClick) onNodeDoubleClick(d); })
             .on("mouseover", (e, d) => onNodeHover(d))
             .on("mouseout", (e, d) => onNodeHover(null));
 

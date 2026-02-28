@@ -2,11 +2,17 @@
 import React from 'react';
 import * as d3 from 'd3';
 
-export const FooterPanel = ({ selected, hovered, layoutMode }) => {
+export const FooterPanel = ({ selected, hovered, layoutMode, onDetailedViewClick }) => {
     const formatAbstract = (text) => {
         if (!text) return '';
         // Removes namespace prefixes from XML tags, e.g. <o:math> to <math> so browsers can render them
         return text.replace(/<(\/?)[a-zA-Z0-9]+:([a-zA-Z0-9-]+)/g, '<$1$2');
+    };
+
+    const handleWheel = (e) => {
+        // Stop the wheel event from propagating down to the D3 canvas
+        // This allows the panel to scroll natively instead of zooming the map
+        e.stopPropagation();
     };
 
     if (!selected && !hovered) {
@@ -20,7 +26,11 @@ export const FooterPanel = ({ selected, hovered, layoutMode }) => {
     }
 
     return (
-        <div className="galaxy-footer" style={{ transform: 'translateY(0)', opacity: 1, pointerEvents: 'none' }}>
+        <div
+            className="galaxy-footer"
+            style={{ transform: 'translateY(0)', opacity: 1, pointerEvents: 'auto' }}
+            onWheel={handleWheel}
+        >
             <div className="footer-panels" style={{ pointerEvents: 'auto' }}>
                 {/* Menu/Info node content */}
                 {(selected?.isMenuNode || hovered?.isMenuNode) && (
@@ -73,15 +83,23 @@ export const FooterPanel = ({ selected, hovered, layoutMode }) => {
                             <p dangerouslySetInnerHTML={{ __html: formatAbstract(selected.abstract) }}></p>
                         </div>
                         {selected.authors && <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '8px' }}><strong>Authors:</strong> {selected.authors}</div>}
-                        {selected.institutions && <div style={{ fontSize: '0.85rem', color: '#64748b' }}><strong>Institution:</strong> {selected.institutions}</div>}
+                        {selected.institutions && <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '16px' }}><strong>Institution:</strong> {selected.institutions}</div>}
+
+                        <button
+                            className="back-to-galaxy"
+                            style={{ width: '100%', marginTop: 'auto', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
+                            onClick={() => onDetailedViewClick && onDetailedViewClick(selected)}
+                        >
+                            Open Detailed Map View
+                        </button>
                     </div>
                 )}
 
                 {/* Hover Panel */}
                 {hovered && !hovered.isMenuNode && hovered.id !== selected?.id && (
-                    <div className="footer-panel hover-panel" style={!selected ? { gridColumn: '1 / -1' } : {}}>
+                    <div className="footer-panel hover-panel" style={!selected ? { gridColumn: '1 / -1', pointerEvents: 'auto' } : { pointerEvents: 'auto' }}>
                         <h4>Hovering</h4>
-                        {console.log("Hovered Data:", hovered)}
+                        {/* console.log("Hovered Data:", hovered) */}
 
                         {hovered.field === "Galaxy" ? (
                             // Rich Galaxy Metadata

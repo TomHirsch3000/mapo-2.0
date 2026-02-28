@@ -25,6 +25,14 @@ export default function App() {
   const [layout, setLayout] = useState('CENTRAL'); // 'CENTRAL' | 'TIMELINE'
   const [grouping, setGrouping] = useState('FIELD'); // 'FIELD' | 'AUTHOR' | 'INSTITUTION'
 
+  // --- Detail View Context ---
+  const [showDetailPrompt, setShowDetailPrompt] = useState(false);
+  const [activeDoubleClickPaper, setActiveDoubleClickPaper] = useState(null);
+  const [detailFilter, setDetailFilter] = useState(null); // { id, minCitations, maxPapers }
+  const [minCitationsInput, setMinCitationsInput] = useState(100);
+  const [maxPapersInput, setMaxPapersInput] = useState(500);
+  const [showTimeoutPrompt, setShowTimeoutPrompt] = useState(false);
+
   // Derived Modes mapped to old logic for compatibility during refactor
   // TODO: Update child components to use new props directly
   const xAxisMode = layout === 'TIMELINE' ? 'TIMELINE' : (viewMode === 'GALAXY' ? grouping : 'NONE');
@@ -39,7 +47,7 @@ export default function App() {
   const isReturningRef = useRef(false);
 
   // --- Data Hook ---
-  const { nodes, edges, groupStats, xGroups, yGroups, universeData, rawNodes, rawEdges } = useGraphData(viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected);
+  const { nodes, edges, groupStats, xGroups, yGroups, universeData, rawNodes, rawEdges, isLoadingDetail, cancelDetailFetch } = useGraphData(viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected, detailFilter, setShowTimeoutPrompt);
 
   // --- Handlers ---
   const handleGalaxyClick = (galaxyId) => {
@@ -100,6 +108,49 @@ export default function App() {
 
   const handleBackgroundClick = () => {
     if (selected) setSelected(null);
+  };
+
+  const handleNodeDoubleClick = (paper) => {
+    // Deprecated via double click, moved to button in footer panel, but kept for power users
+    if (viewMode === 'UNIVERSE' || viewMode === 'GALAXY') return;
+    setActiveDoubleClickPaper(paper);
+    setShowDetailPrompt(true);
+  };
+
+  const handleDetailedViewClick = (paper) => {
+    if (viewMode === 'UNIVERSE' || viewMode === 'GALAXY') return;
+    setActiveDoubleClickPaper(paper);
+    setShowDetailPrompt(true);
+  };
+
+  const confirmDetailView = () => {
+    setShowDetailPrompt(false);
+    setDetailFilter({
+      id: activeDoubleClickPaper.id,
+      minCitations: minCitationsInput,
+      maxPapers: maxPapersInput
+    });
+    setViewMode('DETAIL');
+    setSelected(activeDoubleClickPaper);
+    setActiveGroup(activeDoubleClickPaper.group);
+  };
+
+  const cancelDetailView = () => {
+    setShowDetailPrompt(false);
+    setActiveDoubleClickPaper(null);
+  };
+
+  const handleTimeoutCancel = () => {
+    setShowTimeoutPrompt(false);
+    cancelDetailFetch();
+    setViewMode('FIELD'); // Back to previous view
+    setDetailFilter(null);
+    setActiveDoubleClickPaper(null);
+  };
+
+  const handleTimeoutWait = () => {
+    setShowTimeoutPrompt(false);
+    // Continue waiting...
   };
 
   // --- Scales Calculation ---
@@ -234,6 +285,7 @@ export default function App() {
         onGalaxyClick={handleGalaxyClick}
         onGroupClick={handleGroupClick}
         onBackgroundClick={handleBackgroundClick}
+        onNodeDoubleClick={handleNodeDoubleClick}
 
         onNodeHover={setHovered}
 
@@ -241,13 +293,94 @@ export default function App() {
         isReturning={isReturningRef.current}
         width={dimensions.width}
         height={dimensions.height}
+        isLoadingDetail={isLoadingDetail}
       />
 
       <FooterPanel
         selected={selected}
         hovered={hovered}
         layoutMode={layoutMode}
+        onDetailedViewClick={handleDetailedViewClick}
       />
+
+      {showDetailPrompt && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h3>Load Detailed Paper View</h3>
+            <p>Querying the database for all connected papers...</p>
+            <label style={labelStyle}>
+              Minimum Citations:
+              <input type="number" value={minCitationsInput} onChange={(e) => setMinCitationsInput(Number(e.target.value))} style={inputStyle} />
+            </label>
+            <label style={labelStyle}>
+              Max Papers to Display:
+              <input type="number" value={maxPapersInput} onChange={(e) => setMaxPapersInput(Number(e.target.value))} style={inputStyle} />
+            </label>
+            <div style={buttonContainerStyle}>
+              <button onClick={cancelDetailView} style={cancelButtonStyle}>Cancel</button>
+              <button onClick={confirmDetailView} style={confirmButtonStyle}>Load</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTimeoutPrompt && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h3>Request Taking Longer Than Expected</h3>
+            <p>The database query has taken more than 10 seconds. Do you want to keep waiting or cancel the request?</p>
+            <div style={buttonContainerStyle}>
+              <button onClick={handleTimeoutCancel} style={cancelButtonStyle}>Cancel</button>
+              <button onClick={handleTimeoutWait} style={confirmButtonStyle}>Keep Waiting</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div >
   );
 }
+
+// Simple inline styles for the prototype modals (Light Theme per user request)
+const modalOverlayStyle = {
+  position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+  backgroundColor: 'rgba(255,255,255,0.7)',
+  backdropFilter: 'blur(4px)',
+  display: 'flex', justifyContent: 'center', alignItems: 'center',
+  zIndex: 1000,
+};
+
+const modalContentStyle = {
+  backgroundColor: '#ffffff', color: '#1e293b',
+  padding: '30px', borderRadius: '12px',
+  width: '450px', maxWidth: '90%',
+  fontFamily: 'Inter, sans-serif',
+  boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+  border: '1px solid rgba(0,0,0,0.05)'
+};
+
+const labelStyle = {
+  display: 'block', margin: '16px 0 8px 0', fontSize: '14px', color: '#64748b', fontWeight: '600'
+};
+
+const inputStyle = {
+  width: '100%', padding: '10px', marginTop: '4px',
+  backgroundColor: '#f8fafc', border: '1px solid #cbd5e1',
+  color: '#334155', borderRadius: '6px', boxSizing: 'border-box',
+  fontFamily: 'Inter, sans-serif', fontSize: '14px'
+};
+
+const buttonContainerStyle = {
+  display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px'
+};
+
+const cancelButtonStyle = {
+  padding: '10px 20px', backgroundColor: 'transparent',
+  border: '1px solid #cbd5e1', color: '#64748b', borderRadius: '6px', cursor: 'pointer',
+  fontWeight: '600', transition: 'all 0.2s'
+};
+
+const confirmButtonStyle = {
+  padding: '10px 20px', backgroundColor: '#6366f1',
+  border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer',
+  fontWeight: 'bold', boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)', transition: 'all 0.2s'
+};

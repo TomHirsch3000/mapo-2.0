@@ -55,3 +55,7 @@ typing_extensions==4.13.2
 typing_inspection==0.4.0
 urllib3==2.4.0
 zipp==3.23.0
+
+Flask==3.0.3
+Flask-Cors==4.0.0
+gunicorn==22.0.0
