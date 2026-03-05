@@ -18,46 +18,55 @@ export class LayoutEngine {
     // --- Universe View Layouts ---
 
     applyUniverseCentralLayout(nodes, sim) {
-        // Deterministic Spiral Packing
-        // Sort by value (desc) then ID (asc) for stability
-        const sorted = [...nodes].sort((a, b) => (b.val || 0) - (a.val || 0) || a.id.localeCompare(b.id));
+        // Group-based Clustered Packing
+        // Find unique groups
+        const groups = [...new Set(nodes.map(n => n.group || n.data?.group || "Default"))];
 
-        sorted.forEach((n, i) => {
+        // Assign a dedicated physical center target for each group based on a circular layout
+        const groupCenters = {};
+        const radius = 450; // Far enough apart that same-colour groups form distinct islands
+        groups.forEach((g, i) => {
+            const angle = (i / groups.length) * 2 * Math.PI;
+            groupCenters[g] = {
+                x: Math.cos(angle) * radius,
+                y: Math.sin(angle) * radius + this.graphCenterY
+            };
+        });
+
+        // ALWAYS initialize positions near group center – clears any stale cached positions 
+        nodes.forEach(n => {
             n.fx = null;
             n.fy = null;
 
             if (n.isMenuNode) {
-                // Keep menu node somewhat fixed or let it float? 
-                // Brief says "Nodes gravitate toward center". Menu node is special.
-                // Let's fix it off-center or let it float.
-                // Current behavior: Fixed at 800, -600.
                 n.x = 800; n.y = -600;
             } else {
-                // Archimedean Spiral
-                // theta = i * a
-                // r = b * theta
-                const angle = i * 0.5; // Tighter spiral
-                const radius = 40 * Math.sqrt(i); // SQRT distribution for packing
-                // Apply separate spacing for larger nodes
-
-                // Simple phyllotaxis:
-                const theta = i * 2.39996; // Golden angle approx
-                const r = 40 * Math.sqrt(i) + (n.val * 2);
-
-                // Deterministic initial position
-                if (!n.x && !n.y) {
-                    n.x = Math.cos(theta) * r;
-                    n.y = Math.sin(theta) * r;
-                }
+                const group = n.group || 'Default';
+                const target = groupCenters[group] || { x: 0, y: this.graphCenterY };
+                // Scatter near group center so force simulation can settle them
+                n.x = target.x + (Math.random() - 0.5) * 60;
+                n.y = target.y + (Math.random() - 0.5) * 60;
             }
         });
 
-        // Use forces to handle overlaps dynamically but keep the spiral shape
-        sim.force("center", d3.forceCenter(0, 0))
-            .force("x", d3.forceX(0).strength(0.02))
-            .force("y", d3.forceY(0).strength(0.02))
-            .force("charge", d3.forceManyBody().strength(d => -100 - (d.val * 10))) // Repel based on size
-            .force("collide", d3.forceCollide().radius(d => (d.val * 2.5 + 20)).iterations(2))
+        // Use custom forces to pull them to their assigned group cluster, while pushing everything apart
+        sim.force("center", null) // No global center - groups must spread to their own positions
+            // Strong pull towards each group's dedicated pie-slice position
+            .force("x", d3.forceX(d => {
+                if (d.isMenuNode) return 800;
+                const group = d.group || 'Default';
+                return groupCenters[group]?.x ?? 0;
+            }).strength(0.5))
+            .force("y", d3.forceY(d => {
+                if (d.isMenuNode) return -600;
+                const group = d.group || 'Default';
+                return groupCenters[group]?.y ?? 0;
+            }).strength(0.5))
+            // Enough repulsion to prevent overlap but not so much to blow clusters apart
+            .force("charge", d3.forceManyBody().strength(d => -30 - (d.val * 1.5)))
+            // Collision to prevent physical overlap
+            .force("collide", d3.forceCollide().radius(d => (d.val * 2.5 + 15)).iterations(5))
+            .force("globalCenter", null)
             .force("link", null);
 
         return sim;

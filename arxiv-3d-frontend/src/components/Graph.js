@@ -350,6 +350,13 @@ export const Graph = ({
             if (isUniverse && !d.isMenuNode) {
                 el.append("path").attr("class", "orbit");
                 el.append("path").attr("class", "core");
+
+                // Append icon placeholder for all Universe modes
+                el.append("image")
+                    .attr("class", "node-icon")
+                    .style("pointer-events", "none")
+                    .style("mix-blend-mode", "multiply")
+                    .style("display", "none"); // Hidden by default
             } else if (isGalaxy) {
                 // Check if Galaxy Timeline
                 if (layoutMode === 'TIMELINE') {
@@ -415,6 +422,7 @@ export const Graph = ({
                 el.append("rect").attr("class", "node-rect").attr("rx", 6);
                 el.append("foreignObject").attr("class", "fo-content").append("xhtml:div").attr("class", "node-fo");
             }
+
             el.append("text").attr("class", "label-main");
             el.append("text").attr("class", "label-sub");
             if (isUniverse) el.append("text").attr("class", "label-right");
@@ -508,7 +516,7 @@ export const Graph = ({
                         // We use the .orbit path for the area
                         el.select(".orbit")
                             .attr("d", areaGenerator(dataForChart)) // Use projected data for shape
-                            .attr("fill", cScale(d.id))
+                            .attr("fill", cScale(d.group || d.data?.group || "Default"))
                             .attr("fill-opacity", 0.6)
                             .attr("stroke", "none");
 
@@ -536,16 +544,32 @@ export const Graph = ({
                         // Ensure class is correct for shimmer (uses .orbit)
                         el.select(".orbit")
                             .attr("d", roundedHexagonPath(val * 2.5))
-                            .attr("fill", cScale(d.id)) // Fill with node color
+                            .attr("fill", cScale(d.group || d.data?.group || "Default")) // Fill with node group color
                             .attr("fill-opacity", 0.4)  // Increased opacity for body visibility
-                            .attr("stroke", "#475569")
-                            .attr("stroke-width", 12);
+                            .attr("stroke", d.hasPapers ? "#475569" : "none")
+                            .attr("stroke-width", d.hasPapers ? 12 : 0);
 
                         el.select(".core")
                             .attr("d", roundedHexagonPath(val * 0.8))
                             .attr("r", null)
-                            .attr("fill", cScale(d.id))
+                            .attr("fill", cScale(d.group || d.data?.group || "Default"))
                             .style("filter", "blur(1px)");
+
+                        // Icon display
+                        let iconEl = el.select(".node-icon");
+                        if (d.iconPath) {
+                            // Size the icon relative to the hexagon size (val * 2.5 is the radius)
+                            const iconSize = val * 1.8;
+                            iconEl
+                                .attr("href", process.env.PUBLIC_URL + d.iconPath)
+                                .attr("width", iconSize)
+                                .attr("height", iconSize)
+                                .attr("x", -iconSize / 2)
+                                .attr("y", -iconSize / 2 - 15) // Shift up slightly to make room for text
+                                .style("display", null); // Remove none to show it
+                        } else {
+                            iconEl.style("display", "none");
+                        }
 
                         // Label inside the bottom of the hexagon
                         // "inside the boarder" -> Move up more
@@ -554,7 +578,7 @@ export const Graph = ({
                             .attr("x", 0)
                             .attr("y", 0)
                             .attr("dx", 0)
-                            .attr("dy", val * 2.5 - 45) // Moved up significantly (was -25)
+                            .attr("dy", val * 2.5 - 35) // Adjusted from -45 to -35 as icon pushes things around
                             .attr("text-anchor", "middle")
                             .style("font-size", "22px")
                             .style("fill", "#1e293b"); // Ensure contrast

@@ -494,3 +494,45 @@ svg {
 .type-paper:hover rect.node-rect {
   animation: shimmer 1.5s infinite ease-in-out;
 }
+
+/* --------------------------------------------------------- */
+/* HEXAGON FLIP ANIMATIONS (UNIVERSE VIEW) */
+/* --------------------------------------------------------- */
+
+/* Make the main hexagon bulge a bit */
+.d3-node .orbit {
+  transition: transform 0.3s ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Hovering the universe node bulges the main colored hexagon */
+.d3-node:hover .orbit {
+  transform: scale(1.05);
+}
+
+/* The core hexagon and icon share the same flip transition */
+.d3-node .core, 
+.d3-node .node-icon {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Icon starts flat (scaled 0 horizontally) and hidden */
+.d3-node .node-icon {
+  transform: scaleX(0);
+  opacity: 0 !important;
+}
+
+/* On hover, the core hexagon flattens and fades */
+.d3-node:hover .core {
+  transform: scaleX(0);
+  opacity: 0;
+}
+
+/* On hover, the icon unflattens and fades in */
+.d3-node:hover .node-icon {
+  transform: scaleX(1);
+  opacity: 0.85 !important;
+}

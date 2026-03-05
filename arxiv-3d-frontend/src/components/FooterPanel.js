@@ -101,10 +101,25 @@ export const FooterPanel = ({ selected, hovered, layoutMode, onDetailedViewClick
                         <h4>Hovering</h4>
                         {/* console.log("Hovered Data:", hovered) */}
 
-                        {hovered.field === "Galaxy" ? (
+                        {hovered.field === "Galaxy" || hovered.type === "galaxy" ? (
                             // Rich Galaxy Metadata
                             <>
-                                <h3 dangerouslySetInnerHTML={{ __html: formatAbstract(hovered.title || hovered.name) }}></h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                                    {hovered.iconPath && (
+                                        <img
+                                            src={hovered.iconPath}
+                                            alt={hovered.name || hovered.title}
+                                            style={{
+                                                width: '40px',
+                                                height: '40px',
+                                                objectFit: 'contain',
+                                                mixBlendMode: 'multiply',
+                                                opacity: 0.8
+                                            }}
+                                        />
+                                    )}
+                                    <h3 style={{ margin: 0 }} dangerouslySetInnerHTML={{ __html: formatAbstract(hovered.title || hovered.name) }}></h3>
+                                </div>
                                 <div className="footer-meta" style={{ marginBottom: '8px' }}>
                                     <strong>{d3.format(",")(hovered.totalWorksCount || hovered.totalWorks || 0)}</strong> known works
                                     <span style={{ color: '#94a3b8' }}> • </span>

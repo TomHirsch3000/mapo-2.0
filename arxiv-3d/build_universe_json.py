@@ -16,6 +16,7 @@ import time
 import urllib.parse
 import urllib.request
 import urllib.error
+import re
 from typing import List, Dict, Any, Optional
 
 OPENALEX_BASE = "https://api.openalex.org"
@@ -220,6 +221,143 @@ def get_openalex_metrics(topic_name: str, email: str) -> Dict[str, Any]:
         "openAlexId": concept_id
     }
 
+def fetch_wikimedia_icon(topic_name: str, frontend_dir: str) -> Optional[str]:
+    """
+    Search Wikimedia Commons for an SVG icon related to the topic and download it.
+    Returns the relative path for the frontend (e.g., '/icons/filename.svg').
+    """
+    if not frontend_dir:
+        return None
+
+    icons_dir = os.path.join(frontend_dir, "icons")
+    os.makedirs(icons_dir, exist_ok=True)
+    
+    # Clean topic name for filename
+    safe_name = topic_name.lower().replace(" ", "_").replace("-", "_")
+    safe_name = re.sub(r'[^a-z0-9_]', '', safe_name)
+    local_filename = f"{safe_name}.svg"
+    local_path = os.path.join(icons_dir, local_filename)
+    relative_path = f"/icons/{local_filename}"
+
+    # If already downloaded, return immediately
+    if os.path.exists(local_path):
+        return relative_path
+
+    # We want general icons, we can search "ICON name" or "name diagram"
+    # Actually, often physics fields have abstract representations.
+    # We will search commons for SVG files specifically.
+    
+    # 1. Search for SVG files
+    search_query = f"{topic_name} icon"
+    url = "https://commons.wikimedia.org/w/api.php"
+    params = {
+        "action": "query",
+        "list": "search",
+        "srsearch": f"{search_query} filetype:bitmap|drawing", 
+        "utf8": 1,
+        "format": "json",
+        "srnamespace": 6, # File namespace
+        "srlimit": 5
+    }
+    
+    headers = {'User-Agent': 'Arxiv3D/1.0 (tom.hirsch3000@gmail.com)'}
+    
+    print(f"[info] Searching Wikimedia Commons for icon: '{topic_name}'...")
+    
+    # Custom get json to support headers
+    def get_with_headers(u, p):
+        qs = urllib.parse.urlencode(p, doseq=True, safe=":,")
+        full = f"{u}?{qs}"
+        req = urllib.request.Request(full, headers=headers)
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+            
+    try:
+        data = get_with_headers(url, params)
+    except Exception as e:
+        print(f"[warn] Search failed: {e}")
+        data = {}
+        
+    search_results = data.get("query", {}).get("search", [])
+    if not search_results:
+        # Fallback to just the topic name without "icon"
+        params["srsearch"] = f"{topic_name} filetype:bitmap|drawing"
+        try:
+            data = get_with_headers(url, params)
+        except Exception:
+            data = {}
+        search_results = data.get("query", {}).get("search", [])
+        
+    if not search_results:
+        print(f"[warn] No icon found on Wikimedia for '{topic_name}'")
+        return None
+        
+    # Get the title of the first result (e.g., "File:Pendulum.svg")
+    # Prefer SVGs
+    file_title = None
+    for res in search_results:
+        title = res.get("title", "")
+        if title.lower().endswith(".svg"):
+            file_title = title
+            break
+            
+    # If no SVG found, take the first result (PNG/JPG)
+    if not file_title and search_results:
+        file_title = search_results[0].get("title", "")
+        # Update extension based on title
+        ext = file_title.split(".")[-1].lower() if "." in file_title else "png"
+        local_filename = f"{safe_name}.{ext}"
+        local_path = os.path.join(icons_dir, local_filename)
+        relative_path = f"/icons/{local_filename}"
+        
+    if not file_title:
+        return None
+
+    # 2. Get the actual file URL
+    # https://commons.wikimedia.org/w/api.php?action=query&titles=File:Pendulum.svg&prop=imageinfo&iiprop=url&format=json
+    img_params = {
+        "action": "query",
+        "titles": file_title,
+        "prop": "imageinfo",
+        "iiprop": "url",
+        "format": "json"
+    }
+    
+    try:
+        img_data = get_with_headers(url, img_params)
+    except Exception as e:
+        print(f"[warn] Failed to get image info: {e}")
+        img_data = {}
+        
+    pages = img_data.get("query", {}).get("pages", {})
+    
+    # Extract URL from response
+    img_url = None
+    for page_id, page_info in pages.items():
+        if "imageinfo" in page_info and len(page_info["imageinfo"]) > 0:
+            img_url = page_info["imageinfo"][0].get("url")
+            break
+            
+    if not img_url:
+        print(f"[warn] Could not get direct URL for '{file_title}'")
+        return None
+        
+    # 3. Download the file
+    print(f"      -> Downloading icon: {img_url}")
+    try:
+        # Add User-Agent as Wikimedia requires it
+        req = urllib.request.Request(
+            img_url, 
+            headers={'User-Agent': 'Arxiv3D/1.0 (tom.hirsch3000@gmail.com) Python-urllib/3'}
+        )
+        with urllib.request.urlopen(req, timeout=15) as response, open(local_path, 'wb') as out_file:
+            data = response.read()
+            out_file.write(data)
+        return relative_path
+    except Exception as e:
+        print(f"[warn] Failed to download {img_url}: {e}")
+        return None
+
 
 def load_galaxy_data(nodes_path: str, metadata_path: str = None) -> Dict[str, Any]:
     """Load galaxy nodes and metadata, return count and metadata."""
@@ -304,6 +442,7 @@ def generate_universe_nodes(
                 'id': galaxy['id'],
                 'name': galaxy['name'],
                 'type': 'galaxy',
+                'group': galaxy.get('group', 'Uncategorized'), # Add group field here
                 'nodeCount': galaxy.get('nodeCount', 0),
                 'edgeCount': galaxy.get('edgeCount', 0),
                 'hasPapers': galaxy.get('hasPapers', True),
@@ -313,6 +452,7 @@ def generate_universe_nodes(
                 'worksByDecade': galaxy.get('worksByDecade', []),
                 'oldestWork': galaxy.get('oldestWork'),
                 'mostCitedWork': galaxy.get('mostCitedWork'),
+                'iconPath': galaxy.get('iconPath'),
                 
                 'nodesFile': galaxy.get('nodesFile', f"{galaxy['id']}_nodes.json"),
                 'edgesFile': galaxy.get('edgesFile', f"{galaxy['id']}_edges.json"),
@@ -373,6 +513,7 @@ def generate_universe_nodes(
                 'worksByDecade': galaxy.get('worksByDecade', []),
                 'oldestWork': galaxy.get('oldestWork'),
                 'mostCitedWork': galaxy.get('mostCitedWork'),
+                'iconPath': galaxy.get('iconPath'),
                 'nodesFile': galaxy.get('nodesFile', f"{galaxy['id']}_nodes.json"),
                 'edgesFile': galaxy.get('edgesFile', f"{galaxy['id']}_edges.json"),
                 'metadataFile': galaxy.get('metadataFile', f"{galaxy['id']}_metadata.json"),
@@ -417,6 +558,7 @@ def generate_universe_nodes(
                 'totalCitations': galaxy.get('totalCitations', 0), # New field
                 'firstPublicationYear': galaxy.get('firstPublicationYear'),
                 'worksByDecade': galaxy.get('worksByDecade', []),
+                'iconPath': galaxy.get('iconPath'),
                 'nodesFile': galaxy.get('nodesFile', f"{galaxy['id']}_nodes.json"),
                 'edgesFile': galaxy.get('edgesFile', f"{galaxy['id']}_edges.json"),
                 'metadataFile': galaxy.get('metadataFile', f"{galaxy['id']}_metadata.json"),
@@ -436,63 +578,95 @@ def generate_universe_nodes(
 PHYSICS_CONCEPT_ID = "C121332964"
 
 # Hardcoded list since API filtering by ancestor seems unreliable
-PHYSICS_SUBFIELDS_NAMES = [
-    "Quantum mechanics",
-    "Astrophysics",
-    "Condensed matter physics",
-    "Particle physics",
-    "Nuclear physics",
-    "Atomic physics", 
-    "Optical physics", # Optics
-    "Classical mechanics",
-    "Thermodynamics",
-    "Acoustics",
-    "Biophysics",
-    "Geophysics",
-    "Statistical mechanics",
-    "Fluid dynamics",
-    "Plasma physics",
-    "Computational physics",
-    "Theoretical physics"
-]
+# This is an expanded, highly comprehensive list of major Level 1 and major cross-disciplinary physics fields
+# Grouped into dictionaries so the frontend can color/cluster them
+PHYSICS_SUBFIELDS_GROUPED = {
+    "Quantum & Fundamental": [
+        "Quantum mechanics",
+        "Particle physics",
+        "Nuclear physics",
+        "Atomic physics",
+        "Quantum gravity",
+        "String theory",
+        "Quantum optics",
+        "High-energy physics"
+    ],
+    "Matter & Classical": [
+        "Condensed matter physics",
+        "Solid-state physics",
+        "Classical mechanics",
+        "Statistical mechanics",
+        "Thermodynamics",
+        "Fluid dynamics",
+        "Continuum mechanics",
+        "Acoustics"
+    ],
+    "Astrophysics & Cosmology": [
+        "Astrophysics",
+        "Cosmology",
+        "Astronomy"
+    ],
+    "Optics & Electromagnetism": [
+        "Optical physics",
+        "Electromagnetism",
+        "Photonics"
+    ],
+    "Plasmas & Complex Systems": [
+        "Plasma physics",
+        "Nonlinear dynamics", 
+        "Chaos theory"
+    ],
+    "Cross-Disciplinary": [
+        "Biophysics",
+        "Geophysics",
+        "Chemical physics",
+        "Mathematical physics",
+        "Computational physics",
+        "Theoretical physics",
+        "Experimental physics",
+        "Medical physics",
+        "Applied physics"
+    ]
+}
 
 def fetch_physics_subfields(email: str) -> List[Dict[str, Any]]:
     """Fetch specific Level 1 physics concepts by name."""
     subfields = []
     
-    print(f"[info] Fetching {len(PHYSICS_SUBFIELDS_NAMES)} physics subfields individually...")
+    total_fields = sum(len(fields) for fields in PHYSICS_SUBFIELDS_GROUPED.values())
+    print(f"[info] Fetching {total_fields} physics subfields individually...")
     
-    for name in PHYSICS_SUBFIELDS_NAMES:
-        # Search for exact name match at level 1
-        url = f"{OPENALEX_BASE}/concepts"
-        params = {
-            "filter": f"display_name.search:{name},level:1",
-            "per_page": 1,
-            "mailto": email
-        }
-        
-        try:
-            data = safe_get_json(url, params)
-            results = data.get("results", [])
+    for group_name, names in PHYSICS_SUBFIELDS_GROUPED.items():
+        for name in names:
+            # Search for exact name match
+            url = f"{OPENALEX_BASE}/concepts"
+            params = {
+                "filter": f"display_name.search:{name}", # Removed level:1 restriction!
+                "per_page": 1,
+                "mailto": email
+            }
             
-            if results:
-                r = results[0]
-                # Basic validation: check if name is close match?
-                # OpenAlex search is fuzzy, but usually top result is good for specific terms
-                print(f"  [+] Found: {r['display_name']} ({r['id']})")
-                subfields.append({
-                    "id": r.get("id", "").split("/")[-1],
-                    "display_name": r.get("display_name"),
-                    "description": r.get("description"),
-                    "works_count": r.get("works_count", 0),
-                    "cited_by_count": r.get("cited_by_count", 0) # Capture citations
-                })
-            else:
-                print(f"  [-] Not found: {name}")
+            try:
+                data = safe_get_json(url, params)
+                results = data.get("results", [])
                 
-            time.sleep(0.1) # Polite delay
-        except Exception as e:
-            print(f"  [!] Error fetching {name}: {e}")
+                if results:
+                    r = results[0]
+                    print(f"  [+] Found: {r['display_name']} ({r['id']}) in [{group_name}]")
+                    subfields.append({
+                        "id": r.get("id", "").split("/")[-1],
+                        "display_name": r.get("display_name"),
+                        "description": r.get("description"),
+                        "works_count": r.get("works_count", 0),
+                        "cited_by_count": r.get("cited_by_count", 0),
+                        "group": group_name # Pass the new grouping attribute
+                    })
+                else:
+                    print(f"  [-] Not found: {name}")
+                    
+                time.sleep(0.1) # Polite delay
+            except Exception as e:
+                print(f"  [!] Error fetching {name}: {e}")
             
     print(f"[info] Found {len(subfields)} valid physics subfields.")
     return subfields
@@ -509,6 +683,63 @@ def main():
     
     # 1. Parse User Galaxies (available locally)
     user_galaxies_map = {}
+    
+    # Auto-detect local galaxies by scanning for *_nodes.json files
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    frontend_public_dir = os.path.join(script_dir, "..", "arxiv-3d-frontend", "public")
+    
+    # Check both current working dir and the frontend public dir
+    search_dirs = [os.getcwd(), script_dir, frontend_public_dir]
+    found_node_files = []
+    
+    for d in search_dirs:
+        if os.path.exists(d):
+            for f in os.listdir(d):
+                if f.endswith("_nodes.json"):
+                    full_path = os.path.join(d, f)
+                    if full_path not in found_node_files:
+                        found_node_files.append(full_path)
+
+    for nodes_path in found_node_files:
+        filename = os.path.basename(nodes_path)
+        g_id = filename.replace("_nodes.json", "")
+        # Format a display name from the id (e.g. condensed_matter -> Condensed Matter)
+        name = g_id.replace("_", " ").title()
+        
+        dir_path = os.path.dirname(nodes_path)
+        edges_path = os.path.join(dir_path, f"{g_id}_edges.json")
+        meta_path = os.path.join(dir_path, f"{g_id}_metadata.json")
+        
+        try:
+            load_res = load_galaxy_data(nodes_path, meta_path)
+            node_count = load_res['nodeCount']
+            edge_count = load_res['edgeCount']
+            
+            # Since frontend looks in exactly the dir where universe.json is, 
+            # we just need to provide the relative filenames
+            user_galaxies_map[name.lower()] = {
+                "id": g_id,
+                "name": name,
+                "nodesFile": f"{g_id}_nodes.json",
+                "edgesFile": f"{g_id}_edges.json",
+                "metadataFile": f"{g_id}_metadata.json",
+                "nodeCount": node_count,
+                "edgeCount": edge_count,
+                "hasPapers": True
+            }
+            print(f"[info] Auto-detected local galaxy: {name} ({node_count} nodes)")
+        except Exception as e:
+            print(f"[warn] Failed to parse local galaxy '{g_id}': {e}")
+            
+    # Define a default frontend_dir for icon saving
+    frontend_dir = args.frontend_dir
+    if not frontend_dir:
+        potential_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "arxiv-3d-frontend", "public")
+        if os.path.exists(potential_path):
+            frontend_dir = potential_path
+            print(f"[info] Auto-detected frontend dir: {frontend_dir}")
+
+    # Process explicit command line overrides if provided
     if args.galaxies:
         for g_str in args.galaxies:
             parts = g_str.split(":")
@@ -585,6 +816,7 @@ def main():
             # Let's KEEP the user's ID for user galaxies to ensure file loading works if it relies on ID naming conventions not explicitly in nodesFile property (though nodesFile property is explicit).
             # The issue is `hasPapers` is in `galaxy_info`.
             galaxy_info["hasPapers"] = True
+            galaxy_info["group"] = sub.get("group", "Uncategorized") # Add grouping
             # Also set citations if we matched from sub
             if "cited_by_count" in sub:
                  galaxy_info["totalCitations"] = sub["cited_by_count"]
@@ -594,6 +826,7 @@ def main():
             galaxy_info = {
                 "id": sub["id"], # Use OpenAlex ID as ID for stubs
                 "name": name,
+                "group": sub.get("group", "Uncategorized"), # Add grouping format here too
                 # Set nodeCount to 0 for stubs, size comes from totalWorksCount
                 "nodeCount": 0,
                 "edgeCount": 0,
@@ -608,6 +841,12 @@ def main():
         if metrics:
             print(f"      -> Works: {metrics.get('totalWorksCount')}, First Year: {metrics.get('firstPublicationYear')}")
             galaxy_info.update(metrics)
+            
+        # Icon fetching
+        if frontend_dir:
+            icon_path = fetch_wikimedia_icon(name, frontend_dir)
+            if icon_path:
+                galaxy_info["iconPath"] = icon_path
             
         final_galaxies.append(galaxy_info)
         

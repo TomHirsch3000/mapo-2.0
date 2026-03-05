@@ -1,0 +1,5 @@
+<svg width="210mm" height="160mm" version="1.1" viewBox="0 0 210 160" xmlns="http://www.w3.org/2000/svg">
+ <rect width="210" height="160" fill="#fff"/>
+ <g fill="none" stroke-width="1.6"><path d="m22 136 150-61" stroke="#00f"/><path d="m22 136 159-49" stroke="#0c0"/><path d="m22 136s7-17 12-40c5-23 5-47 13-64 8-17 23-22 26-23" stroke="#999"/><path d="m22 136 167-56" stroke="#f00"/></g>
+ <path d="m22 7v149m-18-20h198" stroke="#000"/><path d="m197 133 10 3-10 3 2-3m-180-124 3-10l3 10-3-2"/>
+ <g font-family="Times" font-size="23px" font-style="italic"><text x="5" y="22">B</text><text x="180" y="155">H</text><text x="140" y="69" fill="#00f">μ<tspan baseline-shift="sub" font-size="17px">p</tspan></text><text x="69" y="28" fill="#888">μ<tspan baseline-shift="sub" font-size="17px">f</tspan></text><text x="162" y="108" fill="#0c0">μ<tspan baseline-shift="sub" font-size="17px">d</tspan></text><text x="188" y="71" fill="#f00">μ<tspan baseline-shift="sub" font-size="17px" font-style="normal">0</tspan></text></g></svg>

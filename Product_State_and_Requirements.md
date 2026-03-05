@@ -60,6 +60,9 @@ the source of this data is the universe json file which is created by the backen
     Nodes gravitate toward the center (Radial force).
     -   Larger nodes (more papers) are pulled closer to the center.
     -   Collision detection prevents overlapping.
+-   **Pictures**
+    -   The hexagons should contain a picture which represents the field. The picture should be a small image of a symbol or icon which represents the field. 
+    -   The pictures will be stored in a folder called "universe_pictures" in the same directory as the universe json file. 
 
 ### Layout Mode: Timeline (Chronological)
 -   **Description**: Broad historical view of when fields emerged and evolved.
@@ -85,6 +88,7 @@ the source of this data is the universe json file which is created by the backen
     -   [x] Timeline node appearance - Area Chart rendering for nodes
     -   [x] Projection to 2026
     -   [x] timeline layout
+    -   [ ] **Requirement**: Universe View must show field pictures
 
 ---
 
@@ -118,6 +122,9 @@ the source of this data is the universe json file which is created by the backen
 -   **Logic**:
     -   Use a "Spiral" or center-weighted force layout.
     -   Largest groups in the center. !! not sure about this???
+-   **Pictures**
+    -   The circles should contain a picture which represents the field. The picture should be a small image of a symbol or icon which represents the field. 
+    -   The pictures will be stored in a folder called "galaxy_pictures" in the same directory as the universe json file. 
 
 ### Layout Mode: Timeline (Streamgraph)
 -   **Description**: Shows the evolution of these groups over time. Nodes should be positioned with their left most point at the correct date on the timeline. They should be spread out from the vertical center so they do not overlap. The shape of the nodes in this view should be long and thin so they represent when papers were being published in this area. The right most point should be the date of the last paper being published. 
@@ -209,11 +216,18 @@ the source of this data is the universe json file which is created by the backen
 ---
 
 ## Detailed paper view
-description - when a specific paper is selected and double clicked the map shows all connected papers, including papers from the database which are not in the json files. This requires a function in the backend to get the connected papers from the database and return them to the frontend. It should query the database edges table for a list of papers connected to the selected paper and then query the database nodes table for the details of those papers. It should return the papers to the frontend and be presented as nodes in the same way as the normal paper view. 
-There is currently only 1 valid database file with all the papers within that field and its papers_particle_physics_all.db 
+**description** 
+when a specific paper is selected and double clicked the map shows all connected papers, including papers from the database which are not in the json files. This requires a function in the backend to get the connected papers from the database and return them to the frontend. It should query the database edges table for a list of papers connected to the selected paper and then query the database nodes table for the details of those papers. It should return the papers to the frontend and be presented as nodes in the same way as the normal paper view.
+
+There is currently only 1 valid database file with all the papers within that field and its papers_particle_physics_all.db
+
 There should be a popup whne double clicking that asks the user to confirm the details of the request including the minimum number of citations and the maximum number of papers to display. 
 And there should be a timeout asking for confirmation to continue if the request is taking longer than 10 seconds. 
 The popups should be themed along with the rest of the website, neutral colours. 
+
+### Status
+    -   [ ] Edges: showing the correct number - not edges between the connected nodes, only edges to the selected node
+    -   [ ] 
 
 
 

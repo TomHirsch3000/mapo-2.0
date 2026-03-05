@@ -159,7 +159,12 @@ export default function App() {
     const height = dimensions.height;
     const graphCenterY = -height * 0.1;
 
-    const colorScale = d3.scaleOrdinal(d3.schemeTableau10).domain(xGroups);
+    // For Universe view, domain must be the galaxy group names (e.g. "Quantum & Fundamental") 
+    // so that each colour cluster is distinct. xGroups is empty in Universe mode.
+    const colorScaleDomain = viewMode === 'UNIVERSE'
+      ? [...new Set(nodes.filter(n => !n.isMenuNode).map(n => n.group).filter(Boolean))]
+      : xGroups;
+    const colorScale = d3.scaleOrdinal(d3.schemeTableau10).domain(colorScaleDomain);
 
     // Universe Timeline Scales
     let universeXScale = null;

@@ -244,6 +244,10 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
                 y: 0,
                 z: position[2],
                 field: 'Galaxy',
+                // --- KEY FIELDS FOR LAYOUT AND ICONS ---
+                group: galaxy.group || 'Uncategorized',  // Used by LayoutEngine for clustering
+                iconPath: galaxy.iconPath || null,         // Used by Graph.js to render icons
+                // --- END KEY FIELDS ---
                 citationCount: galaxy.totalCitations || 0,
                 oldestWork: galaxy.oldest_work || galaxy.oldestWork,
                 mostCitedWork: galaxy.most_cited_work || galaxy.mostCitedWork,

@@ -44,8 +44,18 @@ Take a list of papers from a particular field from openalex, restrict the list b
     --db papers_astrophysics.db ^
     --email tom.hirsch3000@gmail.com
 ```
-
-
+Import year by year
+```bash
+:: 1900–1950
+python import_openalex.py ^
+  --topic-name "particle physics" ^
+  --db papers_particle_physics_all.db ^
+  --from-year 1900 ^
+  --to-year 1950 ^
+  --sample 0 ^
+  --email tom.hirsch3000@gmail.com ^
+  --reset
+```
 
 ### build citations edges
 
@@ -72,6 +82,12 @@ run for astrophysics
 ```bash
 python process_ai_metadata.py --db papers_astrophysics.db
 ```
+
+### Generate or extract pictures or icons 
+
+Objective
+ Each field of physics in the universe view will be represented by a hexagon known as a galaxy. This process should generate an icon or picture for each galaxy which will be contained within the hexagon. It should allow the user to intuitively understand what is contained within the hexagon. e.g. for classical mechanics it should show a picture of a pendulum or a ball on a string. 
+
 ### re label papers and exclude mislabeled
 Objective
 1. Take the list of papers which have been selected to be included using the import_openalex.py script, these are all the papers present in the database. Identify papers which are mislabeled.If it finds a paper which is not relevant to the field then it creats a flag 1 in a new column called mislabelled paper. 

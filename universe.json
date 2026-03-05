@@ -1,0 +1,3494 @@
+{
+  "nodes": [
+    {
+      "id": "C62520636",
+      "name": "Quantum mechanics",
+      "type": "galaxy",
+      "group": "Quantum & Fundamental",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 16997601,
+      "firstPublicationYear": 1019,
+      "worksByDecade": [
+        {
+          "decade": 1750,
+          "works_count": 85
+        },
+        {
+          "decade": 1800,
+          "works_count": 86
+        },
+        {
+          "decade": 1820,
+          "works_count": 119
+        },
+        {
+          "decade": 1830,
+          "works_count": 875
+        },
+        {
+          "decade": 1840,
+          "works_count": 1401
+        },
+        {
+          "decade": 1850,
+          "works_count": 11938
+        },
+        {
+          "decade": 1860,
+          "works_count": 9529
+        },
+        {
+          "decade": 1870,
+          "works_count": 15303
+        },
+        {
+          "decade": 1880,
+          "works_count": 18800
+        },
+        {
+          "decade": 1890,
+          "works_count": 20289
+        },
+        {
+          "decade": 1900,
+          "works_count": 19952
+        },
+        {
+          "decade": 1910,
+          "works_count": 22859
+        },
+        {
+          "decade": 1920,
+          "works_count": 32867
+        },
+        {
+          "decade": 1930,
+          "works_count": 49130
+        },
+        {
+          "decade": 1940,
+          "works_count": 49059
+        },
+        {
+          "decade": 1950,
+          "works_count": 123361
+        },
+        {
+          "decade": 1960,
+          "works_count": 354398
+        },
+        {
+          "decade": 1970,
+          "works_count": 711972
+        },
+        {
+          "decade": 1980,
+          "works_count": 1066713
+        },
+        {
+          "decade": 1990,
+          "works_count": 1727993
+        },
+        {
+          "decade": 2000,
+          "works_count": 3520267
+        },
+        {
+          "decade": 2010,
+          "works_count": 5648673
+        },
+        {
+          "decade": 2020,
+          "works_count": 5490673,
+          "works_count_projected": 5490673,
+          "is_projected": true,
+          "original_count": 3583387
+        }
+      ],
+      "oldestWork": {
+        "title": "Savoirs savants, savoirs d\u2019action et co-constructions au prisme de la transaction sociale",
+        "year": 1019,
+        "id": "https://openalex.org/W4393612804"
+      },
+      "mostCitedWork": {
+        "title": "Generalized Gradient Approximation Made Simple",
+        "year": 1996,
+        "citations": 204057,
+        "id": "https://openalex.org/W1981368803"
+      },
+      "nodesFile": "C62520636_nodes.json",
+      "edgesFile": "C62520636_edges.json",
+      "metadataFile": "C62520636_metadata.json",
+      "position": [
+        80.0,
+        0.0,
+        0
+      ],
+      "size": 120.0,
+      "angle": 0.0,
+      "timeline_y": -1128.6563454814964
+    },
+    {
+      "id": "C97355855",
+      "name": "Thermodynamics",
+      "type": "galaxy",
+      "group": "Matter & Classical",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 6529399,
+      "firstPublicationYear": 1397,
+      "worksByDecade": [
+        {
+          "decade": 1750,
+          "works_count": 47
+        },
+        {
+          "decade": 1780,
+          "works_count": 43
+        },
+        {
+          "decade": 1800,
+          "works_count": 37
+        },
+        {
+          "decade": 1820,
+          "works_count": 70
+        },
+        {
+          "decade": 1830,
+          "works_count": 352
+        },
+        {
+          "decade": 1840,
+          "works_count": 660
+        },
+        {
+          "decade": 1850,
+          "works_count": 5904
+        },
+        {
+          "decade": 1860,
+          "works_count": 5838
+        },
+        {
+          "decade": 1870,
+          "works_count": 8239
+        },
+        {
+          "decade": 1880,
+          "works_count": 7968
+        },
+        {
+          "decade": 1890,
+          "works_count": 11859
+        },
+        {
+          "decade": 1900,
+          "works_count": 13293
+        },
+        {
+          "decade": 1910,
+          "works_count": 9884
+        },
+        {
+          "decade": 1920,
+          "works_count": 13864
+        },
+        {
+          "decade": 1930,
+          "works_count": 21711
+        },
+        {
+          "decade": 1940,
+          "works_count": 23322
+        },
+        {
+          "decade": 1950,
+          "works_count": 66873
+        },
+        {
+          "decade": 1960,
+          "works_count": 178111
+        },
+        {
+          "decade": 1970,
+          "works_count": 324256
+        },
+        {
+          "decade": 1980,
+          "works_count": 478973
+        },
+        {
+          "decade": 1990,
+          "works_count": 721182
+        },
+        {
+          "decade": 2000,
+          "works_count": 1344319
+        },
+        {
+          "decade": 2010,
+          "works_count": 1993116
+        },
+        {
+          "decade": 2020,
+          "works_count": 1985060,
+          "works_count_projected": 1985060,
+          "is_projected": true,
+          "original_count": 1295513
+        }
+      ],
+      "oldestWork": {
+        "title": "An Estimator for Torque and Draft Force Requirements of a New Up-cut Rotary Tiller\\n\\t\\t\\t\\t\u062f\u0648\u0631\u064710 \u0634\u0645\u0627\u0631\u06471 \u0633\u0627\u06441399",
+        "year": 1397,
+        "id": "https://openalex.org/W3114710548"
+      },
+      "mostCitedWork": {
+        "title": "Generalized Gradient Approximation Made Simple",
+        "year": 1996,
+        "citations": 204057,
+        "id": "https://openalex.org/W1981368803"
+      },
+      "nodesFile": "C97355855_nodes.json",
+      "edgesFile": "C97355855_edges.json",
+      "metadataFile": "C97355855_metadata.json",
+      "position": [
+        81.72096766748658,
+        35.06922916121611,
+        0
+      ],
+      "size": 114.25,
+      "angle": 23.23,
+      "timeline_y": -800.7293305879099
+    },
+    {
+      "id": "C44870925",
+      "name": "Astrophysics",
+      "type": "galaxy",
+      "group": "Astrophysics & Cosmology",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 1559162,
+      "firstPublicationYear": 1400,
+      "worksByDecade": [
+        {
+          "decade": 1820,
+          "works_count": 99
+        },
+        {
+          "decade": 1830,
+          "works_count": 635
+        },
+        {
+          "decade": 1840,
+          "works_count": 904
+        },
+        {
+          "decade": 1850,
+          "works_count": 1952
+        },
+        {
+          "decade": 1860,
+          "works_count": 1399
+        },
+        {
+          "decade": 1870,
+          "works_count": 2474
+        },
+        {
+          "decade": 1880,
+          "works_count": 3398
+        },
+        {
+          "decade": 1890,
+          "works_count": 5639
+        },
+        {
+          "decade": 1900,
+          "works_count": 5516
+        },
+        {
+          "decade": 1910,
+          "works_count": 5379
+        },
+        {
+          "decade": 1920,
+          "works_count": 6587
+        },
+        {
+          "decade": 1930,
+          "works_count": 8932
+        },
+        {
+          "decade": 1940,
+          "works_count": 7311
+        },
+        {
+          "decade": 1950,
+          "works_count": 14667
+        },
+        {
+          "decade": 1960,
+          "works_count": 37079
+        },
+        {
+          "decade": 1970,
+          "works_count": 87873
+        },
+        {
+          "decade": 1980,
+          "works_count": 135721
+        },
+        {
+          "decade": 1990,
+          "works_count": 199564
+        },
+        {
+          "decade": 2000,
+          "works_count": 310379
+        },
+        {
+          "decade": 2010,
+          "works_count": 423280
+        },
+        {
+          "decade": 2020,
+          "works_count": 455877,
+          "works_count_projected": 455877,
+          "is_projected": true,
+          "original_count": 297520
+        }
+      ],
+      "oldestWork": {
+        "title": "Guiding Star",
+        "year": 1400,
+        "id": "https://openalex.org/W4235337219"
+      },
+      "mostCitedWork": {
+        "title": "Observational Evidence from Supernovae for an Accelerating Universe and a Cosmological Constant",
+        "year": 1998,
+        "citations": 18376,
+        "id": "https://openalex.org/W2073832139"
+      },
+      "nodesFile": "C44870925_nodes.json",
+      "edgesFile": "C44870925_edges.json",
+      "metadataFile": "C44870925_metadata.json",
+      "position": [
+        68.24976526639128,
+        71.79871228291401,
+        0
+      ],
+      "size": 105.65,
+      "angle": 46.45,
+      "timeline_y": -685.696543241218
+    },
+    {
+      "id": "C1276947",
+      "name": "Astronomy",
+      "type": "galaxy",
+      "group": "Astrophysics & Cosmology",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 3389237,
+      "firstPublicationYear": 1400,
+      "worksByDecade": [
+        {
+          "decade": 1820,
+          "works_count": 234
+        },
+        {
+          "decade": 1830,
+          "works_count": 1360
+        },
+        {
+          "decade": 1840,
+          "works_count": 1633
+        },
+        {
+          "decade": 1850,
+          "works_count": 3361
+        },
+        {
+          "decade": 1860,
+          "works_count": 2942
+        },
+        {
+          "decade": 1870,
+          "works_count": 5676
+        },
+        {
+          "decade": 1880,
+          "works_count": 8281
+        },
+        {
+          "decade": 1890,
+          "works_count": 11312
+        },
+        {
+          "decade": 1900,
+          "works_count": 11536
+        },
+        {
+          "decade": 1910,
+          "works_count": 12141
+        },
+        {
+          "decade": 1920,
+          "works_count": 15664
+        },
+        {
+          "decade": 1930,
+          "works_count": 20734
+        },
+        {
+          "decade": 1940,
+          "works_count": 18488
+        },
+        {
+          "decade": 1950,
+          "works_count": 38660
+        },
+        {
+          "decade": 1960,
+          "works_count": 102344
+        },
+        {
+          "decade": 1970,
+          "works_count": 204572
+        },
+        {
+          "decade": 1980,
+          "works_count": 289523
+        },
+        {
+          "decade": 1990,
+          "works_count": 406191
+        },
+        {
+          "decade": 2000,
+          "works_count": 674389
+        },
+        {
+          "decade": 2010,
+          "works_count": 963321
+        },
+        {
+          "decade": 2020,
+          "works_count": 906840,
+          "works_count_projected": 906840,
+          "is_projected": true,
+          "original_count": 591833
+        }
+      ],
+      "oldestWork": {
+        "title": "Guiding Star",
+        "year": 1400,
+        "id": "https://openalex.org/W4235337219"
+      },
+      "mostCitedWork": {
+        "title": "Analysis of Relative Gene Expression Data Using Real-Time Quantitative PCR and the 2\u2212\u0394\u0394CT Method",
+        "year": 2001,
+        "citations": 177015,
+        "id": "https://openalex.org/W2107277218"
+      },
+      "nodesFile": "C1276947_nodes.json",
+      "edgesFile": "C1276947_edges.json",
+      "metadataFile": "C1276947_metadata.json",
+      "position": [
+        36.918221349904464,
+        99.68216864666722,
+        0
+      ],
+      "size": 110.31,
+      "angle": 69.68,
+      "timeline_y": -598.0098688665463
+    },
+    {
+      "id": "C8058405",
+      "name": "Geophysics",
+      "type": "galaxy",
+      "group": "Cross-Disciplinary",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 562891,
+      "firstPublicationYear": 1400,
+      "worksByDecade": [
+        {
+          "decade": 1400,
+          "works_count": 1
+        },
+        {
+          "decade": 1680,
+          "works_count": 1
+        },
+        {
+          "decade": 1800,
+          "works_count": 4
+        },
+        {
+          "decade": 1810,
+          "works_count": 4
+        },
+        {
+          "decade": 1820,
+          "works_count": 15
+        },
+        {
+          "decade": 1830,
+          "works_count": 29
+        },
+        {
+          "decade": 1840,
+          "works_count": 31
+        },
+        {
+          "decade": 1850,
+          "works_count": 67
+        },
+        {
+          "decade": 1860,
+          "works_count": 93
+        },
+        {
+          "decade": 1870,
+          "works_count": 179
+        },
+        {
+          "decade": 1880,
+          "works_count": 214
+        },
+        {
+          "decade": 1890,
+          "works_count": 232
+        },
+        {
+          "decade": 1900,
+          "works_count": 285
+        },
+        {
+          "decade": 1910,
+          "works_count": 367
+        },
+        {
+          "decade": 1920,
+          "works_count": 712
+        },
+        {
+          "decade": 1930,
+          "works_count": 1546
+        },
+        {
+          "decade": 1940,
+          "works_count": 1549
+        },
+        {
+          "decade": 1950,
+          "works_count": 4762
+        },
+        {
+          "decade": 1960,
+          "works_count": 17883
+        },
+        {
+          "decade": 1970,
+          "works_count": 35543
+        },
+        {
+          "decade": 1980,
+          "works_count": 47254
+        },
+        {
+          "decade": 1990,
+          "works_count": 59155
+        },
+        {
+          "decade": 2000,
+          "works_count": 113021
+        },
+        {
+          "decade": 2010,
+          "works_count": 172857
+        },
+        {
+          "decade": 2020,
+          "works_count": 163478,
+          "works_count_projected": 163478,
+          "is_projected": true,
+          "original_count": 106691
+        }
+      ],
+      "oldestWork": {
+        "title": "The Slab Boys",
+        "year": 1400,
+        "id": "https://openalex.org/W561139834"
+      },
+      "mostCitedWork": {
+        "title": "Negative Refraction Makes a Perfect Lens",
+        "year": 2000,
+        "citations": 11947,
+        "id": "https://openalex.org/W2122765624"
+      },
+      "nodesFile": "C8058405_nodes.json",
+      "edgesFile": "C8058405_edges.json",
+      "metadataFile": "C8058405_metadata.json",
+      "position": [
+        -5.492550455190306,
+        108.30386622012462,
+        0
+      ],
+      "size": 99.53,
+      "angle": 92.9,
+      "timeline_y": -517.8387649630278
+    },
+    {
+      "id": "C185544564",
+      "name": "Nuclear physics",
+      "type": "galaxy",
+      "group": "Quantum & Fundamental",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 2563484,
+      "firstPublicationYear": 1500,
+      "worksByDecade": [
+        {
+          "decade": 1750,
+          "works_count": 7
+        },
+        {
+          "decade": 1800,
+          "works_count": 8
+        },
+        {
+          "decade": 1820,
+          "works_count": 45
+        },
+        {
+          "decade": 1830,
+          "works_count": 44
+        },
+        {
+          "decade": 1840,
+          "works_count": 133
+        },
+        {
+          "decade": 1850,
+          "works_count": 349
+        },
+        {
+          "decade": 1860,
+          "works_count": 225
+        },
+        {
+          "decade": 1870,
+          "works_count": 255
+        },
+        {
+          "decade": 1880,
+          "works_count": 502
+        },
+        {
+          "decade": 1890,
+          "works_count": 925
+        },
+        {
+          "decade": 1900,
+          "works_count": 1516
+        },
+        {
+          "decade": 1910,
+          "works_count": 1690
+        },
+        {
+          "decade": 1920,
+          "works_count": 2848
+        },
+        {
+          "decade": 1930,
+          "works_count": 7487
+        },
+        {
+          "decade": 1940,
+          "works_count": 9769
+        },
+        {
+          "decade": 1950,
+          "works_count": 51682
+        },
+        {
+          "decade": 1960,
+          "works_count": 164802
+        },
+        {
+          "decade": 1970,
+          "works_count": 238992
+        },
+        {
+          "decade": 1980,
+          "works_count": 267995
+        },
+        {
+          "decade": 1990,
+          "works_count": 338798
+        },
+        {
+          "decade": 2000,
+          "works_count": 494081
+        },
+        {
+          "decade": 2010,
+          "works_count": 630346
+        },
+        {
+          "decade": 2020,
+          "works_count": 536097,
+          "works_count_projected": 536097,
+          "is_projected": true,
+          "original_count": 349874
+        }
+      ],
+      "oldestWork": {
+        "title": "Development of a Compact and Sensitive Electrostatic Radon-222 Measuring System for Use in Atmospheric Observation",
+        "year": 1500,
+        "id": "https://openalex.org/W4249403580"
+      },
+      "mostCitedWork": {
+        "title": "Radiation Resistant Camera System for Monitoring Deuterium Plasma Discharges in the Large Helical Device",
+        "year": 2020,
+        "citations": 801216,
+        "id": "https://openalex.org/W3038568908"
+      },
+      "nodesFile": "C185544564_nodes.json",
+      "edgesFile": "C185544564_edges.json",
+      "metadataFile": "C185544564_metadata.json",
+      "position": [
+        -47.548534574572564,
+        96.93428043946415,
+        0
+      ],
+      "size": 108.64,
+      "angle": 116.13,
+      "timeline_y": -446.5097820319924
+    },
+    {
+      "id": "C74650414",
+      "name": "Classical mechanics",
+      "type": "galaxy",
+      "group": "Matter & Classical",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 1824602,
+      "firstPublicationYear": 1500,
+      "worksByDecade": [
+        {
+          "decade": 1800,
+          "works_count": 12
+        },
+        {
+          "decade": 1820,
+          "works_count": 28
+        },
+        {
+          "decade": 1830,
+          "works_count": 117
+        },
+        {
+          "decade": 1840,
+          "works_count": 168
+        },
+        {
+          "decade": 1850,
+          "works_count": 234
+        },
+        {
+          "decade": 1860,
+          "works_count": 221
+        },
+        {
+          "decade": 1870,
+          "works_count": 499
+        },
+        {
+          "decade": 1880,
+          "works_count": 725
+        },
+        {
+          "decade": 1890,
+          "works_count": 880
+        },
+        {
+          "decade": 1900,
+          "works_count": 1010
+        },
+        {
+          "decade": 1910,
+          "works_count": 1392
+        },
+        {
+          "decade": 1920,
+          "works_count": 2380
+        },
+        {
+          "decade": 1930,
+          "works_count": 3684
+        },
+        {
+          "decade": 1940,
+          "works_count": 4513
+        },
+        {
+          "decade": 1950,
+          "works_count": 14984
+        },
+        {
+          "decade": 1960,
+          "works_count": 47050
+        },
+        {
+          "decade": 1970,
+          "works_count": 90093
+        },
+        {
+          "decade": 1980,
+          "works_count": 130134
+        },
+        {
+          "decade": 1990,
+          "works_count": 201701
+        },
+        {
+          "decade": 2000,
+          "works_count": 367863
+        },
+        {
+          "decade": 2010,
+          "works_count": 553710
+        },
+        {
+          "decade": 2020,
+          "works_count": 614867,
+          "works_count_projected": 614867,
+          "is_projected": true,
+          "original_count": 401282
+        }
+      ],
+      "oldestWork": {
+        "title": "Acceleration test method for GMR/TMR head instability",
+        "year": 1500,
+        "id": "https://openalex.org/W4233079056"
+      },
+      "mostCitedWork": {
+        "title": "Projector augmented-wave method",
+        "year": 1994,
+        "citations": 87523,
+        "id": "https://openalex.org/W1970127494"
+      },
+      "nodesFile": "C74650414_nodes.json",
+      "edgesFile": "C74650414_edges.json",
+      "metadataFile": "C74650414_metadata.json",
+      "position": [
+        -84.18589672847405,
+        72.27122177962518,
+        0
+      ],
+      "size": 106.6,
+      "angle": 139.35,
+      "timeline_y": -363.44326357712697
+    },
+    {
+      "id": "C24890656",
+      "name": "Acoustics",
+      "type": "galaxy",
+      "group": "Matter & Classical",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 5407801,
+      "firstPublicationYear": 1500,
+      "worksByDecade": [
+        {
+          "decade": 1750,
+          "works_count": 17
+        },
+        {
+          "decade": 1800,
+          "works_count": 45
+        },
+        {
+          "decade": 1820,
+          "works_count": 66
+        },
+        {
+          "decade": 1830,
+          "works_count": 279
+        },
+        {
+          "decade": 1840,
+          "works_count": 358
+        },
+        {
+          "decade": 1850,
+          "works_count": 549
+        },
+        {
+          "decade": 1860,
+          "works_count": 617
+        },
+        {
+          "decade": 1870,
+          "works_count": 1398
+        },
+        {
+          "decade": 1880,
+          "works_count": 1808
+        },
+        {
+          "decade": 1890,
+          "works_count": 1963
+        },
+        {
+          "decade": 1900,
+          "works_count": 2603
+        },
+        {
+          "decade": 1910,
+          "works_count": 3209
+        },
+        {
+          "decade": 1920,
+          "works_count": 5693
+        },
+        {
+          "decade": 1930,
+          "works_count": 10301
+        },
+        {
+          "decade": 1940,
+          "works_count": 11719
+        },
+        {
+          "decade": 1950,
+          "works_count": 32568
+        },
+        {
+          "decade": 1960,
+          "works_count": 79240
+        },
+        {
+          "decade": 1970,
+          "works_count": 152952
+        },
+        {
+          "decade": 1980,
+          "works_count": 228289
+        },
+        {
+          "decade": 1990,
+          "works_count": 363193
+        },
+        {
+          "decade": 2000,
+          "works_count": 782768
+        },
+        {
+          "decade": 2010,
+          "works_count": 1240220
+        },
+        {
+          "decade": 2020,
+          "works_count": 3807365,
+          "works_count_projected": 3807365,
+          "is_projected": true,
+          "original_count": 2484807
+        }
+      ],
+      "oldestWork": {
+        "title": "dummyRelationship between shelf sedimentation and climate changes in the upper Pliocene Dainenji Formation in Fukushima, northeastern Japan",
+        "year": 1500,
+        "id": "https://openalex.org/W4247481856"
+      },
+      "mostCitedWork": {
+        "title": "A Rapid and Sensitive Method for the Quantitation of Microgram Quantities of Protein Utilizing the Principle of Protein-Dye Binding",
+        "year": 1976,
+        "citations": 225262,
+        "id": "https://openalex.org/W2128635872"
+      },
+      "nodesFile": "C24890656_nodes.json",
+      "edgesFile": "C24890656_edges.json",
+      "metadataFile": "C24890656_metadata.json",
+      "position": [
+        -116.91621978589127,
+        36.68270060850431,
+        0
+      ],
+      "size": 113.12,
+      "angle": 162.58,
+      "timeline_y": -145.4591768721611
+    },
+    {
+      "id": "C26873012",
+      "name": "Condensed matter physics",
+      "type": "galaxy",
+      "group": "Matter & Classical",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 2328629,
+      "firstPublicationYear": 1524,
+      "worksByDecade": [
+        {
+          "decade": 1750,
+          "works_count": 21
+        },
+        {
+          "decade": 1800,
+          "works_count": 7
+        },
+        {
+          "decade": 1820,
+          "works_count": 20
+        },
+        {
+          "decade": 1830,
+          "works_count": 120
+        },
+        {
+          "decade": 1840,
+          "works_count": 201
+        },
+        {
+          "decade": 1850,
+          "works_count": 192
+        },
+        {
+          "decade": 1860,
+          "works_count": 110
+        },
+        {
+          "decade": 1870,
+          "works_count": 282
+        },
+        {
+          "decade": 1880,
+          "works_count": 397
+        },
+        {
+          "decade": 1890,
+          "works_count": 482
+        },
+        {
+          "decade": 1900,
+          "works_count": 549
+        },
+        {
+          "decade": 1910,
+          "works_count": 660
+        },
+        {
+          "decade": 1920,
+          "works_count": 1221
+        },
+        {
+          "decade": 1930,
+          "works_count": 2754
+        },
+        {
+          "decade": 1940,
+          "works_count": 2657
+        },
+        {
+          "decade": 1950,
+          "works_count": 14501
+        },
+        {
+          "decade": 1960,
+          "works_count": 63268
+        },
+        {
+          "decade": 1970,
+          "works_count": 133302
+        },
+        {
+          "decade": 1980,
+          "works_count": 208572
+        },
+        {
+          "decade": 1990,
+          "works_count": 359655
+        },
+        {
+          "decade": 2000,
+          "works_count": 508404
+        },
+        {
+          "decade": 2010,
+          "works_count": 627674
+        },
+        {
+          "decade": 2020,
+          "works_count": 615296,
+          "works_count_projected": 615296,
+          "is_projected": true,
+          "original_count": 401562
+        }
+      ],
+      "oldestWork": {
+        "title": "Pauli Iouii Nouocomensis Medici De Romanis piscibus libellus ad Ludouicum Borbonium Cardinalem amplissimum",
+        "year": 1524,
+        "id": "https://openalex.org/W4249680786"
+      },
+      "mostCitedWork": {
+        "title": "Generalized Gradient Approximation Made Simple",
+        "year": 1996,
+        "citations": 204057,
+        "id": "https://openalex.org/W1981368803"
+      },
+      "nodesFile": "C26873012_nodes.json",
+      "edgesFile": "C26873012_edges.json",
+      "metadataFile": "C26873012_metadata.json",
+      "position": [
+        -141.47988955933107,
+        -14.387098571785488,
+        0
+      ],
+      "size": 108.06,
+      "angle": 185.81,
+      "timeline_y": 72.86499855806825
+    },
+    {
+      "id": "C33332235",
+      "name": "Theoretical physics",
+      "type": "galaxy",
+      "group": "Cross-Disciplinary",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 833467,
+      "firstPublicationYear": 1582,
+      "worksByDecade": [
+        {
+          "decade": 1790,
+          "works_count": 7
+        },
+        {
+          "decade": 1820,
+          "works_count": 52
+        },
+        {
+          "decade": 1830,
+          "works_count": 155
+        },
+        {
+          "decade": 1840,
+          "works_count": 161
+        },
+        {
+          "decade": 1850,
+          "works_count": 249
+        },
+        {
+          "decade": 1860,
+          "works_count": 275
+        },
+        {
+          "decade": 1870,
+          "works_count": 578
+        },
+        {
+          "decade": 1880,
+          "works_count": 627
+        },
+        {
+          "decade": 1890,
+          "works_count": 854
+        },
+        {
+          "decade": 1900,
+          "works_count": 966
+        },
+        {
+          "decade": 1910,
+          "works_count": 1146
+        },
+        {
+          "decade": 1920,
+          "works_count": 2363
+        },
+        {
+          "decade": 1930,
+          "works_count": 3085
+        },
+        {
+          "decade": 1940,
+          "works_count": 3037
+        },
+        {
+          "decade": 1950,
+          "works_count": 7591
+        },
+        {
+          "decade": 1960,
+          "works_count": 19882
+        },
+        {
+          "decade": 1970,
+          "works_count": 39454
+        },
+        {
+          "decade": 1980,
+          "works_count": 65128
+        },
+        {
+          "decade": 1990,
+          "works_count": 92539
+        },
+        {
+          "decade": 2000,
+          "works_count": 150937
+        },
+        {
+          "decade": 2010,
+          "works_count": 211337
+        },
+        {
+          "decade": 2020,
+          "works_count": 353191,
+          "works_count_projected": 353191,
+          "is_projected": true,
+          "original_count": 230504
+        }
+      ],
+      "oldestWork": {
+        "title": "2 The dart, the beams, the string so strong I prove;",
+        "year": 1582,
+        "id": "https://openalex.org/W2506530204"
+      },
+      "mostCitedWork": {
+        "title": "Handbook of Mathematical Functions",
+        "year": 1966,
+        "citations": 40435,
+        "id": "https://openalex.org/W2120062331"
+      },
+      "nodesFile": "C33332235_nodes.json",
+      "edgesFile": "C33332235_edges.json",
+      "metadataFile": "C33332235_metadata.json",
+      "position": [
+        -142.3463888071601,
+        -79.0086912578659,
+        0
+      ],
+      "size": 101.89,
+      "angle": 209.03,
+      "timeline_y": 148.9117798109395
+    },
+    {
+      "id": "C109214941",
+      "name": "Particle physics",
+      "type": "galaxy",
+      "group": "Quantum & Fundamental",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 685944,
+      "firstPublicationYear": 1613,
+      "worksByDecade": [
+        {
+          "decade": 1610,
+          "works_count": 1
+        },
+        {
+          "decade": 1640,
+          "works_count": 5
+        },
+        {
+          "decade": 1660,
+          "works_count": 1
+        },
+        {
+          "decade": 1680,
+          "works_count": 1
+        },
+        {
+          "decade": 1740,
+          "works_count": 1
+        },
+        {
+          "decade": 1750,
+          "works_count": 1
+        },
+        {
+          "decade": 1790,
+          "works_count": 1
+        },
+        {
+          "decade": 1800,
+          "works_count": 4
+        },
+        {
+          "decade": 1810,
+          "works_count": 1
+        },
+        {
+          "decade": 1820,
+          "works_count": 4
+        },
+        {
+          "decade": 1830,
+          "works_count": 7
+        },
+        {
+          "decade": 1840,
+          "works_count": 15
+        },
+        {
+          "decade": 1850,
+          "works_count": 42
+        },
+        {
+          "decade": 1860,
+          "works_count": 39
+        },
+        {
+          "decade": 1870,
+          "works_count": 43
+        },
+        {
+          "decade": 1880,
+          "works_count": 49
+        },
+        {
+          "decade": 1890,
+          "works_count": 69
+        },
+        {
+          "decade": 1900,
+          "works_count": 115
+        },
+        {
+          "decade": 1910,
+          "works_count": 112
+        },
+        {
+          "decade": 1920,
+          "works_count": 218
+        },
+        {
+          "decade": 1930,
+          "works_count": 357
+        },
+        {
+          "decade": 1940,
+          "works_count": 877
+        },
+        {
+          "decade": 1950,
+          "works_count": 5940
+        },
+        {
+          "decade": 1960,
+          "works_count": 20197
+        },
+        {
+          "decade": 1970,
+          "works_count": 40324
+        },
+        {
+          "decade": 1980,
+          "works_count": 57593
+        },
+        {
+          "decade": 1990,
+          "works_count": 90407
+        },
+        {
+          "decade": 2000,
+          "works_count": 148259
+        },
+        {
+          "decade": 2010,
+          "works_count": 197073
+        },
+        {
+          "decade": 2020,
+          "works_count": 189508,
+          "works_count_projected": 189508,
+          "is_projected": true,
+          "original_count": 123679
+        }
+      ],
+      "oldestWork": {
+        "title": "XVI. Through your strangeness",
+        "year": 1613,
+        "id": "https://openalex.org/W2475869303"
+      },
+      "mostCitedWork": {
+        "title": "<i>Planck</i> 2018 results",
+        "year": 2020,
+        "citations": 13171,
+        "id": "https://openalex.org/W4288079944"
+      },
+      "nodesFile": "C109214941_nodes.json",
+      "edgesFile": "C109214941_edges.json",
+      "metadataFile": "C109214941_metadata.json",
+      "position": [
+        -106.89269816986946,
+        -138.0939813996273,
+        0
+      ],
+      "size": 100.72,
+      "angle": 232.26,
+      "timeline_y": 213.52399050183985
+    },
+    {
+      "id": "C37914503",
+      "name": "Mathematical physics",
+      "type": "galaxy",
+      "group": "Cross-Disciplinary",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 907362,
+      "firstPublicationYear": 1630,
+      "worksByDecade": [
+        {
+          "decade": 1790,
+          "works_count": 12
+        },
+        {
+          "decade": 1800,
+          "works_count": 11
+        },
+        {
+          "decade": 1820,
+          "works_count": 24
+        },
+        {
+          "decade": 1830,
+          "works_count": 54
+        },
+        {
+          "decade": 1840,
+          "works_count": 87
+        },
+        {
+          "decade": 1850,
+          "works_count": 157
+        },
+        {
+          "decade": 1860,
+          "works_count": 144
+        },
+        {
+          "decade": 1870,
+          "works_count": 226
+        },
+        {
+          "decade": 1880,
+          "works_count": 289
+        },
+        {
+          "decade": 1890,
+          "works_count": 386
+        },
+        {
+          "decade": 1900,
+          "works_count": 486
+        },
+        {
+          "decade": 1910,
+          "works_count": 672
+        },
+        {
+          "decade": 1920,
+          "works_count": 1420
+        },
+        {
+          "decade": 1930,
+          "works_count": 1864
+        },
+        {
+          "decade": 1940,
+          "works_count": 1732
+        },
+        {
+          "decade": 1950,
+          "works_count": 6566
+        },
+        {
+          "decade": 1960,
+          "works_count": 21611
+        },
+        {
+          "decade": 1970,
+          "works_count": 45918
+        },
+        {
+          "decade": 1980,
+          "works_count": 76230
+        },
+        {
+          "decade": 1990,
+          "works_count": 117882
+        },
+        {
+          "decade": 2000,
+          "works_count": 186947
+        },
+        {
+          "decade": 2010,
+          "works_count": 256237
+        },
+        {
+          "decade": 2020,
+          "works_count": 286959,
+          "works_count_projected": 286959,
+          "is_projected": true,
+          "original_count": 187279
+        }
+      ],
+      "oldestWork": {
+        "title": "The saints solace: or, The condition, and consolation of the saints in the earth Deliuered in certaine sermons at Eatonbridge in Kent. By the minister there.",
+        "year": 1630,
+        "id": "https://openalex.org/W2776100772"
+      },
+      "mostCitedWork": {
+        "title": "Distinctive Image Features from Scale-Invariant Keypoints",
+        "year": 2004,
+        "citations": 54596,
+        "id": "https://openalex.org/W2151103935"
+      },
+      "nodesFile": "C37914503_nodes.json",
+      "edgesFile": "C37914503_edges.json",
+      "metadataFile": "C37914503_metadata.json",
+      "position": [
+        -43.215247262376465,
+        -166.90711912564979,
+        0
+      ],
+      "size": 102.4,
+      "angle": 255.48,
+      "timeline_y": 276.3774164303721
+    },
+    {
+      "id": "C184779094",
+      "name": "Atomic physics",
+      "type": "galaxy",
+      "group": "Quantum & Fundamental",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 2095851,
+      "firstPublicationYear": 1670,
+      "worksByDecade": [
+        {
+          "decade": 1670,
+          "works_count": 1
+        },
+        {
+          "decade": 1750,
+          "works_count": 12
+        },
+        {
+          "decade": 1800,
+          "works_count": 9
+        },
+        {
+          "decade": 1810,
+          "works_count": 3
+        },
+        {
+          "decade": 1820,
+          "works_count": 1
+        },
+        {
+          "decade": 1830,
+          "works_count": 10
+        },
+        {
+          "decade": 1840,
+          "works_count": 11
+        },
+        {
+          "decade": 1850,
+          "works_count": 12
+        },
+        {
+          "decade": 1860,
+          "works_count": 27
+        },
+        {
+          "decade": 1870,
+          "works_count": 41
+        },
+        {
+          "decade": 1880,
+          "works_count": 78
+        },
+        {
+          "decade": 1890,
+          "works_count": 227
+        },
+        {
+          "decade": 1900,
+          "works_count": 554
+        },
+        {
+          "decade": 1910,
+          "works_count": 980
+        },
+        {
+          "decade": 1920,
+          "works_count": 3022
+        },
+        {
+          "decade": 1930,
+          "works_count": 6749
+        },
+        {
+          "decade": 1940,
+          "works_count": 5116
+        },
+        {
+          "decade": 1950,
+          "works_count": 26796
+        },
+        {
+          "decade": 1960,
+          "works_count": 100710
+        },
+        {
+          "decade": 1970,
+          "works_count": 193955
+        },
+        {
+          "decade": 1980,
+          "works_count": 231998
+        },
+        {
+          "decade": 1990,
+          "works_count": 287780
+        },
+        {
+          "decade": 2000,
+          "works_count": 358367
+        },
+        {
+          "decade": 2010,
+          "works_count": 361701
+        },
+        {
+          "decade": 2020,
+          "works_count": 792365,
+          "works_count_projected": 792365,
+          "is_projected": true,
+          "original_count": 517123
+        }
+      ],
+      "oldestWork": {
+        "title": "V. To the truly Noble Sir J.D.",
+        "year": 1670,
+        "id": "https://openalex.org/W2479756164"
+      },
+      "mostCitedWork": {
+        "title": "Density-functional thermochemistry. III. The role of exact exchange",
+        "year": 1993,
+        "citations": 101136,
+        "id": "https://openalex.org/W2143981217"
+      },
+      "nodesFile": "C184779094_nodes.json",
+      "edgesFile": "C184779094_edges.json",
+      "metadataFile": "C184779094_metadata.json",
+      "position": [
+        24.2431046619716,
+        -158.25062902350152,
+        0
+      ],
+      "size": 107.43,
+      "angle": 278.71,
+      "timeline_y": 355.0387675122988
+    },
+    {
+      "id": "C26405456",
+      "name": "Cosmology",
+      "type": "galaxy",
+      "group": "Astrophysics & Cosmology",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 146189,
+      "firstPublicationYear": 1671,
+      "worksByDecade": [
+        {
+          "decade": 1670,
+          "works_count": 1
+        },
+        {
+          "decade": 1740,
+          "works_count": 1
+        },
+        {
+          "decade": 1820,
+          "works_count": 2
+        },
+        {
+          "decade": 1840,
+          "works_count": 5
+        },
+        {
+          "decade": 1850,
+          "works_count": 4
+        },
+        {
+          "decade": 1860,
+          "works_count": 7
+        },
+        {
+          "decade": 1870,
+          "works_count": 9
+        },
+        {
+          "decade": 1880,
+          "works_count": 11
+        },
+        {
+          "decade": 1890,
+          "works_count": 14
+        },
+        {
+          "decade": 1900,
+          "works_count": 24
+        },
+        {
+          "decade": 1910,
+          "works_count": 40
+        },
+        {
+          "decade": 1920,
+          "works_count": 57
+        },
+        {
+          "decade": 1930,
+          "works_count": 141
+        },
+        {
+          "decade": 1940,
+          "works_count": 139
+        },
+        {
+          "decade": 1950,
+          "works_count": 259
+        },
+        {
+          "decade": 1960,
+          "works_count": 953
+        },
+        {
+          "decade": 1970,
+          "works_count": 3612
+        },
+        {
+          "decade": 1980,
+          "works_count": 7891
+        },
+        {
+          "decade": 1990,
+          "works_count": 13263
+        },
+        {
+          "decade": 2000,
+          "works_count": 27624
+        },
+        {
+          "decade": 2010,
+          "works_count": 41223
+        },
+        {
+          "decade": 2020,
+          "works_count": 77349,
+          "works_count_projected": 77349,
+          "is_projected": true,
+          "original_count": 50481
+        }
+      ],
+      "oldestWork": {
+        "title": "Errata",
+        "year": 1671,
+        "id": "https://openalex.org/W4255877457"
+      },
+      "mostCitedWork": {
+        "title": "Observational Evidence from Supernovae for an Accelerating Universe and a Cosmological Constant",
+        "year": 1998,
+        "citations": 18376,
+        "id": "https://openalex.org/W2073832139"
+      },
+      "nodesFile": "C26405456_nodes.json",
+      "edgesFile": "C26405456_edges.json",
+      "metadataFile": "C26405456_metadata.json",
+      "position": [
+        79.16270325739886,
+        -127.00480980856666,
+        0
+      ],
+      "size": 91.43,
+      "angle": 301.94,
+      "timeline_y": 428.13394402543736
+    },
+    {
+      "id": "C19527891",
+      "name": "Medical physics",
+      "type": "galaxy",
+      "group": "Cross-Disciplinary",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 737282,
+      "firstPublicationYear": 1687,
+      "worksByDecade": [
+        {
+          "decade": 1800,
+          "works_count": 5
+        },
+        {
+          "decade": 1810,
+          "works_count": 2
+        },
+        {
+          "decade": 1820,
+          "works_count": 7
+        },
+        {
+          "decade": 1830,
+          "works_count": 67
+        },
+        {
+          "decade": 1840,
+          "works_count": 175
+        },
+        {
+          "decade": 1850,
+          "works_count": 155
+        },
+        {
+          "decade": 1860,
+          "works_count": 139
+        },
+        {
+          "decade": 1870,
+          "works_count": 216
+        },
+        {
+          "decade": 1880,
+          "works_count": 271
+        },
+        {
+          "decade": 1890,
+          "works_count": 526
+        },
+        {
+          "decade": 1900,
+          "works_count": 1001
+        },
+        {
+          "decade": 1910,
+          "works_count": 1065
+        },
+        {
+          "decade": 1920,
+          "works_count": 2407
+        },
+        {
+          "decade": 1930,
+          "works_count": 3204
+        },
+        {
+          "decade": 1940,
+          "works_count": 4570
+        },
+        {
+          "decade": 1950,
+          "works_count": 12405
+        },
+        {
+          "decade": 1960,
+          "works_count": 19808
+        },
+        {
+          "decade": 1970,
+          "works_count": 31073
+        },
+        {
+          "decade": 1980,
+          "works_count": 48214
+        },
+        {
+          "decade": 1990,
+          "works_count": 69259
+        },
+        {
+          "decade": 2000,
+          "works_count": 121860
+        },
+        {
+          "decade": 2010,
+          "works_count": 219111
+        },
+        {
+          "decade": 2020,
+          "works_count": 308291,
+          "works_count_projected": 308291,
+          "is_projected": true,
+          "original_count": 201201
+        }
+      ],
+      "oldestWork": {
+        "title": "Testimonia sacr\u00e6 Scriptur\u00e6., &amp; exemplum qu\u00f2d hujuscemodi apparitionibus non sit adhibenda fides, quodque cauti esse debeamus.",
+        "year": 1687,
+        "id": "https://openalex.org/W7127047266"
+      },
+      "mostCitedWork": {
+        "title": "The Cochrane Collaboration's tool for assessing risk of bias in randomised trials",
+        "year": 2011,
+        "citations": 32971,
+        "id": "https://openalex.org/W2098923148"
+      },
+      "nodesFile": "C19527891_nodes.json",
+      "edgesFile": "C19527891_edges.json",
+      "metadataFile": "C19527891_metadata.json",
+      "position": [
+        126.22020378419647,
+        -87.85185463260574,
+        0
+      ],
+      "size": 101.15,
+      "angle": 325.16,
+      "timeline_y": 488.374579303847
+    },
+    {
+      "id": "C12554922",
+      "name": "Biophysics",
+      "type": "galaxy",
+      "group": "Cross-Disciplinary",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 1207519,
+      "firstPublicationYear": 1752,
+      "worksByDecade": [
+        {
+          "decade": 1750,
+          "works_count": 16
+        },
+        {
+          "decade": 1800,
+          "works_count": 1
+        },
+        {
+          "decade": 1810,
+          "works_count": 1
+        },
+        {
+          "decade": 1820,
+          "works_count": 4
+        },
+        {
+          "decade": 1830,
+          "works_count": 16
+        },
+        {
+          "decade": 1840,
+          "works_count": 14
+        },
+        {
+          "decade": 1850,
+          "works_count": 18
+        },
+        {
+          "decade": 1860,
+          "works_count": 38
+        },
+        {
+          "decade": 1870,
+          "works_count": 90
+        },
+        {
+          "decade": 1880,
+          "works_count": 123
+        },
+        {
+          "decade": 1890,
+          "works_count": 137
+        },
+        {
+          "decade": 1900,
+          "works_count": 237
+        },
+        {
+          "decade": 1910,
+          "works_count": 411
+        },
+        {
+          "decade": 1920,
+          "works_count": 1088
+        },
+        {
+          "decade": 1930,
+          "works_count": 1849
+        },
+        {
+          "decade": 1940,
+          "works_count": 1965
+        },
+        {
+          "decade": 1950,
+          "works_count": 8093
+        },
+        {
+          "decade": 1960,
+          "works_count": 28936
+        },
+        {
+          "decade": 1970,
+          "works_count": 75002
+        },
+        {
+          "decade": 1980,
+          "works_count": 128736
+        },
+        {
+          "decade": 1990,
+          "works_count": 167940
+        },
+        {
+          "decade": 2000,
+          "works_count": 226531
+        },
+        {
+          "decade": 2010,
+          "works_count": 332008
+        },
+        {
+          "decade": 2020,
+          "works_count": 357929,
+          "works_count_projected": 357929,
+          "is_projected": true,
+          "original_count": 233596
+        }
+      ],
+      "oldestWork": {
+        "title": "Amplissimo Gravissimoque Viro Casparo van Citters, Illustrium AC Praepotentium Zelandiae Ordinum Syndico, S. D. Corn. van Bynkershoek",
+        "year": 1752,
+        "id": "https://openalex.org/W7126409268"
+      },
+      "mostCitedWork": {
+        "title": "THE USE OF LEAD CITRATE AT HIGH pH AS AN ELECTRON-OPAQUE STAIN IN ELECTRON MICROSCOPY",
+        "year": 1963,
+        "citations": 24965,
+        "id": "https://openalex.org/W2127911529"
+      },
+      "nodesFile": "C12554922_nodes.json",
+      "edgesFile": "C12554922_edges.json",
+      "metadataFile": "C12554922_metadata.json",
+      "position": [
+        173.36333770744696,
+        -35.627071566099346,
+        0
+      ],
+      "size": 104.12,
+      "angle": 348.39,
+      "timeline_y": 556.0659910743638
+    },
+    {
+      "id": "C20788544",
+      "name": "Photonics",
+      "type": "galaxy",
+      "group": "Optics & Electromagnetism",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 163675,
+      "firstPublicationYear": 1753,
+      "worksByDecade": [
+        {
+          "decade": 1750,
+          "works_count": 3
+        },
+        {
+          "decade": 1840,
+          "works_count": 1
+        },
+        {
+          "decade": 1900,
+          "works_count": 2
+        },
+        {
+          "decade": 1920,
+          "works_count": 1
+        },
+        {
+          "decade": 1940,
+          "works_count": 1
+        },
+        {
+          "decade": 1950,
+          "works_count": 14
+        },
+        {
+          "decade": 1960,
+          "works_count": 193
+        },
+        {
+          "decade": 1970,
+          "works_count": 322
+        },
+        {
+          "decade": 1980,
+          "works_count": 1238
+        },
+        {
+          "decade": 1990,
+          "works_count": 6689
+        },
+        {
+          "decade": 2000,
+          "works_count": 32433
+        },
+        {
+          "decade": 2010,
+          "works_count": 65459
+        },
+        {
+          "decade": 2020,
+          "works_count": 87651,
+          "works_count_projected": 87651,
+          "is_projected": true,
+          "original_count": 57204
+        }
+      ],
+      "oldestWork": {
+        "title": "Resonance Fluorescence from Waveguide-Coupled, Strain-Localized,\\nTwo-Dimensional Quantum Emitters",
+        "year": 1753,
+        "id": "https://openalex.org/W4287866954"
+      },
+      "mostCitedWork": {
+        "title": "Surface plasmon subwavelength optics",
+        "year": 2003,
+        "citations": 11394,
+        "id": "https://openalex.org/W2123343298"
+      },
+      "nodesFile": "C20788544_nodes.json",
+      "edgesFile": "C20788544_edges.json",
+      "metadataFile": "C20788544_metadata.json",
+      "position": [
+        206.89108294638768,
+        42.517198364958034,
+        0
+      ],
+      "size": 92.11,
+      "angle": 371.61,
+      "timeline_y": 617.8983276249129
+    },
+    {
+      "id": "C159467904",
+      "name": "Chemical physics",
+      "type": "galaxy",
+      "group": "Cross-Disciplinary",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 703194,
+      "firstPublicationYear": 1753,
+      "worksByDecade": [
+        {
+          "decade": 1750,
+          "works_count": 18
+        },
+        {
+          "decade": 1790,
+          "works_count": 1
+        },
+        {
+          "decade": 1830,
+          "works_count": 5
+        },
+        {
+          "decade": 1840,
+          "works_count": 7
+        },
+        {
+          "decade": 1850,
+          "works_count": 13
+        },
+        {
+          "decade": 1860,
+          "works_count": 19
+        },
+        {
+          "decade": 1870,
+          "works_count": 35
+        },
+        {
+          "decade": 1880,
+          "works_count": 32
+        },
+        {
+          "decade": 1890,
+          "works_count": 38
+        },
+        {
+          "decade": 1900,
+          "works_count": 76
+        },
+        {
+          "decade": 1910,
+          "works_count": 93
+        },
+        {
+          "decade": 1920,
+          "works_count": 384
+        },
+        {
+          "decade": 1930,
+          "works_count": 799
+        },
+        {
+          "decade": 1940,
+          "works_count": 690
+        },
+        {
+          "decade": 1950,
+          "works_count": 2762
+        },
+        {
+          "decade": 1960,
+          "works_count": 9969
+        },
+        {
+          "decade": 1970,
+          "works_count": 24782
+        },
+        {
+          "decade": 1980,
+          "works_count": 45135
+        },
+        {
+          "decade": 1990,
+          "works_count": 81178
+        },
+        {
+          "decade": 2000,
+          "works_count": 138098
+        },
+        {
+          "decade": 2010,
+          "works_count": 218976
+        },
+        {
+          "decade": 2020,
+          "works_count": 275469,
+          "works_count_projected": 275469,
+          "is_projected": true,
+          "original_count": 179780
+        }
+      ],
+      "oldestWork": {
+        "title": "Cavity-Modulated Proton Transfer Reactions",
+        "year": 1753,
+        "id": "https://openalex.org/W4308537049"
+      },
+      "mostCitedWork": {
+        "title": "Electric Field Effect in Atomically Thin Carbon Films",
+        "year": 2004,
+        "citations": 65116,
+        "id": "https://openalex.org/W2058122340"
+      },
+      "nodesFile": "C159467904_nodes.json",
+      "edgesFile": "C159467904_edges.json",
+      "metadataFile": "C159467904_metadata.json",
+      "position": [
+        196.76867537882654,
+        136.95504005988155,
+        0
+      ],
+      "size": 100.87,
+      "angle": 394.84,
+      "timeline_y": 677.5409463426188
+    },
+    {
+      "id": "C30475298",
+      "name": "Computational physics",
+      "type": "galaxy",
+      "group": "Cross-Disciplinary",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 425888,
+      "firstPublicationYear": 1753,
+      "worksByDecade": [
+        {
+          "decade": 1750,
+          "works_count": 1
+        },
+        {
+          "decade": 1800,
+          "works_count": 1
+        },
+        {
+          "decade": 1830,
+          "works_count": 4
+        },
+        {
+          "decade": 1840,
+          "works_count": 2
+        },
+        {
+          "decade": 1850,
+          "works_count": 2
+        },
+        {
+          "decade": 1860,
+          "works_count": 4
+        },
+        {
+          "decade": 1870,
+          "works_count": 7
+        },
+        {
+          "decade": 1880,
+          "works_count": 6
+        },
+        {
+          "decade": 1890,
+          "works_count": 16
+        },
+        {
+          "decade": 1900,
+          "works_count": 34
+        },
+        {
+          "decade": 1910,
+          "works_count": 83
+        },
+        {
+          "decade": 1920,
+          "works_count": 228
+        },
+        {
+          "decade": 1930,
+          "works_count": 632
+        },
+        {
+          "decade": 1940,
+          "works_count": 754
+        },
+        {
+          "decade": 1950,
+          "works_count": 3655
+        },
+        {
+          "decade": 1960,
+          "works_count": 15360
+        },
+        {
+          "decade": 1970,
+          "works_count": 31050
+        },
+        {
+          "decade": 1980,
+          "works_count": 41626
+        },
+        {
+          "decade": 1990,
+          "works_count": 59816
+        },
+        {
+          "decade": 2000,
+          "works_count": 90757
+        },
+        {
+          "decade": 2010,
+          "works_count": 107486
+        },
+        {
+          "decade": 2020,
+          "works_count": 113492,
+          "works_count_projected": 113492,
+          "is_projected": true,
+          "original_count": 74069
+        }
+      ],
+      "oldestWork": {
+        "title": "Achieving an Order of Magnitude Speed-up in Hybrid Functional and Plane\\n Wave based Ab Initio Molecular Dynamics: Applications to Proton Transfer\\n Reactions in Enzymes and in Solution",
+        "year": 1753,
+        "id": "https://openalex.org/W4287392687"
+      },
+      "mostCitedWork": {
+        "title": "Special points for Brillouin-zone integrations",
+        "year": 1976,
+        "citations": 68324,
+        "id": "https://openalex.org/W2036113194"
+      },
+      "nodesFile": "C30475298_nodes.json",
+      "edgesFile": "C30475298_edges.json",
+      "metadataFile": "C30475298_metadata.json",
+      "position": [
+        130.94665926306337,
+        210.08448259652053,
+        0
+      ],
+      "size": 97.86,
+      "angle": 418.06,
+      "timeline_y": 737.8697704752957
+    },
+    {
+      "id": "C120882062",
+      "name": "Permeability (electromagnetism)",
+      "type": "galaxy",
+      "group": "Optics & Electromagnetism",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 181985,
+      "firstPublicationYear": 1798,
+      "worksByDecade": [
+        {
+          "decade": 1790,
+          "works_count": 1
+        },
+        {
+          "decade": 1840,
+          "works_count": 1
+        },
+        {
+          "decade": 1850,
+          "works_count": 2
+        },
+        {
+          "decade": 1860,
+          "works_count": 6
+        },
+        {
+          "decade": 1870,
+          "works_count": 7
+        },
+        {
+          "decade": 1880,
+          "works_count": 15
+        },
+        {
+          "decade": 1890,
+          "works_count": 22
+        },
+        {
+          "decade": 1900,
+          "works_count": 41
+        },
+        {
+          "decade": 1910,
+          "works_count": 113
+        },
+        {
+          "decade": 1920,
+          "works_count": 199
+        },
+        {
+          "decade": 1930,
+          "works_count": 415
+        },
+        {
+          "decade": 1940,
+          "works_count": 538
+        },
+        {
+          "decade": 1950,
+          "works_count": 1659
+        },
+        {
+          "decade": 1960,
+          "works_count": 3555
+        },
+        {
+          "decade": 1970,
+          "works_count": 7182
+        },
+        {
+          "decade": 1980,
+          "works_count": 12067
+        },
+        {
+          "decade": 1990,
+          "works_count": 19108
+        },
+        {
+          "decade": 2000,
+          "works_count": 35993
+        },
+        {
+          "decade": 2010,
+          "works_count": 61135
+        },
+        {
+          "decade": 2020,
+          "works_count": 61002,
+          "works_count_projected": 61002,
+          "is_projected": true,
+          "original_count": 39812
+        }
+      ],
+      "oldestWork": {
+        "title": "VII. <i>An experiment to prove the permeability of glass to the electric fluid</i>",
+        "year": 1798,
+        "id": "https://openalex.org/W4238768311"
+      },
+      "mostCitedWork": {
+        "title": "Experimental and computational approaches to estimate solubility and permeability in drug discovery and development settings 1PII of original article: S0169-409X(96)00423-1. The article was originally published in Advanced Drug Delivery Reviews 23 (1997) 3\u201325. 1",
+        "year": 2001,
+        "citations": 17549,
+        "id": "https://openalex.org/W2135732933"
+      },
+      "nodesFile": "C120882062_nodes.json",
+      "edgesFile": "C120882062_edges.json",
+      "metadataFile": "C120882062_metadata.json",
+      "position": [
+        35.1080323007663,
+        229.1731307866993,
+        0
+      ],
+      "size": 92.75,
+      "angle": 441.29,
+      "timeline_y": 792.5069746469658
+    },
+    {
+      "id": "C1633027",
+      "name": "Computational fluid dynamics",
+      "type": "galaxy",
+      "group": "Matter & Classical",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 198100,
+      "firstPublicationYear": 1832,
+      "worksByDecade": [
+        {
+          "decade": 1830,
+          "works_count": 1
+        },
+        {
+          "decade": 1840,
+          "works_count": 1
+        },
+        {
+          "decade": 1850,
+          "works_count": 2
+        },
+        {
+          "decade": 1860,
+          "works_count": 7
+        },
+        {
+          "decade": 1870,
+          "works_count": 2
+        },
+        {
+          "decade": 1880,
+          "works_count": 2
+        },
+        {
+          "decade": 1900,
+          "works_count": 5
+        },
+        {
+          "decade": 1910,
+          "works_count": 7
+        },
+        {
+          "decade": 1920,
+          "works_count": 15
+        },
+        {
+          "decade": 1930,
+          "works_count": 24
+        },
+        {
+          "decade": 1940,
+          "works_count": 10
+        },
+        {
+          "decade": 1950,
+          "works_count": 40
+        },
+        {
+          "decade": 1960,
+          "works_count": 162
+        },
+        {
+          "decade": 1970,
+          "works_count": 644
+        },
+        {
+          "decade": 1980,
+          "works_count": 2439
+        },
+        {
+          "decade": 1990,
+          "works_count": 9544
+        },
+        {
+          "decade": 2000,
+          "works_count": 36839
+        },
+        {
+          "decade": 2010,
+          "works_count": 85175
+        },
+        {
+          "decade": 2020,
+          "works_count": 96441,
+          "works_count_projected": 96441,
+          "is_projected": true,
+          "original_count": 62941
+        }
+      ],
+      "oldestWork": {
+        "title": "Observations on the preservation of lives from shipwreck, with a suggestion for the employment of sky rockets",
+        "year": 1832,
+        "id": "https://openalex.org/W2057925779"
+      },
+      "mostCitedWork": {
+        "title": "Turbulence modeling for CFD",
+        "year": 1993,
+        "citations": 7516,
+        "id": "https://openalex.org/W1583872979"
+      },
+      "nodesFile": "C1633027_nodes.json",
+      "edgesFile": "C1633027_edges.json",
+      "metadataFile": "C1633027_metadata.json",
+      "position": [
+        -51.462318682627526,
+        198.75918568031597,
+        0
+      ],
+      "size": 93.26,
+      "angle": 464.52,
+      "timeline_y": 846.6913910576874
+    },
+    {
+      "id": "C84035572",
+      "name": "Continuum mechanics",
+      "type": "galaxy",
+      "group": "Matter & Classical",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 13215,
+      "firstPublicationYear": 1870,
+      "worksByDecade": [
+        {
+          "decade": 1870,
+          "works_count": 1
+        },
+        {
+          "decade": 1900,
+          "works_count": 4
+        },
+        {
+          "decade": 1910,
+          "works_count": 3
+        },
+        {
+          "decade": 1920,
+          "works_count": 6
+        },
+        {
+          "decade": 1930,
+          "works_count": 3
+        },
+        {
+          "decade": 1940,
+          "works_count": 1
+        },
+        {
+          "decade": 1950,
+          "works_count": 16
+        },
+        {
+          "decade": 1960,
+          "works_count": 144
+        },
+        {
+          "decade": 1970,
+          "works_count": 410
+        },
+        {
+          "decade": 1980,
+          "works_count": 552
+        },
+        {
+          "decade": 1990,
+          "works_count": 992
+        },
+        {
+          "decade": 2000,
+          "works_count": 2416
+        },
+        {
+          "decade": 2010,
+          "works_count": 4479
+        },
+        {
+          "decade": 2020,
+          "works_count": 6384,
+          "works_count_projected": 6384,
+          "is_projected": true,
+          "original_count": 4167
+        }
+      ],
+      "oldestWork": {
+        "title": "XV. On the thermodynamic theory of waves of finite longitudinal disturbance",
+        "year": 1870,
+        "id": "https://openalex.org/W4210727571"
+      },
+      "mostCitedWork": {
+        "title": "Cellular solids: structure and properties",
+        "year": 1997,
+        "citations": 9058,
+        "id": "https://openalex.org/W1520891405"
+      },
+      "nodesFile": "C84035572_nodes.json",
+      "edgesFile": "C84035572_edges.json",
+      "metadataFile": "C84035572_metadata.json",
+      "position": [
+        -115.85626013977463,
+        149.6739487981431,
+        0
+      ],
+      "size": 77.0,
+      "angle": 487.74,
+      "timeline_y": 899.4218996213801
+    },
+    {
+      "id": "C49987212",
+      "name": "String theory",
+      "type": "galaxy",
+      "group": "Quantum & Fundamental",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 21219,
+      "firstPublicationYear": 1875,
+      "worksByDecade": [
+        {
+          "decade": 1870,
+          "works_count": 1
+        },
+        {
+          "decade": 1900,
+          "works_count": 1
+        },
+        {
+          "decade": 1910,
+          "works_count": 2
+        },
+        {
+          "decade": 1920,
+          "works_count": 4
+        },
+        {
+          "decade": 1930,
+          "works_count": 2
+        },
+        {
+          "decade": 1950,
+          "works_count": 4
+        },
+        {
+          "decade": 1960,
+          "works_count": 7
+        },
+        {
+          "decade": 1970,
+          "works_count": 122
+        },
+        {
+          "decade": 1980,
+          "works_count": 1332
+        },
+        {
+          "decade": 1990,
+          "works_count": 3502
+        },
+        {
+          "decade": 2000,
+          "works_count": 5863
+        },
+        {
+          "decade": 2010,
+          "works_count": 5074
+        },
+        {
+          "decade": 2020,
+          "works_count": 8033,
+          "works_count_projected": 8033,
+          "is_projected": true,
+          "original_count": 5243
+        }
+      ],
+      "oldestWork": {
+        "title": "XII. <i>On the mathematical theory of</i> Mr. Baillie Hamilton's <i>string-organ</i>",
+        "year": 1875,
+        "id": "https://openalex.org/W1586528300"
+      },
+      "mostCitedWork": {
+        "title": "Large N field theories, string theory and gravity",
+        "year": 2000,
+        "citations": 5166,
+        "id": "https://openalex.org/W2107240173"
+      },
+      "nodesFile": "C49987212_nodes.json",
+      "edgesFile": "C49987212_edges.json",
+      "metadataFile": "C49987212_metadata.json",
+      "position": [
+        -175.09573639610085,
+        97.18606206603215,
+        0
+      ],
+      "size": 79.84,
+      "angle": 510.97,
+      "timeline_y": 949.8047417508502
+    },
+    {
+      "id": "C99874945",
+      "name": "Statistical mechanics",
+      "type": "galaxy",
+      "group": "Matter & Classical",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 20981,
+      "firstPublicationYear": 1880,
+      "worksByDecade": [
+        {
+          "decade": 1880,
+          "works_count": 3
+        },
+        {
+          "decade": 1890,
+          "works_count": 2
+        },
+        {
+          "decade": 1900,
+          "works_count": 9
+        },
+        {
+          "decade": 1910,
+          "works_count": 10
+        },
+        {
+          "decade": 1920,
+          "works_count": 31
+        },
+        {
+          "decade": 1930,
+          "works_count": 63
+        },
+        {
+          "decade": 1940,
+          "works_count": 100
+        },
+        {
+          "decade": 1950,
+          "works_count": 310
+        },
+        {
+          "decade": 1960,
+          "works_count": 837
+        },
+        {
+          "decade": 1970,
+          "works_count": 1481
+        },
+        {
+          "decade": 1980,
+          "works_count": 2084
+        },
+        {
+          "decade": 1990,
+          "works_count": 2832
+        },
+        {
+          "decade": 2000,
+          "works_count": 4330
+        },
+        {
+          "decade": 2010,
+          "works_count": 4507
+        },
+        {
+          "decade": 2020,
+          "works_count": 6639,
+          "works_count_projected": 6639,
+          "is_projected": true,
+          "original_count": 4333
+        }
+      ],
+      "oldestWork": {
+        "title": "Mechanical theory of heat",
+        "year": 1880,
+        "id": "https://openalex.org/W4231274026"
+      },
+      "mostCitedWork": {
+        "title": "Optimization by Simulated Annealing",
+        "year": 1983,
+        "citations": 44002,
+        "id": "https://openalex.org/W2024060531"
+      },
+      "nodesFile": "C99874945_nodes.json",
+      "edgesFile": "C99874945_edges.json",
+      "metadataFile": "C99874945_metadata.json",
+      "position": [
+        -237.25739285927662,
+        24.126718705981073,
+        0
+      ],
+      "size": 79.77,
+      "angle": 534.19,
+      "timeline_y": 1000.1943553822288
+    },
+    {
+      "id": "C49357902",
+      "name": "Applied physics",
+      "type": "galaxy",
+      "group": "Cross-Disciplinary",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 400,
+      "firstPublicationYear": 1889,
+      "worksByDecade": [
+        {
+          "decade": 1880,
+          "works_count": 1
+        },
+        {
+          "decade": 1920,
+          "works_count": 1
+        },
+        {
+          "decade": 1930,
+          "works_count": 2
+        },
+        {
+          "decade": 1950,
+          "works_count": 7
+        },
+        {
+          "decade": 1960,
+          "works_count": 27
+        },
+        {
+          "decade": 1970,
+          "works_count": 19
+        },
+        {
+          "decade": 1980,
+          "works_count": 20
+        },
+        {
+          "decade": 1990,
+          "works_count": 37
+        },
+        {
+          "decade": 2000,
+          "works_count": 82
+        },
+        {
+          "decade": 2010,
+          "works_count": 104
+        },
+        {
+          "decade": 2020,
+          "works_count": 124,
+          "works_count_projected": 124,
+          "is_projected": true,
+          "original_count": 81
+        }
+      ],
+      "oldestWork": {
+        "title": "Simple Experiments in Physics",
+        "year": 1889,
+        "id": "https://openalex.org/W4242563494"
+      },
+      "mostCitedWork": {
+        "title": "The Physics of Semiconductor Devices",
+        "year": 1978,
+        "citations": 794,
+        "id": "https://openalex.org/W2565051160"
+      },
+      "nodesFile": "C49357902_nodes.json",
+      "edgesFile": "C49357902_edges.json",
+      "metadataFile": "C49357902_metadata.json",
+      "position": [
+        -273.03931554006436,
+        -85.66663791088263,
+        0
+      ],
+      "size": 56.0,
+      "angle": 557.42,
+      "timeline_y": 1050.373946234806
+    },
+    {
+      "id": "C108568745",
+      "name": "Quantum gravity",
+      "type": "galaxy",
+      "group": "Quantum & Fundamental",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 63171,
+      "firstPublicationYear": 1899,
+      "worksByDecade": [
+        {
+          "decade": 1890,
+          "works_count": 1
+        },
+        {
+          "decade": 1900,
+          "works_count": 4
+        },
+        {
+          "decade": 1910,
+          "works_count": 3
+        },
+        {
+          "decade": 1920,
+          "works_count": 13
+        },
+        {
+          "decade": 1930,
+          "works_count": 31
+        },
+        {
+          "decade": 1940,
+          "works_count": 54
+        },
+        {
+          "decade": 1950,
+          "works_count": 236
+        },
+        {
+          "decade": 1960,
+          "works_count": 504
+        },
+        {
+          "decade": 1970,
+          "works_count": 1307
+        },
+        {
+          "decade": 1980,
+          "works_count": 4009
+        },
+        {
+          "decade": 1990,
+          "works_count": 7964
+        },
+        {
+          "decade": 2000,
+          "works_count": 10750
+        },
+        {
+          "decade": 2010,
+          "works_count": 15625
+        },
+        {
+          "decade": 2020,
+          "works_count": 34584,
+          "works_count_projected": 34584,
+          "is_projected": true,
+          "original_count": 22571
+        }
+      ],
+      "oldestWork": {
+        "title": "Programming the Logic Theory Machine",
+        "year": 1899,
+        "id": "https://openalex.org/W2795503730"
+      },
+      "mostCitedWork": {
+        "title": "<i>Planck</i>2015 results",
+        "year": 2016,
+        "citations": 10254,
+        "id": "https://openalex.org/W4292875581"
+      },
+      "nodesFile": "C108568745_nodes.json",
+      "edgesFile": "C108568745_edges.json",
+      "metadataFile": "C108568745_metadata.json",
+      "position": [
+        -241.05676599840172,
+        -206.94044577489504,
+        0
+      ],
+      "size": 86.39,
+      "angle": 580.65,
+      "timeline_y": 1101.2956140318267
+    },
+    {
+      "id": "C68717125",
+      "name": "Quantum optics",
+      "type": "galaxy",
+      "group": "Quantum & Fundamental",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 43326,
+      "firstPublicationYear": 1926,
+      "worksByDecade": [
+        {
+          "decade": 1920,
+          "works_count": 2
+        },
+        {
+          "decade": 1930,
+          "works_count": 2
+        },
+        {
+          "decade": 1940,
+          "works_count": 1
+        },
+        {
+          "decade": 1950,
+          "works_count": 9
+        },
+        {
+          "decade": 1960,
+          "works_count": 1130
+        },
+        {
+          "decade": 1970,
+          "works_count": 2713
+        },
+        {
+          "decade": 1980,
+          "works_count": 2981
+        },
+        {
+          "decade": 1990,
+          "works_count": 4693
+        },
+        {
+          "decade": 2000,
+          "works_count": 8730
+        },
+        {
+          "decade": 2010,
+          "works_count": 11746
+        },
+        {
+          "decade": 2020,
+          "works_count": 17260,
+          "works_count_projected": 17260,
+          "is_projected": true,
+          "original_count": 11265
+        }
+      ],
+      "oldestWork": {
+        "title": "Liquefied hydrogen sulphide as a reagent",
+        "year": 1926,
+        "id": "https://openalex.org/W4256664616"
+      },
+      "mostCitedWork": {
+        "title": "Optical Coherence and Quantum Optics",
+        "year": 1995,
+        "citations": 8123,
+        "id": "https://openalex.org/W1977733098"
+      },
+      "nodesFile": "C68717125_nodes.json",
+      "edgesFile": "C68717125_edges.json",
+      "metadataFile": "C68717125_metadata.json",
+      "position": [
+        -139.12008917878725,
+        -283.61559109818376,
+        0
+      ],
+      "size": 84.13,
+      "angle": 603.87,
+      "timeline_y": 1152.6723267570985
+    },
+    {
+      "id": "C43588577",
+      "name": "Solid-state physics",
+      "type": "galaxy",
+      "group": "Matter & Classical",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 36962,
+      "firstPublicationYear": 1934,
+      "worksByDecade": [
+        {
+          "decade": 1930,
+          "works_count": 1
+        },
+        {
+          "decade": 1940,
+          "works_count": 2
+        },
+        {
+          "decade": 1950,
+          "works_count": 81
+        },
+        {
+          "decade": 1960,
+          "works_count": 2826
+        },
+        {
+          "decade": 1970,
+          "works_count": 5150
+        },
+        {
+          "decade": 1980,
+          "works_count": 4806
+        },
+        {
+          "decade": 1990,
+          "works_count": 7785
+        },
+        {
+          "decade": 2000,
+          "works_count": 6019
+        },
+        {
+          "decade": 2010,
+          "works_count": 6549
+        },
+        {
+          "decade": 2020,
+          "works_count": 5730,
+          "works_count_projected": 5730,
+          "is_projected": true,
+          "original_count": 3740
+        }
+      ],
+      "oldestWork": {
+        "title": "On the Physics of Crystals. Part I",
+        "year": 1934,
+        "id": "https://openalex.org/W2057566878"
+      },
+      "mostCitedWork": {
+        "title": "Exact Theory of Two-dimensional Self-focusing and One-dimensional Self-modulation of Waves in Nonlinear Media",
+        "year": 1970,
+        "citations": 2628,
+        "id": "https://openalex.org/W1708785370"
+      },
+      "nodesFile": "C43588577_nodes.json",
+      "edgesFile": "C43588577_edges.json",
+      "metadataFile": "C43588577_metadata.json",
+      "position": [
+        -14.38483996759755,
+        -283.64487429994836,
+        0
+      ],
+      "size": 83.17,
+      "angle": 627.1,
+      "timeline_y": 1203.3373944641512
+    },
+    {
+      "id": "C103862110",
+      "name": "Optical physics",
+      "type": "galaxy",
+      "group": "Optics & Electromagnetism",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 1249,
+      "firstPublicationYear": 1951,
+      "worksByDecade": [
+        {
+          "decade": 1950,
+          "works_count": 1
+        },
+        {
+          "decade": 1960,
+          "works_count": 4
+        },
+        {
+          "decade": 1970,
+          "works_count": 14
+        },
+        {
+          "decade": 1980,
+          "works_count": 21
+        },
+        {
+          "decade": 1990,
+          "works_count": 115
+        },
+        {
+          "decade": 2000,
+          "works_count": 256
+        },
+        {
+          "decade": 2010,
+          "works_count": 384
+        },
+        {
+          "decade": 2020,
+          "works_count": 684,
+          "works_count_projected": 684,
+          "is_projected": true,
+          "original_count": 447
+        }
+      ],
+      "oldestWork": {
+        "title": "Electromagnetic waves and radiating systems",
+        "year": 1951,
+        "id": "https://openalex.org/W2312909179"
+      },
+      "mostCitedWork": {
+        "title": "Electromagnetically induced transparency: Optics in coherent media",
+        "year": 2005,
+        "citations": 5030,
+        "id": "https://openalex.org/W2068895447"
+      },
+      "nodesFile": "C103862110_nodes.json",
+      "edgesFile": "C103862110_edges.json",
+      "metadataFile": "C103862110_metadata.json",
+      "position": [
+        85.16230025421589,
+        -229.9450641410934,
+        0
+      ],
+      "size": 62.83,
+      "angle": 650.32,
+      "timeline_y": 1253.5622879922416
+    },
+    {
+      "id": "C18975210",
+      "name": "Experimental physics",
+      "type": "galaxy",
+      "group": "Cross-Disciplinary",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 53,
+      "firstPublicationYear": 1960,
+      "worksByDecade": [
+        {
+          "decade": 1960,
+          "works_count": 1
+        },
+        {
+          "decade": 1990,
+          "works_count": 3
+        },
+        {
+          "decade": 2000,
+          "works_count": 5
+        },
+        {
+          "decade": 2010,
+          "works_count": 18
+        },
+        {
+          "decade": 2020,
+          "works_count": 39,
+          "works_count_projected": 39,
+          "is_projected": true,
+          "original_count": 26
+        }
+      ],
+      "oldestWork": {
+        "title": "Solid state physics. Volume 6. Methods of experimental physics",
+        "year": 1960,
+        "id": "https://openalex.org/W2323633760"
+      },
+      "mostCitedWork": {
+        "title": "Fermi-gas approach to the problem of superfluidity in three- and two-dimensional solutions of <sup>3</sup> He in <sup>4</sup> He",
+        "year": 1994,
+        "citations": 42,
+        "id": "https://openalex.org/W2049580433"
+      },
+      "nodesFile": "C18975210_nodes.json",
+      "edgesFile": "C18975210_edges.json",
+      "metadataFile": "C18975210_metadata.json",
+      "position": [
+        157.7379795380364,
+        -165.94026022997474,
+        0
+      ],
+      "size": 43.96,
+      "angle": 673.55,
+      "timeline_y": 1303.5814871917705
+    },
+    {
+      "id": "C92866567",
+      "name": "Chaos theory",
+      "type": "galaxy",
+      "group": "Plasmas & Complex Systems",
+      "nodeCount": 0,
+      "edgeCount": 0,
+      "hasPapers": false,
+      "totalWorksCount": 4201,
+      "firstPublicationYear": 1978,
+      "worksByDecade": [
+        {
+          "decade": 1970,
+          "works_count": 2
+        },
+        {
+          "decade": 1980,
+          "works_count": 72
+        },
+        {
+          "decade": 1990,
+          "works_count": 597
+        },
+        {
+          "decade": 2000,
+          "works_count": 1236
+        },
+        {
+          "decade": 2010,
+          "works_count": 1390
+        },
+        {
+          "decade": 2020,
+          "works_count": 1322,
+          "works_count_projected": 1322,
+          "is_projected": true,
+          "original_count": 863
+        }
+      ],
+      "oldestWork": {
+        "title": "Systems Science: Chaos or Harmony?",
+        "year": 1978,
+        "id": "https://openalex.org/W2493694729"
+      },
+      "mostCitedWork": {
+        "title": "Ergodic theory of chaos and strange attractors",
+        "year": 1985,
+        "citations": 4838,
+        "id": "https://openalex.org/W1998727969"
+      },
+      "nodesFile": "C92866567_nodes.json",
+      "edgesFile": "C92866567_edges.json",
+      "metadataFile": "C92866567_metadata.json",
+      "position": [
+        231.72777990647594,
+        -99.44222209440711,
+        0
+      ],
+      "size": 70.11,
+      "angle": 696.77,
+      "timeline_y": 1353.6194341573673
+    }
+  ],
+  "metadata": {
+    "galaxyCount": 31,
+    "generatedAt": "2026-02-28 14:03:02"
+  }
+}
