@@ -320,9 +320,22 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
             return nodes.filter(n => n.group === activeGroup);
         }
         if (viewMode === 'DETAIL') {
-            // API returns exactly the connected nodes + central node, so we show all of them.
-            // We just ensure we return the processed `nodes` array.
-            return nodes;
+            if (!selected) return nodes;
+
+            // STRICT EGO-NETWORK FILTERING
+            // The user ONLY wants to see papers connected to the selected paper. 
+            // The API might return unconnected "context" papers, so we physically filter them out here.
+            const connectedIndices = new Set();
+            connectedIndices.add(selected.id);
+
+            rawEdges.forEach(e => {
+                const src = String(e.source.id ?? e.source);
+                const tgt = String(e.target.id ?? e.target);
+                if (src === selected.id) connectedIndices.add(tgt);
+                if (tgt === selected.id) connectedIndices.add(src);
+            });
+
+            return nodes.filter(n => connectedIndices.has(String(n.id)));
         }
         return nodes; // Default
     }, [viewMode, universeNodes, aggregatedNodes, nodes, activeGroup, selected, rawEdges]);

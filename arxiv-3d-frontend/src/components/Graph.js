@@ -888,9 +888,10 @@ export const Graph = ({
                         }
 
                         if (isDetail) {
-                            // In detail view, dim unconnected nodes slightly when a node is focused
+                            // In detail view, dim unconnected nodes heavily when a node is focused
                             if (connectedNodeIds.has(d.id)) return 1;
-                            return isHovering ? 0.25 : 0.5;
+                            // Make them practically invisible so they don't clutter the view
+                            return isHovering ? 0.02 : 0.02;
                         }
 
                         return 1;
