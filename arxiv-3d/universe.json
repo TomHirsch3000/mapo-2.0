@@ -1299,13 +1299,13 @@
       "timeline_y": 148.83424036867314
     },
     {
-      "id": "C109214941",
-      "name": "Particle physics",
+      "id": "particle_physics",
+      "name": "Particle Physics",
       "type": "galaxy",
       "group": "Quantum & Fundamental",
-      "nodeCount": 0,
-      "edgeCount": 0,
-      "hasPapers": false,
+      "nodeCount": 2000,
+      "edgeCount": 15288,
+      "hasPapers": true,
       "totalWorksCount": 687905,
       "firstPublicationYear": 1613,
       "worksByDecade": [
@@ -1445,9 +1445,9 @@
         "id": "https://openalex.org/W4288079944"
       },
       "iconPath": "/icons/particle_physics.svg",
-      "nodesFile": "C109214941_nodes.json",
-      "edgesFile": "C109214941_edges.json",
-      "metadataFile": "C109214941_metadata.json",
+      "nodesFile": "particle_physics_nodes.json",
+      "edgesFile": "particle_physics_edges.json",
+      "metadataFile": "particle_physics_metadata.json",
       "position": [
         -106.89269816986946,
         -138.0939813996273,
@@ -3520,6 +3520,6 @@
   ],
   "metadata": {
     "galaxyCount": 31,
-    "generatedAt": "2026-03-05 17:07:09"
+    "generatedAt": "2026-03-06 06:23:37"
   }
 }

@@ -789,16 +789,20 @@ export const Graph = ({
         const svg = d3.select(svgRef.current);
         const isGalaxy = viewMode === 'GALAXY';
         const isField = viewMode === 'FIELD';
+        const isDetail = viewMode === 'DETAIL';
         const isUniverseTimeline = viewMode === 'UNIVERSE' && layoutMode === 'TIMELINE';
         const isUniverseCentral = viewMode === 'UNIVERSE' && layoutMode === 'CENTRAL';
 
-        if (isGalaxy || isField || isUniverseTimeline || isUniverseCentral) {
+        if (isGalaxy || isField || isDetail || isUniverseTimeline || isUniverseCentral) {
             const gLinks = svg.select(".g-links");
             const gNodes = svg.select(".g-nodes");
             const currentEdges = edges;
 
-            // Determine Focus Object (Hover takes precedence, then Selection in Field/Detail modes)
-            const focusNode = hovered || ((isField && selected && !isReturning) ? selected : null);
+            // Determine Focus Object:
+            // - In DETAIL view: hover takes precedence over selected (to show hovered paper's edges)
+            // - In FIELD view: hover takes precedence, then selected
+            // - In no-selection DETAIL view: nothing to focus
+            const focusNode = hovered || ((isField || isDetail) && selected && !isReturning ? selected : null);
             const isHovering = !!hovered;
 
             if (focusNode) {
@@ -806,8 +810,8 @@ export const Graph = ({
                 const connectedNodeIds = new Set();
                 connectedNodeIds.add(focusNode.id);
 
-                if (isGalaxy || isField) {
-                    const prefix = isField ? "P" : "G";
+                if (isGalaxy || isField || isDetail) {
+                    const prefix = isField || isDetail ? "P" : "G";
                     const keyFn = (s, t) => `${prefix}|${s}|${t}`;
 
                     currentEdges.forEach(e => {
@@ -822,45 +826,43 @@ export const Graph = ({
                 }
 
                 // Update Links
-                if (isGalaxy || isField) {
-                    const prefix = isField ? "P" : "G";
+                if (isGalaxy || isField || isDetail) {
+                    const prefix = isField || isDetail ? "P" : "G";
                     gLinks.selectAll(".d3-link")
                         .transition("highlight").duration(200)
                         .attr("stroke-opacity", function () {
-                            if (isField) return null; // Let style("opacity") handle it for Field
+                            if (isField || isDetail) return null;
                             const d = d3.select(this).datum();
                             const s = (d.source.id || d.source);
                             const t = (d.target.id || d.target);
                             const key = `${prefix}|${s}|${t}`;
-                            // Highlight if connected, otherwise fade
                             return connectedEdgeIds.has(key) ? 0.8 : 0.05;
                         })
                         .style("opacity", function () {
-                            if (!isField) return null; // Let stroke-opacity handle it for Galaxy
+                            if (!isField && !isDetail) return null;
                             const d = d3.select(this).datum();
                             const s = (d.source.id || d.source);
                             const t = (d.target.id || d.target);
                             const key = `${prefix}|${s}|${t}`;
 
-                            // In Field view, if a node is selected, ONLY show edges connected to it,
-                            // EVEN if we are hovering over another connected node.
+                            if (isDetail) {
+                                // DETAIL view: only show edges connected to the focus node (selected or hovered)
+                                return connectedEdgeIds.has(key) ? 1 : 0;
+                            }
+
+                            // FIELD view behaviour preserved
                             if (isField && selected) {
-                                // Check if this edge is connected to the SELECTED node specifically
                                 const isConnectedToSelected = s === selected.id || t === selected.id;
                                 if (!isConnectedToSelected) return 0;
-
-                                // If hovering, we might want to highlight the hovered node's edges MORE
-                                // but we still only show them if they are also connected to the selected node
-                                if (isHovering && !connectedEdgeIds.has(key)) return 0.2; // Dim others
+                                if (isHovering && !connectedEdgeIds.has(key)) return 0.2;
                                 return 1;
                             }
 
-                            // If not selected but hovering in Field view
                             if (isField && isHovering) {
                                 return connectedEdgeIds.has(key) ? 1 : 0.05;
                             }
 
-                            return connectedEdgeIds.has(key) ? 1 : 0; // Default fallback, though should be covered
+                            return connectedEdgeIds.has(key) ? 1 : 0;
                         })
                         .attr("stroke-width", function () {
                             const d = d3.select(this).datum();
@@ -874,7 +876,7 @@ export const Graph = ({
 
                 // Update Nodes
                 gNodes.selectAll(".d3-node")
-                    .classed("node-shimmer", d => d.id === focusNode.id && isHovering) // Only shimmer on hover
+                    .classed("node-shimmer", d => d.id === focusNode.id && isHovering)
                     .transition("highlight").duration(200)
                     .style("opacity", function () {
                         const d = d3.select(this).datum();
@@ -884,20 +886,35 @@ export const Graph = ({
                             if (connectedNodeIds.has(d.id)) return 1;
                             return (isField && selected && !isHovering) ? 0 : 0.1;
                         }
+
+                        if (isDetail) {
+                            // In detail view, dim unconnected nodes slightly when a node is focused
+                            if (connectedNodeIds.has(d.id)) return 1;
+                            return isHovering ? 0.25 : 0.5;
+                        }
+
                         return 1;
                     });
 
             } else {
-                // Reset State
+                // Reset State — no focus node
                 if (isGalaxy || isField) {
                     gLinks.selectAll(".d3-link")
                         .transition("highlight").duration(200)
-                        .attr("stroke-opacity", isField ? null : 0.6) // Reset stroke-opacity for Galaxy (was 0.6 previously on load)
-                        .style("opacity", isField ? 1 : null) // Reset opacity for Field
+                        .attr("stroke-opacity", isField ? null : 0.6)
+                        .style("opacity", isField ? 1 : null)
                         .attr("stroke-width", function () {
                             const d = d3.select(this).datum();
                             return Math.max(1, Math.sqrt(d.weight || 1));
                         });
+                } else if (isDetail) {
+                    // DETAIL view default: hide ALL edges unless a node is selected/hovered
+                    // focusNode is null here but selected may still be set;
+                    // this branch only reached when there's truly no focus (e.g. no selection yet)
+                    gLinks.selectAll(".d3-link")
+                        .transition("highlight").duration(200)
+                        .style("opacity", 0)
+                        .attr("stroke-opacity", null);
                 }
 
                 gNodes.selectAll(".d3-node")
