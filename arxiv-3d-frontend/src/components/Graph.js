@@ -357,6 +357,10 @@ export const Graph = ({
                     .style("pointer-events", "none")
                     .style("mix-blend-mode", "multiply")
                     .style("display", "none"); // Hidden by default
+
+                // Use foreignObject for consistent text-wrap label at the bottom of every hexagon
+                const fo = el.append("foreignObject").attr("class", "hex-label-fo");
+                fo.append("xhtml:div").attr("class", "hex-label-div");
             } else if (isGalaxy) {
                 // Check if Galaxy Timeline
                 if (layoutMode === 'TIMELINE') {
@@ -571,17 +575,41 @@ export const Graph = ({
                             iconEl.style("display", "none");
                         }
 
-                        // Label inside the bottom of the hexagon
-                        // "inside the boarder" -> Move up more
-                        el.select(".label-main")
-                            .text(d.name)
-                            .attr("x", 0)
-                            .attr("y", 0)
-                            .attr("dx", 0)
-                            .attr("dy", val * 2.5 - 35) // Adjusted from -45 to -35 as icon pushes things around
-                            .attr("text-anchor", "middle")
-                            .style("font-size", "22px")
-                            .style("fill", "#1e293b"); // Ensure contrast
+                        // Label: consistent bottom-center via foreignObject HTML div
+                        const hexR = val * 2.5; // hexagon 'radius'
+                        const labelW = hexR * 1.4; // label area is 70% of diameter
+                        const labelH = hexR * 0.8; // enough height for 2 lines
+                        // Place label box at the bottom third of the hexagon
+                        const labelY = hexR * 0.25;
+                        el.select(".hex-label-fo")
+                            .attr("x", -labelW / 2)
+                            .attr("y", labelY)
+                            .attr("width", labelW)
+                            .attr("height", labelH)
+                            .style("overflow", "visible")
+                            .style("pointer-events", "none");
+
+                        el.select(".hex-label-div")
+                            .style("width", `${labelW}px`)
+                            .style("height", `${labelH}px`)
+                            .style("display", "flex")
+                            .style("align-items", "center")
+                            .style("justify-content", "center")
+                            .style("text-align", "center")
+                            .style("font-family", "Inter, system-ui, sans-serif")
+                            .style("font-size", `${Math.max(10, Math.min(16, val * 0.28))}px`)
+                            .style("font-weight", "600")
+                            .style("color", "#1e293b")
+                            .style("line-height", "1.2")
+                            .style("word-break", "break-word")
+                            .style("overflow-wrap", "break-word")
+                            .style("white-space", "normal")
+                            .style("padding", "0 4px")
+                            .style("box-sizing", "border-box")
+                            .text(d.name);
+
+                        // Hide the old SVG text label (kept for timeline mode)
+                        el.select(".label-main").text("");
                     }
                 } else {
                     el.select(".orbit").attr("r", val * 2.5);
