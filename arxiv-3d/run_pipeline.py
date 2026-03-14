@@ -46,6 +46,7 @@ from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).parent
+DATA_DIR = SCRIPT_DIR / "data"
 CHECKPOINT_VERSION = 2
 
 
@@ -177,8 +178,8 @@ def batch_key(from_year: int, to_year: int) -> str:
 # ---------------------------------------------------------------------------
 
 def find_galaxy_args() -> list:
-    node_files = sorted(glob.glob(str(SCRIPT_DIR / "*_nodes.json")))
-    generic = SCRIPT_DIR / "nodes.json"
+    node_files = sorted(glob.glob(str(DATA_DIR / "*_nodes.json")))
+    generic = DATA_DIR / "nodes.json"
     if generic.exists():
         node_files = [str(generic)] + node_files
 
@@ -192,9 +193,9 @@ def find_galaxy_args() -> list:
             edges_file = f"{base}_edges.json"
             meta_file = f"{base}_metadata.json"
             name = base.replace("_", " ").title()
-        if not (SCRIPT_DIR / edges_file).exists() or not (SCRIPT_DIR / meta_file).exists():
+        if not (DATA_DIR / edges_file).exists() or not (DATA_DIR / meta_file).exists():
             continue
-        galaxies.append(f"{idx}:{name}:{nodes_file}:{edges_file}:{meta_file}")
+        galaxies.append(f"{idx}:{name}:data/{nodes_file}:data/{edges_file}:data/{meta_file}")
     return galaxies
 
 
@@ -269,13 +270,16 @@ def main() -> None:
     db = args.db
     slug = args.topic.lower().replace(" ", "_")
 
-    # Output filenames scoped to topic
+    # Ensure data directory exists
+    DATA_DIR.mkdir(exist_ok=True)
+
+    # Output filenames scoped to topic (relative to SCRIPT_DIR / cwd)
     if slug == "particle_physics":
-        nodes_out, edges_out, meta_out = "nodes.json", "edges.json", "metadata.json"
+        nodes_out, edges_out, meta_out = "data/nodes.json", "data/edges.json", "data/metadata.json"
     else:
-        nodes_out = f"{slug}_nodes.json"
-        edges_out = f"{slug}_edges.json"
-        meta_out  = f"{slug}_metadata.json"
+        nodes_out = f"data/{slug}_nodes.json"
+        edges_out = f"data/{slug}_edges.json"
+        meta_out  = f"data/{slug}_metadata.json"
 
     # Load checkpoint
     cp = load_checkpoint(db)
@@ -484,7 +488,7 @@ def main() -> None:
             cmd = [
                 sys.executable, "build_universe_json.py",
                 "--email", args.email,
-                "--output", "universe.json",
+                "--output", "data/universe.json",
             ]
             if args.frontend_dir:
                 cmd += ["--frontend-dir", args.frontend_dir]

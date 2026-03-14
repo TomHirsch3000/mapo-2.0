@@ -500,7 +500,7 @@ def fetch_physics_subfields(email: str) -> List[Dict[str, Any]]:
 def main():
     parser = argparse.ArgumentParser(description="Generate universe.json from galaxy data")
     parser.add_argument("--galaxies", nargs="+", help="Galaxy definitions in format id:name:nodesFile:edgesFile:metadataFile", default=[])
-    parser.add_argument("--output", default="universe.json", help="Output JSON file path")
+    parser.add_argument("--output", default="data/universe.json", help="Output JSON file path")
     parser.add_argument("--frontend-dir", help="Path to frontend public dir to copy universe.json to")
     parser.add_argument("--layout", default="spiral", choices=["spiral", "cluster", "circle"], help="Layout algorithm")
     parser.add_argument("--email", help="Email for OpenAlex API (polite pool)")
@@ -693,6 +693,7 @@ def main():
         }
     }
     
+    os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
     with open(args.output, 'w', encoding='utf-8') as f:
         json.dump(output_data, f, indent=2)
         
