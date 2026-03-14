@@ -97,11 +97,11 @@ def check_relevance_llm(title: str, abstract: str, target_field: str) -> bool:
 
 
 def run_mislabel_detection(conn: sqlite3.Connection, target_field: str, limit: Optional[int] = None):
-    print(f"\n--- Starting Mislabel Detection (Target Field: {target_field}) ---")
+    print(f"\n--- Starting Mislabel Detection (Target: {target_field or 'AUTO (Per Paper)'}) ---")
     
     # Select papers that haven't been flagged as mislabelled yet (or check all?)
     # For now, let's just go through all.
-    query = "SELECT paperId, title, abstract, mislabelled_paper FROM papers"
+    query = "SELECT paperId, title, abstract, mislabelled_paper, AI_primary_field FROM papers"
     if limit:
         query += f" LIMIT {limit}"
     
@@ -115,19 +115,24 @@ def run_mislabel_detection(conn: sqlite3.Connection, target_field: str, limit: O
         title = row["title"] or ""
         abstract = row["abstract"] or ""
         
-        # Skip if no text to judge
-        if not title and not abstract:
+        # Determine target category
+        # If target_field is explicitly provided (e.g. 'Astrophysics'), use it.
+        # Otherwise, check against the paper's own assigned AI_primary_field.
+        check_against = target_field
+        if not check_against or check_against == 'AUTO':
+            check_against = row["AI_primary_field"]
+
+        # Skip if no text to judge or no category to check against
+        if (not title and not abstract) or not check_against or check_against == 'Unknown':
             continue
 
-        is_relevant = check_relevance_llm(title, abstract, target_field)
+        is_relevant = check_relevance_llm(title, abstract, check_against)
         
         if not is_relevant:
-            print(f"[MISLABEL DETECTED] {pid} | {title[:40]}... -> NOT {target_field}")
+            print(f"[MISLABEL] {pid} | {title[:40]}... != {check_against}")
             updates.append((1, pid))
         else:
-             # Reset to 0 if we want to re-verify? 
-             # Or just skip? Let's assume we only mark 1s.
-             # If strictly enforcing, we might want to set to 0 to 'clear' mistakes.
+             # Option: Set to 0 if relevant? 
              pass
 
         if (i + 1) % 10 == 0:
@@ -295,7 +300,7 @@ def run_field_standardization(conn: sqlite3.Connection, top_50: List[str], limit
 def main():
     parser = argparse.ArgumentParser(description="Clean and Categorize Papers")
     parser.add_argument("--db", required=True, help="Path to SQLite database")
-    parser.add_argument("--field", default="Physics", help="Target field for mislabel detection (e.g. 'Astrophysics')")
+    parser.add_argument("--field", default="AUTO", help="Target field for mislabel detection. Use 'AUTO' to check against each paper's primary field.")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of rows to process")
     parser.add_argument("--skip-mislabel", action="store_true", help="Skip mislabel detection step")
     parser.add_argument("--skip-standardize", action="store_true", help="Skip field standardization step")

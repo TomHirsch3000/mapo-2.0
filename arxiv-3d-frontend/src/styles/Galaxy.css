@@ -49,6 +49,10 @@
     backdrop-filter: blur(8px);
     border: 1px solid rgba(0, 0, 0, 0.05);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    max-width: 50vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Control UI Styling */
@@ -218,7 +222,7 @@
     box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.05);
     z-index: 1000;
     max-height: 33vh;
-    min-height: 15vh;
+    min-height: 30vh;
     overflow-y: auto;
     transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -308,11 +312,6 @@
     line-height: 1.6;
 }
 
-/* Compact hover panel (when both are shown) */
-.footer-panel.hover-panel .footer-abstract {
-    display: none;
-    /* Hide abstract in hover panel to save space */
-}
 
 /* Scrollbar styling for light mode */
 .galaxy-footer::-webkit-scrollbar {
@@ -354,4 +353,54 @@
         padding: 10px 20px;
         font-size: 0.85rem;
     }
+}
+
+/* Paper Node Styles - Added for Topic View */
+.node-paper-card {
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    rx: 6px;
+    ry: 6px;
+    stroke: rgba(0, 0, 0, 0.1);
+    stroke-width: 1px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05));
+    cursor: pointer;
+    /* fill controlled by JS */
+}
+
+.node-paper-card:hover {
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.1));
+    stroke: rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    /* Check rendering engine support */
+}
+
+/* ForeignObject Content for Papers */
+.node-fo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.node-paper-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    /* Base size */
+    line-height: 1.25;
+    color: #334155;
+    font-weight: 500;
+    text-align: center;
+
+    /* Clamp text */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

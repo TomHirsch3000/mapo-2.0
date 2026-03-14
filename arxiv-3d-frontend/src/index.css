@@ -11,3 +11,25 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@keyframes shimmer-pulse {
+  0% {
+    filter: brightness(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    filter: brightness(1.3);
+    opacity: 1;
+  }
+
+  100% {
+    filter: brightness(1);
+    opacity: 0.8;
+  }
+}
+
+.node-shimmer .orbit {
+  animation: shimmer-pulse 1.5s infinite ease-in-out;
+  /* stroke removed to allow border to shimmer */
+}
