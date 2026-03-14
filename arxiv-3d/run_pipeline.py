@@ -1,104 +1,200 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-run_pipeline.py — Orchestrate the full pipeline to download and process a new physics topic.
+run_pipeline.py — Orchestrate the full pipeline with checkpointing and batching.
 
-Usage:
-    python run_pipeline.py \
-        --topic "Astrophysics" \
-        --db papers_astrophysics.db \
-        --email your@email.com \
-        --sample 2000
+Handles crashes/shutdowns by saving progress to a checkpoint file after every
+completed batch or step. Re-running the same command resumes from where it stopped.
 
-Steps run in order:
-    1. import_openalex.py        — Fetch papers from OpenAlex API
-    2. rebuild_citations_openalex.py — Build citation edges
-    3. fetch_abstracts_s2_arxiv.py   — Fill missing abstracts
-    4. process_ai_metadata.py    — Generate AI categories, summaries
-    5. clean_and_categorize.py   — Standardize fields, detect mislabels
-    6. build_frontend_json.py    — Generate nodes/edges JSON for visualization
-    7. build_universe_json.py    — Update universe view with all known topics
+QUICK START — add a new physics topic:
+    python run_pipeline.py \\
+        --topic "Nuclear Physics" \\
+        --db papers_nuclear_physics.db \\
+        --email your@email.com
 
-Skip any step with --skip-step N (e.g. --skip-step 1 --skip-step 2).
-Resume from a specific step with --from-step N.
+STEP-BY-STEP DEFAULTS:
+    Step 1 — Import      : downloads papers in 10-year batches (1950 → now), no per-batch limit
+    Step 2 — Citations   : builds citation edges (already resumable internally)
+    Step 3 — Abstracts   : fills missing abstracts (already resumable internally)
+    Step 4 — AI metadata : runs AI on up to --ai-sample papers, --ai-batch-size at a time
+    Step 5 — Standardize : cleans field labels (skip-mislabel by default)
+    Step 6 — Frontend    : generates nodes/edges JSON
+    Step 7 — Universe    : rebuilds universe.json with all known topics
+
+TUNING PARAMETERS:
+    --papers-per-batch 500   Limit papers fetched per year-range (0 = no limit)
+    --year-batch-size  10    How many years per import batch (default: 10)
+    --year-start       1950  First publication year to import (default: 1950)
+    --year-end         2025  Last publication year to import (default: current year)
+    --ai-sample        500   Total papers to run AI on (0 = all; can run again for more)
+    --ai-batch-size    200   Papers processed per AI subprocess call
+
+RESUMING:
+    Just re-run the exact same command — completed batches and steps are skipped.
+    To force a step to re-run: --force-step 4
+    To skip a step entirely:   --skip-step 3
 """
 
 import argparse
+import datetime
 import glob
 import json
-import os
+import sqlite3
 import subprocess
 import sys
 from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).parent
+CHECKPOINT_VERSION = 2
 
 
 # ---------------------------------------------------------------------------
-# Helpers
+# Checkpoint helpers
 # ---------------------------------------------------------------------------
 
-def run(cmd: list[str], step_name: str) -> None:
-    """Run a subprocess command and exit on failure."""
+def checkpoint_path(db: str) -> Path:
+    stem = Path(db).stem
+    return SCRIPT_DIR / f"{stem}_checkpoint.json"
+
+
+def load_checkpoint(db: str) -> dict:
+    p = checkpoint_path(db)
+    if p.exists():
+        try:
+            with open(p) as f:
+                data = json.load(f)
+            if data.get("version") == CHECKPOINT_VERSION:
+                return data
+            print(f"[checkpoint] Version mismatch — starting fresh (old: {data.get('version')})")
+        except Exception as e:
+            print(f"[checkpoint] Could not read {p}: {e} — starting fresh")
+    return {"version": CHECKPOINT_VERSION, "import_batches_done": [], "steps_done": [], "ai_processed": 0}
+
+
+def save_checkpoint(db: str, cp: dict) -> None:
+    cp["updated"] = datetime.datetime.now().isoformat(timespec="seconds")
+    p = checkpoint_path(db)
+    with open(p, "w") as f:
+        json.dump(cp, f, indent=2)
+
+
+def mark_step_done(db: str, cp: dict, step: int) -> None:
+    if step not in cp["steps_done"]:
+        cp["steps_done"].append(step)
+    save_checkpoint(db, cp)
+
+
+def mark_import_batch_done(db: str, cp: dict, batch_key: str) -> None:
+    if batch_key not in cp["import_batches_done"]:
+        cp["import_batches_done"].append(batch_key)
+    save_checkpoint(db, cp)
+
+
+# ---------------------------------------------------------------------------
+# DB helpers (read-only queries from orchestrator)
+# ---------------------------------------------------------------------------
+
+def count_unprocessed_ai(db: str) -> int:
+    """Count papers that still need AI processing."""
+    db_path = SCRIPT_DIR / db
+    if not db_path.exists():
+        return 0
+    try:
+        conn = sqlite3.connect(str(db_path))
+        # Check if AI columns exist first
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(papers)").fetchall()}
+        if "AI_field_list" not in cols:
+            n = conn.execute("SELECT COUNT(*) FROM papers").fetchone()[0]
+        else:
+            n = conn.execute("""
+                SELECT COUNT(*) FROM papers
+                WHERE AI_field_list IS NULL OR AI_field_list = '[]'
+                   OR AI_summary IS NULL OR TRIM(AI_summary) = ''
+            """).fetchone()[0]
+        conn.close()
+        return n
+    except Exception as e:
+        print(f"[warn] Could not query DB for AI count: {e}")
+        return 0
+
+
+def count_total_papers(db: str) -> int:
+    db_path = SCRIPT_DIR / db
+    if not db_path.exists():
+        return 0
+    try:
+        conn = sqlite3.connect(str(db_path))
+        n = conn.execute("SELECT COUNT(*) FROM papers").fetchone()[0]
+        conn.close()
+        return n
+    except Exception:
+        return 0
+
+
+# ---------------------------------------------------------------------------
+# Subprocess runner
+# ---------------------------------------------------------------------------
+
+def run_cmd(cmd: list, label: str, fatal: bool = True) -> bool:
+    """Run a subprocess. Returns True on success. Exits if fatal=True on failure."""
     print(f"\n{'='*60}")
-    print(f"  STEP: {step_name}")
-    print(f"  CMD: {' '.join(cmd)}")
+    print(f"  {label}")
+    print(f"  $ {' '.join(str(c) for c in cmd)}")
     print(f"{'='*60}")
-    result = subprocess.run(cmd, cwd=SCRIPT_DIR)
+    result = subprocess.run([str(c) for c in cmd], cwd=SCRIPT_DIR)
     if result.returncode != 0:
-        print(f"\n[FATAL] Step '{step_name}' failed with exit code {result.returncode}.")
-        print("Fix the error and re-run with --from-step to resume from this point.")
-        sys.exit(result.returncode)
-    print(f"\n[OK] {step_name} completed successfully.")
+        print(f"\n[FAIL] Exit code {result.returncode}")
+        if fatal:
+            print("Re-run the same command to resume from this point.")
+            sys.exit(result.returncode)
+        return False
+    print(f"[OK] Done.")
+    return True
 
 
-def topic_to_slug(topic: str) -> str:
-    """Convert topic name to a safe lowercase slug, e.g. 'Astrophysics' -> 'astrophysics'."""
-    return topic.lower().replace(" ", "_")
+# ---------------------------------------------------------------------------
+# Year-range batching helpers
+# ---------------------------------------------------------------------------
+
+def make_year_batches(year_start: int, year_end: int, batch_size: int) -> list:
+    """Return list of (from_year, to_year) tuples covering year_start..year_end."""
+    batches = []
+    y = year_start
+    while y <= year_end:
+        end = min(y + batch_size - 1, year_end)
+        batches.append((y, end))
+        y = end + 1
+    return batches
 
 
-def find_existing_galaxy_args(current_topic_slug: str, current_db: str) -> list[str]:
-    """
-    Scan for existing topic JSON files in SCRIPT_DIR and build --galaxies args
-    for build_universe_json.py. Includes the current topic being built.
+def batch_key(from_year: int, to_year: int) -> str:
+    return f"{from_year}-{to_year}"
 
-    Each galaxy arg format: "N:TopicName:nodes.json:edges.json:metadata.json"
-    """
-    # Find all *_nodes.json files (excluding the generic nodes.json for particle physics)
+
+# ---------------------------------------------------------------------------
+# Galaxy discovery for universe step
+# ---------------------------------------------------------------------------
+
+def find_galaxy_args() -> list:
     node_files = sorted(glob.glob(str(SCRIPT_DIR / "*_nodes.json")))
-
-    # Also include generic nodes.json (particle physics default)
-    generic_nodes = SCRIPT_DIR / "nodes.json"
-    if generic_nodes.exists():
-        node_files = [str(generic_nodes)] + node_files
+    generic = SCRIPT_DIR / "nodes.json"
+    if generic.exists():
+        node_files = [str(generic)] + node_files
 
     galaxies = []
-    idx = 1
-
-    for nodes_path in node_files:
+    for idx, nodes_path in enumerate(node_files, start=1):
         nodes_file = Path(nodes_path).name
-
-        # Derive edges + metadata filenames
         if nodes_file == "nodes.json":
-            edges_file = "edges.json"
-            meta_file = "metadata.json"
-            name = "Particle Physics"
+            edges_file, meta_file, name = "edges.json", "metadata.json", "Particle Physics"
         else:
             base = nodes_file.replace("_nodes.json", "")
             edges_file = f"{base}_edges.json"
             meta_file = f"{base}_metadata.json"
             name = base.replace("_", " ").title()
-
-        # Only include if all three files exist
-        edges_path = SCRIPT_DIR / edges_file
-        meta_path = SCRIPT_DIR / meta_file
-        if not edges_path.exists() or not meta_path.exists():
+        if not (SCRIPT_DIR / edges_file).exists() or not (SCRIPT_DIR / meta_file).exists():
             continue
-
         galaxies.append(f"{idx}:{name}:{nodes_file}:{edges_file}:{meta_file}")
-        idx += 1
-
     return galaxies
 
 
@@ -108,35 +204,58 @@ def find_existing_galaxy_args(current_topic_slug: str, current_db: str) -> list[
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="Run the full pipeline to add a new physics topic to the database.",
+        description="Run the full pipeline to download and process a new physics topic.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
 
+    # Required
     p.add_argument("--topic", required=True,
-                   help="Human-readable topic name, e.g. 'Astrophysics' or 'Nuclear Physics'")
+                   help="Topic name, e.g. 'Astrophysics'")
     p.add_argument("--db", required=True,
                    help="SQLite DB filename, e.g. papers_astrophysics.db")
     p.add_argument("--email", required=True,
-                   help="Email for OpenAlex polite pool (required by their API)")
+                   help="Email for OpenAlex polite pool")
 
-    p.add_argument("--sample", type=int, default=2000,
-                   help="Max papers to import (default: 2000). Use 0 for unlimited.")
+    # Import batching
+    p.add_argument("--year-start", type=int, default=1950,
+                   help="First publication year to import (default: 1950)")
+    p.add_argument("--year-end", type=int, default=datetime.date.today().year,
+                   help="Last publication year to import (default: current year)")
+    p.add_argument("--year-batch-size", type=int, default=10,
+                   help="Years per import batch (default: 10). Increase to 20+ for sparse topics.")
+    p.add_argument("--papers-per-batch", type=int, default=0,
+                   help="Max papers per year-range batch (default: 0 = no limit). "
+                        "Use e.g. 500 to cap each decade.")
+
+    # AI sampling
+    p.add_argument("--ai-sample", type=int, default=500,
+                   help="Total papers to run AI on (default: 500). "
+                        "0 = process everything. Re-run to process more.")
+    p.add_argument("--ai-batch-size", type=int, default=200,
+                   help="Papers per AI subprocess call (default: 200). "
+                        "Reduce to 50-100 if Ollama is slow.")
+
+    # Visualization
     p.add_argument("--min-citations", type=int, default=5,
-                   help="Min citations for visualization (default: 5)")
-    p.add_argument("--from-step", type=int, default=1,
-                   help="Resume from this step number (default: 1 = start from beginning)")
-    p.add_argument("--skip-step", type=int, action="append", default=[],
-                   help="Skip this step number. Can be repeated.")
-    p.add_argument("--reset-import", action="store_true",
-                   help="Pass --reset to import_openalex (wipes existing papers table)")
-    p.add_argument("--reset-citations", action="store_true",
-                   help="Pass --reset to rebuild_citations (wipes existing citations table)")
-    p.add_argument("--skip-mislabel", action="store_true", default=True,
-                   help="Skip mislabel detection in clean_and_categorize (default: True, saves time)")
+                   help="Min citations to include in visualization (default: 5)")
     p.add_argument("--frontend-dir", type=str,
                    default=str(SCRIPT_DIR.parent / "arxiv-3d-frontend" / "public"),
                    help="Directory to copy JSON files into for the frontend")
+
+    # Step control
+    p.add_argument("--skip-step", type=int, action="append", default=[],
+                   help="Skip this step number entirely (repeatable). E.g. --skip-step 3 --skip-step 7")
+    p.add_argument("--force-step", type=int, action="append", default=[],
+                   help="Re-run this step even if checkpoint marks it done (repeatable).")
+    p.add_argument("--only-step", type=int, default=None,
+                   help="Run only this single step number.")
+    p.add_argument("--reset-import", action="store_true",
+                   help="Wipe and restart the papers table from scratch.")
+    p.add_argument("--reset-citations", action="store_true",
+                   help="Wipe and restart the citations table from scratch.")
+    p.add_argument("--skip-mislabel", action="store_true", default=True,
+                   help="Skip mislabel detection in step 5 (default: True)")
 
     return p.parse_args()
 
@@ -147,71 +266,183 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-
-    slug = topic_to_slug(args.topic)
     db = args.db
+    slug = args.topic.lower().replace(" ", "_")
 
-    # Derived output filenames (scoped to this topic)
-    if slug in ("particle_physics",):
-        # Particle physics uses the generic filenames (existing convention)
-        nodes_out = "nodes.json"
-        edges_out = "edges.json"
-        meta_out = "metadata.json"
+    # Output filenames scoped to topic
+    if slug == "particle_physics":
+        nodes_out, edges_out, meta_out = "nodes.json", "edges.json", "metadata.json"
     else:
         nodes_out = f"{slug}_nodes.json"
         edges_out = f"{slug}_edges.json"
-        meta_out = f"{slug}_metadata.json"
+        meta_out  = f"{slug}_metadata.json"
 
-    skip = set(args.skip_step)
+    # Load checkpoint
+    cp = load_checkpoint(db)
+    cp.setdefault("topic", args.topic)
+    cp.setdefault("db", db)
+    save_checkpoint(db, cp)
+
+    forced  = set(args.force_step)
+    skipped = set(args.skip_step)
 
     def should_run(step: int) -> bool:
-        return step >= args.from_step and step not in skip
+        if args.only_step is not None:
+            return step == args.only_step
+        if step in skipped:
+            return False
+        if step in forced:
+            return True
+        if step in cp["steps_done"]:
+            print(f"\n[checkpoint] Step {step} already done — skipping. "
+                  f"Use --force-step {step} to re-run.")
+            return False
+        return True
+
+    print(f"\n{'='*60}")
+    print(f"  Pipeline: {args.topic}")
+    print(f"  Database: {db}")
+    print(f"  Checkpoint: {checkpoint_path(db).name}")
+    print(f"  Steps done so far: {cp['steps_done']}")
+    print(f"  Import batches done: {len(cp['import_batches_done'])}")
+    print(f"  AI papers processed: {cp['ai_processed']}")
+    print(f"{'='*60}")
 
     # ------------------------------------------------------------------
-    # STEP 1: Import papers
+    # STEP 1 — Import papers (year-range batches)
     # ------------------------------------------------------------------
     if should_run(1):
-        cmd = [
-            sys.executable, "import_openalex.py",
-            "--topic-name", args.topic,
-            "--db", db,
-            "--email", args.email,
-        ]
-        if args.sample > 0:
-            cmd += ["--sample", str(args.sample)]
-        if args.reset_import:
-            cmd.append("--reset")
-        run(cmd, "1 — Import papers from OpenAlex")
+        batches = make_year_batches(args.year_start, args.year_end, args.year_batch_size)
+        done_keys = set(cp["import_batches_done"])
+
+        # Handle --force-step 1 by clearing batch history for this topic
+        if 1 in forced:
+            print("[info] --force-step 1: clearing import batch history from checkpoint")
+            cp["import_batches_done"] = []
+            done_keys = set()
+            save_checkpoint(db, cp)
+
+        pending = [(f, t) for (f, t) in batches if batch_key(f, t) not in done_keys]
+        print(f"\n[step 1] Import: {len(batches)} year-range batches total, "
+              f"{len(done_keys)} already done, {len(pending)} to go.")
+
+        for from_y, to_y in pending:
+            bk = batch_key(from_y, to_y)
+            cmd = [
+                sys.executable, "import_openalex.py",
+                "--topic-name", args.topic,
+                "--db", db,
+                "--email", args.email,
+                "--from-year", str(from_y),
+                "--to-year",   str(to_y),
+            ]
+            if args.papers_per_batch > 0:
+                cmd += ["--sample", str(args.papers_per_batch)]
+            if args.reset_import:
+                cmd.append("--reset")
+                args.reset_import = False  # only reset on first batch
+
+            ok = run_cmd(cmd, f"1 — Import {from_y}–{to_y}", fatal=False)
+            if ok:
+                mark_import_batch_done(db, cp, bk)
+                total = count_total_papers(db)
+                print(f"[checkpoint] Batch {bk} done. Total papers in DB: {total}")
+            else:
+                print(f"[warn] Batch {bk} failed. Will retry next run.")
+                print("Stopping here. Re-run to resume from this batch.")
+                sys.exit(1)
+
+        mark_step_done(db, cp, 1)
+        print(f"\n[step 1] Import complete. Total papers: {count_total_papers(db)}")
 
     # ------------------------------------------------------------------
-    # STEP 2: Build citation edges
+    # STEP 2 — Build citation edges
     # ------------------------------------------------------------------
     if should_run(2):
         cmd = [sys.executable, "rebuild_citations_openalex.py", "--db", db]
         if args.reset_citations:
             cmd.append("--reset")
-        run(cmd, "2 — Rebuild citation edges")
+        run_cmd(cmd, "2 — Rebuild citation edges")
+        mark_step_done(db, cp, 2)
 
     # ------------------------------------------------------------------
-    # STEP 3: Fetch missing abstracts
+    # STEP 3 — Fetch missing abstracts
     # ------------------------------------------------------------------
     if should_run(3):
-        cmd = [sys.executable, "fetch_abstracts_s2_arxiv.py", "--db", db]
-        run(cmd, "3 — Fetch missing abstracts (Semantic Scholar / arXiv)")
+        run_cmd(
+            [sys.executable, "fetch_abstracts_s2_arxiv.py", "--db", db],
+            "3 — Fetch missing abstracts (Semantic Scholar / arXiv)"
+        )
+        mark_step_done(db, cp, 3)
 
     # ------------------------------------------------------------------
-    # STEP 4: Generate AI metadata
+    # STEP 4 — AI metadata (sampled, batched loop)
     # ------------------------------------------------------------------
     if should_run(4):
-        cmd = [
-            sys.executable, "process_ai_metadata.py",
-            "--db", db,
-            "--only-unprocessed", "1",
-        ]
-        run(cmd, "4 — Generate AI categories + summaries (requires Ollama)")
+        target = args.ai_sample  # 0 = no limit
+        batch  = args.ai_batch_size
+
+        # On force, reset the counter so we can process more papers
+        if 4 in forced:
+            cp["ai_processed"] = 0
+            save_checkpoint(db, cp)
+
+        already_done = cp["ai_processed"]
+        remaining_target = (target - already_done) if target > 0 else float("inf")
+
+        unprocessed = count_unprocessed_ai(db)
+        print(f"\n[step 4] AI metadata:")
+        print(f"         Unprocessed papers in DB : {unprocessed}")
+        print(f"         Already processed (this run): {already_done}")
+        print(f"         Target (--ai-sample)     : {target if target > 0 else 'unlimited'}")
+        print(f"         Batch size               : {batch}")
+
+        if remaining_target <= 0:
+            print(f"[checkpoint] Already reached AI sample target ({target}). "
+                  f"Use --force-step 4 to process more, or increase --ai-sample.")
+        elif unprocessed == 0:
+            print("[info] No unprocessed papers found — skipping AI step.")
+            mark_step_done(db, cp, 4)
+        else:
+            processed_this_run = 0
+            while True:
+                to_process = batch if target == 0 else min(batch, int(remaining_target) - processed_this_run)
+                if to_process <= 0:
+                    break
+
+                unprocessed = count_unprocessed_ai(db)
+                if unprocessed == 0:
+                    print("[info] All papers now have AI metadata.")
+                    break
+
+                print(f"\n[step 4] Running AI on next {to_process} papers "
+                      f"({processed_this_run + already_done} done so far, "
+                      f"{unprocessed} remaining in DB)...")
+
+                run_cmd(
+                    [
+                        sys.executable, "process_ai_metadata.py",
+                        "--db", db,
+                        "--only-unprocessed", "1",
+                        "--limit", str(to_process),
+                    ],
+                    f"4 — AI metadata (batch of {to_process})"
+                )
+
+                processed_this_run += to_process
+                cp["ai_processed"] = already_done + processed_this_run
+                save_checkpoint(db, cp)
+
+                if target > 0 and processed_this_run >= int(remaining_target):
+                    print(f"[info] Reached AI sample target ({target} total). "
+                          f"Re-run with --force-step 4 or increase --ai-sample for more.")
+                    break
+
+            mark_step_done(db, cp, 4)
+            print(f"\n[step 4] AI done. Total processed: {cp['ai_processed']}")
 
     # ------------------------------------------------------------------
-    # STEP 5: Clean and standardize fields
+    # STEP 5 — Clean and standardize fields
     # ------------------------------------------------------------------
     if should_run(5):
         cmd = [
@@ -221,10 +452,11 @@ def main() -> None:
         ]
         if args.skip_mislabel:
             cmd.append("--skip-mislabel")
-        run(cmd, "5 — Clean and standardize field classifications")
+        run_cmd(cmd, "5 — Clean and standardize field classifications")
+        mark_step_done(db, cp, 5)
 
     # ------------------------------------------------------------------
-    # STEP 6: Build frontend JSON
+    # STEP 6 — Build frontend JSON
     # ------------------------------------------------------------------
     if should_run(6):
         cmd = [
@@ -238,15 +470,16 @@ def main() -> None:
         ]
         if args.frontend_dir:
             cmd += ["--frontend-dir", args.frontend_dir]
-        run(cmd, "6 — Build nodes/edges JSON for frontend")
+        run_cmd(cmd, "6 — Build nodes/edges JSON for frontend")
+        mark_step_done(db, cp, 6)
 
     # ------------------------------------------------------------------
-    # STEP 7: Update universe view
+    # STEP 7 — Rebuild universe view
     # ------------------------------------------------------------------
     if should_run(7):
-        galaxies = find_existing_galaxy_args(slug, db)
+        galaxies = find_galaxy_args()
         if not galaxies:
-            print("[warn] No galaxy JSON files found — skipping universe build.")
+            print("[warn] No topic JSON files found — skipping universe build.")
         else:
             cmd = [
                 sys.executable, "build_universe_json.py",
@@ -257,13 +490,17 @@ def main() -> None:
                 cmd += ["--frontend-dir", args.frontend_dir]
             for g in galaxies:
                 cmd += ["--galaxies", g]
-            run(cmd, "7 — Build universe view (all topics)")
+            run_cmd(cmd, "7 — Build universe view")
+        mark_step_done(db, cp, 7)
 
+    # ------------------------------------------------------------------
+    # Summary
+    # ------------------------------------------------------------------
     print(f"\n{'='*60}")
-    print(f"  Pipeline complete for topic: {args.topic}")
-    print(f"  Database: {db}")
-    print(f"  Nodes:    {nodes_out}")
-    print(f"  Edges:    {edges_out}")
+    print(f"  Pipeline complete: {args.topic}")
+    print(f"  Papers in DB     : {count_total_papers(db)}")
+    print(f"  AI processed     : {cp['ai_processed']}")
+    print(f"  Steps done       : {sorted(cp['steps_done'])}")
     print(f"{'='*60}\n")
 
 
