@@ -53,7 +53,7 @@ export const FooterPanel = ({ selected, hovered, layoutMode, onDetailedViewClick
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <img
-                                src="./Mapo information flow.png"
+                                src={process.env.PUBLIC_URL + "/Mapo information flow.png"}
                                 alt="Map of Physics Information Flow"
                                 style={{
                                     maxWidth: '400px',
@@ -107,7 +107,7 @@ export const FooterPanel = ({ selected, hovered, layoutMode, onDetailedViewClick
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                                     {hovered.iconPath && (
                                         <img
-                                            src={hovered.iconPath}
+                                            src={process.env.PUBLIC_URL + hovered.iconPath}
                                             alt={hovered.name || hovered.title}
                                             style={{
                                                 width: '40px',

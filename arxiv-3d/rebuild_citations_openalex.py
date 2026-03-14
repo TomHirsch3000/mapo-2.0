@@ -119,6 +119,7 @@ def get_done_sources(conn: sqlite3.Connection) -> set:
 def iter_paper_id_chunks(
     conn: sqlite3.Connection,
     chunk_size: int = 2000,
+    min_citations: int = None,
 ) -> Iterable[List[str]]:
     """
     Iterate over paperIds in the papers table in chunks.
@@ -127,11 +128,17 @@ def iter_paper_id_chunks(
     """
     c = conn.cursor()
     offset = 0
+    query = "SELECT paperId FROM papers"
+    params = []
+    if min_citations is not None:
+        query += " WHERE cited_by_count >= ?"
+        params.append(min_citations)
+    
+    query += " LIMIT ? OFFSET ?;"
+    
     while True:
-        rows = c.execute(
-            "SELECT paperId FROM papers LIMIT ? OFFSET ?;",
-            (chunk_size, offset),
-        ).fetchall()
+        chunk_params = params + [chunk_size, offset]
+        rows = c.execute(query, chunk_params).fetchall()
         if not rows:
             break
         yield [row[0] for row in rows]
@@ -147,6 +154,7 @@ def rebuild_citations(
     reset: bool = False,
     id_chunk_size: int = 2000,
     batch_size: int = BATCH_SIZE,
+    min_citations: int = None,
 ) -> None:
     conn = sqlite3.connect(db_path, timeout=30)
     c = conn.cursor()
@@ -159,15 +167,18 @@ def rebuild_citations(
     if not reset:
         done_sources = get_done_sources(conn)
 
-    total_papers = c.execute("SELECT COUNT(*) FROM papers;").fetchone()[0]
-    print(f"[info] Found {total_papers} papers in DB")
+    if min_citations is not None:
+        total_papers = c.execute("SELECT COUNT(*) FROM papers WHERE cited_by_count >= ?;", (min_citations,)).fetchone()[0]
+    else:
+        total_papers = c.execute("SELECT COUNT(*) FROM papers;").fetchone()[0]
+    print(f"[info] Found {total_papers} papers in DB to process")
 
     total_refs_seen = 0
     total_rows_inserted = 0
     processed_papers = 0
 
     # Iterate over all papers in DB in ID chunks
-    for id_chunk in iter_paper_id_chunks(conn, chunk_size=id_chunk_size):
+    for id_chunk in iter_paper_id_chunks(conn, chunk_size=id_chunk_size, min_citations=min_citations):
         # Filter out any that we've already processed as sources
         remaining_ids = [pid for pid in id_chunk if pid not in done_sources]
         if not remaining_ids:
@@ -296,6 +307,12 @@ def parse_args():
         default=BATCH_SIZE,
         help="How many OpenAlex IDs per HTTP request (default: 60)",
     )
+    p.add_argument(
+        "--min-citations",
+        type=int,
+        default=None,
+        help="Only rebuild citations for papers with at least this many citations",
+    )
     return p.parse_args()
 
 
@@ -307,6 +324,7 @@ def main():
             reset=args.reset,
             id_chunk_size=args.id_chunk_size,
             batch_size=args.batch_size,
+            min_citations=args.min_citations,
         )
     except KeyboardInterrupt:
         print("\n[info] Interrupted by user (Ctrl+C). "

@@ -96,12 +96,20 @@ def check_relevance_llm(title: str, abstract: str, target_field: str) -> bool:
         return True
 
 
-def run_mislabel_detection(conn: sqlite3.Connection, target_field: str, limit: Optional[int] = None):
+def run_mislabel_detection(conn: sqlite3.Connection, target_field: str, limit: Optional[int] = None, min_citations: Optional[int] = None):
     print(f"\n--- Starting Mislabel Detection (Target: {target_field or 'AUTO (Per Paper)'}) ---")
     
     # Select papers that haven't been flagged as mislabelled yet (or check all?)
     # For now, let's just go through all.
     query = "SELECT paperId, title, abstract, mislabelled_paper, AI_primary_field FROM papers"
+    conditions = []
+    
+    if min_citations is not None:
+        conditions.append(f"cited_by_count >= {min_citations}")
+        
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+        
     if limit:
         query += f" LIMIT {limit}"
     
@@ -228,7 +236,7 @@ def classify_single_field_llm(abstract: str, top_50: List[str]) -> str:
         return "Unknown"
 
 
-def run_field_standardization(conn: sqlite3.Connection, top_50: List[str], limit: Optional[int] = None):
+def run_field_standardization(conn: sqlite3.Connection, top_50: List[str], limit: Optional[int] = None, min_citations: Optional[int] = None):
     print("\n--- Starting Field Standardization ---")
     
     # Process papers. 
@@ -237,6 +245,14 @@ def run_field_standardization(conn: sqlite3.Connection, top_50: List[str], limit
     # 2. No? -> LLM classify.
     
     query = "SELECT paperId, title, abstract, AI_field_list, AI_primary_field FROM papers"
+    conditions = []
+    
+    if min_citations is not None:
+        conditions.append(f"cited_by_count >= {min_citations}")
+        
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+        
     if limit:
         query += f" LIMIT {limit}"
         
@@ -302,6 +318,7 @@ def main():
     parser.add_argument("--db", required=True, help="Path to SQLite database")
     parser.add_argument("--field", default="AUTO", help="Target field for mislabel detection. Use 'AUTO' to check against each paper's primary field.")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of rows to process")
+    parser.add_argument("--min-citations", type=int, default=None, help="Only process papers with more than N citations")
     parser.add_argument("--skip-mislabel", action="store_true", help="Skip mislabel detection step")
     parser.add_argument("--skip-standardize", action="store_true", help="Skip field standardization step")
     
@@ -313,7 +330,7 @@ def main():
     try:
         # Step 1: Mislabel Detection
         if not args.skip_mislabel:
-            run_mislabel_detection(conn, args.field, args.limit)
+            run_mislabel_detection(conn, args.field, args.limit, args.min_citations)
             
         # Step 2: Field Standardization
         if not args.skip_standardize:
@@ -322,7 +339,7 @@ def main():
             if not top_50:
                 print("[error] Could not generate Top 50 fields list. Is AI_field_list populated?")
             else:
-                run_field_standardization(conn, top_50, args.limit)
+                run_field_standardization(conn, top_50, args.limit, args.min_citations)
                 
     finally:
         conn.close()

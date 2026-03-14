@@ -372,6 +372,10 @@ export const Graph = ({
                 } else {
                     el.append("circle").attr("class", "orbit");
                     el.append("circle").attr("class", "core");
+
+                    // Use foreignObject for text-wrap labels below Galaxy circles
+                    const fo = el.append("foreignObject").attr("class", "galaxy-label-fo");
+                    fo.append("xhtml:div").attr("class", "galaxy-label-div");
                 }
 
             } else if (isField) {
@@ -479,8 +483,42 @@ export const Graph = ({
                     el.select(".orbit").attr("r", radius).attr("fill", cScale(d.xGroup)).attr("fill-opacity", 0.15)
                         .attr("width", null).attr("height", null); // Clear rect attrs
                     el.select(".core").attr("r", radius * 0.6).attr("fill", cScale(d.xGroup));
-                    el.select(".label-main").text((d.name || "").substring(0, 25)).attr("dy", radius + 25).style("font-size", "28px");
-                    el.select(".label-sub").text(d.nodeCount ? `${d.nodeCount} papers` : "").attr("dy", radius + 45);
+
+                    // Label: consistent bottom-center via foreignObject HTML div
+                    const labelW = Math.max(120, radius * 3); // Allow enough width to wrap
+                    const labelH = 60; // Max height for a few lines
+                    // Place label box right below the circle
+                    const labelY = radius + 4;
+
+                    el.select(".galaxy-label-fo")
+                        .attr("x", -labelW / 2)
+                        .attr("y", labelY)
+                        .attr("width", labelW)
+                        .attr("height", labelH)
+                        .style("overflow", "visible")
+                        .style("pointer-events", "none");
+
+                    el.select(".galaxy-label-div")
+                        .style("width", `${labelW}px`)
+                        .style("height", `${labelH}px`)
+                        .style("display", "flex")
+                        .style("flex-direction", "column")
+                        .style("align-items", "center")
+                        .style("justify-content", "flex-start")
+                        .style("text-align", "center")
+                        .style("font-family", "Inter, system-ui, sans-serif")
+                        // Scale font based on val, clamp between 10px and 20px
+                        .style("font-size", `${Math.max(10, Math.min(20, val * 0.04))}px`)
+                        .style("color", "#1e293b")
+                        .style("line-height", "1.2")
+                        .html(`
+                            <div style="font-weight: 600; margin-bottom: 2px;">${d.name || ""}</div>
+                            ${d.nodeCount ? `<div style="font-weight: 400; font-size: 0.8em; color: #475569;">${d.nodeCount} papers</div>` : ""}
+                        `);
+
+                    // Hide the old legacy SVG text fields
+                    el.select(".label-main").text("");
+                    el.select(".label-sub").text("");
                 }
             } else if (isUniverse) {
                 const val = d.val || 20;

@@ -9,6 +9,8 @@ This document serves as the single source of truth for the **Map of Physics** ap
 ## 1. Core Interface & Experience
 The application is an interactive 2D visualization of academic papers arranged in a graph form. The design philosophy emphasizes immersion, smoothness, and a "premium" feel.
 
+Mapo is a tool for people who want to learn what real evidence there is behind an idea. It allows a user to find a topic and understand all it's sources without having to fully drive into the literature. It answers the question, why do we think this is true? 
+
 ### Canvas & Environment
 -   **Description**: A clean, expansive 2D chart rendered on a soft white/light grey background (~#f0f0f0).
 -   **Grid**: The canvas must be free of visible gridlines to maintain an organic feel.

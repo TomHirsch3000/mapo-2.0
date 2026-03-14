@@ -372,6 +372,17 @@ def build_nodes(
         z = math.log1p(cited_by_count or 0) * 10.0
 
         size = get_size_from_citations(cited_by_count)
+        
+        # Enforce Title Case except for specific acronyms
+        if ai_primary_field:
+            if ai_primary_field.lower() in ["high energy physics", "high-energy physics"]:
+                ai_primary_field = "High Energy Physics"
+            elif ai_primary_field.lower() in ["particle physics", "elementary particle physics"]:
+                ai_primary_field = "Particle Physics"
+            elif "qcd" in ai_primary_field.lower() or "quantum chromodynamics" in ai_primary_field.lower():
+                ai_primary_field = "Quantum Chromodynamics"
+            else:
+                ai_primary_field = ai_primary_field.title()
 
         node = {
             "id": paperId,
