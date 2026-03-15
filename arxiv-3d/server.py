@@ -104,6 +104,134 @@ def get_paper_details(paper_id):
     finally:
         conn.close()
 
+@app.route('/api/search', methods=['GET'])
+def search_topics():
+    query = request.args.get('query', '').strip()
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+
+    try:
+        min_citations = int(request.args.get('min_citations', 0))
+        max_papers = int(request.args.get('max_papers', 50))
+    except ValueError:
+        return jsonify({"error": "Invalid parameters. Must be integers."}), 400
+
+    conn = get_db_connection()
+    try:
+        search_term = f'%{query}%'
+
+        # 1. Find core papers matching the search query
+        core_rows = conn.execute("""
+            SELECT * FROM papers
+            WHERE (title LIKE ? OR AI_summary LIKE ? OR abstract LIKE ? OR AI_primary_field LIKE ?)
+            AND cited_by_count >= ?
+            ORDER BY cited_by_count DESC
+            LIMIT ?
+        """, (search_term, search_term, search_term, search_term, min_citations, max_papers)).fetchall()
+
+        if not core_rows:
+            return jsonify({
+                "nodes": [], "edges": [], "searchQuery": query,
+                "stats": {"core": 0, "foundation": 0, "impact": 0}
+            })
+
+        core_ids = set(row['paperId'] for row in core_rows)
+        core_ph = ','.join(['?'] * len(core_ids))
+        core_id_list = list(core_ids)
+
+        # 2. Foundation papers: papers that core papers cite (the evidence chain — why we believe it)
+        foundation_edge_rows = conn.execute(
+            f"SELECT source, target FROM citations WHERE source IN ({core_ph}) LIMIT 500",
+            core_id_list
+        ).fetchall()
+        foundation_target_ids = set(r['target'] for r in foundation_edge_rows) - core_ids
+
+        # 3. Impact papers: papers that cite core papers (where this led)
+        impact_edge_rows = conn.execute(
+            f"SELECT source, target FROM citations WHERE target IN ({core_ph}) LIMIT 500",
+            core_id_list
+        ).fetchall()
+        impact_source_ids = set(r['source'] for r in impact_edge_rows) - core_ids
+
+        # 4. Fetch context node details (top by citation count)
+        MAX_CONTEXT = 30
+
+        def fetch_context_nodes(id_set, limit):
+            if not id_set:
+                return []
+            ids = list(id_set)
+            ph = ','.join(['?'] * len(ids))
+            return conn.execute(
+                f"SELECT * FROM papers WHERE paperId IN ({ph}) ORDER BY cited_by_count DESC LIMIT {limit}",
+                ids
+            ).fetchall()
+
+        foundation_rows = fetch_context_nodes(foundation_target_ids, MAX_CONTEXT)
+        impact_rows = fetch_context_nodes(impact_source_ids, MAX_CONTEXT)
+
+        valid_foundation_ids = set(r['paperId'] for r in foundation_rows)
+        valid_impact_ids = set(r['paperId'] for r in impact_rows)
+
+        # 5. Format nodes
+        def format_node(row, node_type):
+            yr = row['year']
+            if not yr and row['publicationDate']:
+                try:
+                    yr = int(row['publicationDate'].split('-')[0])
+                except Exception:
+                    yr = 2000
+            return {
+                "id": row['paperId'],
+                "title": row['title'],
+                "year": yr,
+                "citationCount": row['cited_by_count'] or 0,
+                "primaryField": row['AI_primary_field'] or row['primary_concept'] or "Unassigned",
+                "abstract": row['AI_summary'] or row['abstract'] or "No abstract available.",
+                "authors": row['all_author_names'] or row['first_author_name'] or "Unknown",
+                "institutions": row['all_institution_names'] or "",
+                "nodeType": node_type,
+                "data": dict(row)
+            }
+
+        formatted_nodes = (
+            [format_node(r, 'core') for r in core_rows] +
+            [format_node(r, 'foundation') for r in foundation_rows] +
+            [format_node(r, 'impact') for r in impact_rows]
+        )
+
+        # 6. Build edges between valid nodes
+        all_valid_ids = core_ids | valid_foundation_ids | valid_impact_ids
+        seen_edges = set()
+        edges_out = []
+
+        def add_edge(source, target, edge_type):
+            key = f"{source}|{target}"
+            if key not in seen_edges and source in all_valid_ids and target in all_valid_ids:
+                seen_edges.add(key)
+                edges_out.append({"source": source, "target": target, "importance": 1, "edgeType": edge_type})
+
+        for row in foundation_edge_rows:
+            add_edge(row['source'], row['target'], 'foundation')
+        for row in impact_edge_rows:
+            add_edge(row['source'], row['target'], 'impact')
+
+        return jsonify({
+            "nodes": formatted_nodes,
+            "edges": edges_out,
+            "searchQuery": query,
+            "stats": {
+                "core": len(core_rows),
+                "foundation": len(valid_foundation_ids),
+                "impact": len(valid_impact_ids)
+            }
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
 if __name__ == '__main__':
     # Use environment variables for port to support Render deployment seamlessly
     port = int(os.environ.get('PORT', 5000))

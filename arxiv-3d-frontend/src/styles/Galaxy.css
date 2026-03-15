@@ -355,6 +355,122 @@
     }
 }
 
+/* ============================================================
+   Search Bar Styles
+   ============================================================ */
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+}
+
+.search-bar-inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 10px;
+    width: 16px;
+    height: 16px;
+    color: #94a3b8;
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+.search-input {
+    width: 260px;
+    padding: 8px 36px 8px 34px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    color: #334155;
+    outline: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+}
+
+.search-input::placeholder {
+    color: #94a3b8;
+}
+
+.search-input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: #ffffff;
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 2px 4px;
+    line-height: 1;
+    border-radius: 4px;
+    transition: color 0.15s;
+}
+
+.search-clear-btn:hover {
+    color: #64748b;
+}
+
+.search-submit-btn {
+    padding: 8px 18px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+    color: #ffffff;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.search-submit-btn:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+}
+
+.search-submit-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(99, 102, 241, 0.3);
+}
+
+/* ============================================================
+   Search View Node Styles
+   ============================================================ */
+
+/* Dummy hub node pulse animation */
+@keyframes search-pulse {
+    0%   { opacity: 0.12; r: 90; }
+    50%  { opacity: 0.22; r: 96; }
+    100% { opacity: 0.12; r: 90; }
+}
+
+.search-dummy-orbit {
+    animation: search-pulse 3s ease-in-out infinite;
+}
+
+/* Colour legend hints for search view card borders */
+/* core = indigo #6366f1 */
+/* foundation = emerald #10b981 (evidence) */
+/* impact = amber #f59e0b (where it led) */
+
 /* Paper Node Styles - Added for Topic View */
 .node-paper-card {
     transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);

@@ -393,4 +393,58 @@ export class LayoutEngine {
         return sim;
     }
 
+    // --- Search View Layout ---
+
+    applySearchLayout(nodes, edges, sim) {
+        // Hub-and-spoke: dummy node pinned at centre, others arranged in rings by type.
+        // nodeType: 'search_dummy' | 'core' | 'foundation' | 'impact'
+
+        const coreNodes = nodes.filter(n => n.nodeType === 'core');
+        const foundationNodes = nodes.filter(n => n.nodeType === 'foundation');
+        const impactNodes = nodes.filter(n => n.nodeType === 'impact');
+
+        // Pin dummy at centre
+        nodes.forEach(n => {
+            if (n.isSearchDummy) {
+                n.fx = 0;
+                n.fy = this.graphCenterY;
+                n.x = 0;
+                n.y = this.graphCenterY;
+            }
+        });
+
+        // Seed initial positions so the simulation starts near target rings
+        const placeRing = (nodeList, radius) => {
+            nodeList.forEach((n, i) => {
+                const theta = (i / Math.max(1, nodeList.length)) * 2 * Math.PI;
+                n.x = Math.cos(theta) * radius;
+                n.y = Math.sin(theta) * radius + this.graphCenterY;
+                n.vx = 0;
+                n.vy = 0;
+            });
+        };
+
+        placeRing(coreNodes, 280);
+        placeRing(foundationNodes, 560);
+        placeRing(impactNodes, 560);
+
+        const cy = this.graphCenterY;
+
+        sim
+            .force('link', d3.forceLink(edges).id(d => d.id).distance(180).strength(0.15))
+            .force('charge', d3.forceManyBody().strength(d => d.isSearchDummy ? -2000 : -400))
+            .force('collide', d3.forceCollide().radius(d => {
+                if (d.isSearchDummy) return 120;
+                return (d._w ? d._w * 0.55 : 50) + 10;
+            }).iterations(3))
+            .force('radial', d3.forceRadial(d => {
+                if (d.isSearchDummy) return 0;
+                if (d.nodeType === 'core') return 280;
+                return 540;
+            }, 0, cy).strength(d => d.isSearchDummy ? 1 : 0.6))
+            .force('center', null);
+
+        return sim;
+    }
+
 }

@@ -15,11 +15,14 @@ export default function App() {
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
 
   // --- Global State ---
-  const [viewMode, setViewMode] = useState('UNIVERSE'); // 'UNIVERSE' | 'GALAXY' | 'FIELD' | 'DETAIL'
+  const [viewMode, setViewMode] = useState('UNIVERSE'); // 'UNIVERSE' | 'GALAXY' | 'FIELD' | 'DETAIL' | 'SEARCH'
   const [activeGalaxy, setActiveGalaxy] = useState(null);
   const [activeGroup, setActiveGroup] = useState(null);
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
+
+  // --- Search State ---
+  const [searchFilter, setSearchFilter] = useState(null); // { query, minCitations, maxPapers }
 
   // --- Layout State ---
   const [layout, setLayout] = useState('CENTRAL'); // 'CENTRAL' | 'TIMELINE'
@@ -47,7 +50,7 @@ export default function App() {
   const isReturningRef = useRef(false);
 
   // --- Data Hook ---
-  const { nodes, edges, groupStats, xGroups, yGroups, universeData, rawNodes, rawEdges, isLoadingDetail, cancelDetailFetch } = useGraphData(viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected, detailFilter, setShowTimeoutPrompt);
+  const { nodes, edges, groupStats, xGroups, yGroups, universeData, rawNodes, rawEdges, isLoadingDetail, cancelDetailFetch } = useGraphData(viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected, detailFilter, setShowTimeoutPrompt, searchFilter);
 
   // --- Handlers ---
   const handleGalaxyClick = (galaxyId) => {
@@ -66,11 +69,26 @@ export default function App() {
     setSelected(null);
   };
 
+  const handleSearch = (query) => {
+    setSearchFilter({ query, minCitations: 0, maxPapers: 50 });
+    setViewMode('SEARCH');
+    setSelected(null);
+  };
+
+  const handleBackFromSearch = () => {
+    setViewMode('UNIVERSE');
+    setSearchFilter(null);
+    setSelected(null);
+    setActiveGalaxy(null);
+    setActiveGroup(null);
+  };
+
   const handleBackToUniverse = () => {
     isReturningRef.current = true;
     setActiveGalaxy(null);
     setActiveGroup(null);
     setViewMode('UNIVERSE');
+    setSearchFilter(null);
     // Layout persists globally, no need to restore from ref
     setSelected(null);
   };
@@ -101,6 +119,9 @@ export default function App() {
       handleGalaxyClick(d.id);
     } else if (viewMode === 'GALAXY') {
       handleGroupClick(d.key);
+    } else if (viewMode === 'SEARCH') {
+      if (d.isSearchDummy) return; // Dummy node is not selectable
+      handlePaperClick(d);
     } else {
       handlePaperClick(d);
     }
@@ -111,10 +132,13 @@ export default function App() {
   };
 
   const handleNodeDoubleClick = (paper) => {
-    // Deprecated via double click, moved to button in footer panel, but kept for power users
     if (viewMode === 'UNIVERSE' || viewMode === 'GALAXY') return;
-    setActiveDoubleClickPaper(paper);
-    setShowDetailPrompt(true);
+    if (paper.isSearchDummy) return; // Don't search on the dummy node itself
+    // Double-click triggers a topic search using the paper's primary field or title
+    const searchTerm = paper.primaryField && paper.primaryField !== 'Unassigned'
+      ? paper.primaryField
+      : paper.title;
+    handleSearch(searchTerm);
   };
 
   const handleDetailedViewClick = (paper) => {
@@ -270,10 +294,13 @@ export default function App() {
         selected={selected}
         activeGroupLabel={activeGroup} // Simplified label
         galaxyName={activeGalaxy && universeData ? (universeData.nodes?.find(n => n.id === activeGalaxy)?.name || "Galaxy View") : "Galaxy View"}
+        searchQuery={searchFilter?.query || ''}
         onBackToUniverse={handleBackToUniverse}
         onBackToGalaxy={handleBackToGalaxy}
+        onBackFromSearch={handleBackFromSearch}
         onLayoutChange={setLayout}
         onGroupingChange={setGrouping}
+        onSearch={handleSearch}
       />
 
       <Graph
@@ -291,6 +318,7 @@ export default function App() {
         onGroupClick={handleGroupClick}
         onBackgroundClick={handleBackgroundClick}
         onNodeDoubleClick={handleNodeDoubleClick}
+        onSearch={handleSearch}
 
         onNodeHover={setHovered}
 

@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import * as d3 from 'd3';
 
-export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected, detailFilter, setShowTimeoutPrompt) => {
+export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected, detailFilter, setShowTimeoutPrompt, searchFilter) => {
     const [universeData, setUniverseData] = useState(null);
     const [rawNodes, setRawNodes] = useState([]);
     const [rawEdges, setRawEdges] = useState([]);
@@ -90,6 +90,39 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         }
     };
 
+    // --- Load Search Data (Flask API) ---
+    useEffect(() => {
+        if (viewMode !== 'SEARCH' || !searchFilter) return;
+
+        setIsLoadingDetail(true);
+        if (abortControllerRef.current) abortControllerRef.current.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        const { query, minCitations, maxPapers } = searchFilter;
+        const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const url = `${backendUrl}/api/search?query=${encodeURIComponent(query)}&min_citations=${minCitations}&max_papers=${maxPapers}`;
+
+        fetch(url, { signal: controller.signal })
+            .then(res => {
+                if (!res.ok) throw new Error('Search API request failed');
+                return res.json();
+            })
+            .then(data => {
+                setRawNodes(data.nodes || []);
+                setRawEdges(data.edges || []);
+                setIsLoadingDetail(false);
+            })
+            .catch(err => {
+                if (err.name !== 'AbortError') {
+                    console.error('Search failed:', err);
+                    setIsLoadingDetail(false);
+                }
+            });
+
+        return () => controller.abort();
+    }, [viewMode, searchFilter]);
+
     // Process Nodes & Groups
     const { nodes, groupStats, xGroups, groupEdges, yGroups } = useMemo(() => {
         if (!rawNodes || rawNodes.length === 0) return { nodes: [], groupStats: [], xGroups: [], groupEdges: [], yGroups: [] };
@@ -131,6 +164,7 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
                 authors: d.allAuthors || d.firstAuthor || "Unknown",
                 institutions: d.institutions,
                 val: Math.min(50, Math.max(5, Math.sqrt(cites) * 2)),
+                nodeType: d.nodeType || null, // Preserved from search API response
                 data: d // Keep original data accessible
             };
 
@@ -323,7 +357,7 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
             if (!selected) return nodes;
 
             // STRICT EGO-NETWORK FILTERING
-            // The user ONLY wants to see papers connected to the selected paper. 
+            // The user ONLY wants to see papers connected to the selected paper.
             // The API might return unconnected "context" papers, so we physically filter them out here.
             const connectedIndices = new Set();
             connectedIndices.add(selected.id);
@@ -337,24 +371,61 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
 
             return nodes.filter(n => connectedIndices.has(String(n.id)));
         }
+        if (viewMode === 'SEARCH') {
+            // Inject a central dummy node representing the search query
+            const query = searchFilter?.query || '';
+            const dummyNode = {
+                id: 'search-dummy',
+                title: query,
+                name: query,
+                isSearchDummy: true,
+                nodeType: 'search_dummy',
+                val: 60,
+                citationCount: 0,
+                year: null,
+                group: 'search',
+                xGroup: 'search',
+                field: 'search',
+                abstract: `Search results for: "${query}". The inner ring shows directly matching papers. The outer ring shows the foundations that support this topic (what these papers cite) and the impact — papers that cited these works.`,
+                authors: '',
+                institutions: ''
+            };
+            return [dummyNode, ...nodes];
+        }
         return nodes; // Default
-    }, [viewMode, universeNodes, aggregatedNodes, nodes, activeGroup, selected, rawEdges]);
+    }, [viewMode, universeNodes, aggregatedNodes, nodes, activeGroup, selected, rawEdges, searchFilter]);
 
     // Process Edges - Filter based on Active Nodes
     const edges = useMemo(() => {
         if (viewMode === 'GALAXY') return groupEdges; // Return aggregated edges for Galaxy View
-        if (viewMode !== 'FIELD' && viewMode !== 'DETAIL') return []; // Only show paper edges in Field and Detail View
+        if (viewMode !== 'FIELD' && viewMode !== 'DETAIL' && viewMode !== 'SEARCH') return [];
 
         // Create a set of active node IDs for fast lookup
         const activeIds = new Set(activeNodes.map(n => n.id));
 
-        return rawEdges
+        const paperEdges = rawEdges
             .map(e => ({
                 source: String(e.source),
                 target: String(e.target),
-                importance: e.importance ?? 1
+                importance: e.importance ?? 1,
+                edgeType: e.edgeType || null
             }))
             .filter(e => activeIds.has(e.source) && activeIds.has(e.target) && e.source !== e.target);
+
+        if (viewMode === 'SEARCH') {
+            // Add spokes from dummy node to each core paper
+            const coreSpokes = activeNodes
+                .filter(n => n.nodeType === 'core')
+                .map(n => ({
+                    source: 'search-dummy',
+                    target: n.id,
+                    importance: 1,
+                    edgeType: 'spoke'
+                }));
+            return [...coreSpokes, ...paperEdges];
+        }
+
+        return paperEdges;
     }, [rawEdges, activeNodes, viewMode, groupEdges]);
 
     // Helper to clear data

@@ -64,7 +64,8 @@ export const Graph = ({
         const svg = d3.select(svgRef.current);
         const isUniverse = viewMode === 'UNIVERSE';
         const isGalaxy = viewMode === 'GALAXY';
-        const isField = viewMode === 'FIELD' || viewMode === 'DETAIL';
+        const isSearch = viewMode === 'SEARCH';
+        const isField = viewMode === 'FIELD' || viewMode === 'DETAIL' || isSearch;
 
         // --- DATA PREP ---
         const currentNodes = nodes.map(n => ({ ...n })); // Shallow copy to prevent mutation issues between runs/views if needed, though d3 mutates inplace usually fine if we reset
@@ -142,6 +143,8 @@ export const Graph = ({
             }
         } else if (isGalaxy) {
             layoutEngine.current.applyGalaxyLayout(currentNodes, currentEdges, sim, layoutMode, scales);
+        } else if (isSearch) {
+            layoutEngine.current.applySearchLayout(currentNodes, currentEdges, sim);
         } else {
             layoutEngine.current.applyFieldLayout(currentNodes, currentEdges, sim, selected, layoutMode, scales);
         }
@@ -379,49 +382,58 @@ export const Graph = ({
                 }
 
             } else if (isField) {
-                // Topic/Field View (Papers)
-                const width = d._w || 80;
-                const height = d._h || 50;
+                if (d.isSearchDummy) {
+                    // Central search dummy node — rendered as a large glowing circle with text
+                    el.append("circle").attr("class", "search-dummy-orbit").attr("r", 90);
+                    el.append("circle").attr("class", "search-dummy-core").attr("r", 72);
+                    const fo = el.append("foreignObject")
+                        .attr("class", "search-dummy-fo")
+                        .attr("x", -72).attr("y", -72)
+                        .attr("width", 144).attr("height", 144);
+                    fo.append("xhtml:div").attr("class", "search-dummy-label");
+                } else {
+                    // Topic/Field View (Papers)
+                    const width = d._w || 80;
+                    const height = d._h || 50;
 
-                // Opaque background to hide links passing behind
-                el.append("rect")
-                    .attr("class", "node-paper-bg")
-                    .attr("x", -width / 2)
-                    .attr("y", -height / 2)
-                    .attr("width", width)
-                    .attr("height", height)
-                    .attr("fill", "#ffffff")
-                    .attr("rx", 6); // Add rounded corners to match the card (if any, see below)
+                    // Opaque background to hide links passing behind
+                    el.append("rect")
+                        .attr("class", "node-paper-bg")
+                        .attr("x", -width / 2)
+                        .attr("y", -height / 2)
+                        .attr("width", width)
+                        .attr("height", height)
+                        .attr("fill", "#ffffff")
+                        .attr("rx", 6);
 
-                el.append("rect")
-                    .attr("class", "node-paper-card")
-                    .attr("x", -width / 2)
-                    .attr("y", -height / 2)
-                    .attr("width", width)
-                    .attr("height", height)
-                    .attr("rx", 6); // Also round the card itself for better appearance
+                    el.append("rect")
+                        .attr("class", "node-paper-card")
+                        .attr("x", -width / 2)
+                        .attr("y", -height / 2)
+                        .attr("width", width)
+                        .attr("height", height)
+                        .attr("rx", 6);
 
-                const fo = el.append("foreignObject")
-                    .attr("class", "node-fo-wrapper")
-                    .attr("x", -width / 2)
-                    .attr("y", -height / 2)
-                    .attr("width", width)
-                    .attr("height", height);
+                    const fo = el.append("foreignObject")
+                        .attr("class", "node-fo-wrapper")
+                        .attr("x", -width / 2)
+                        .attr("y", -height / 2)
+                        .attr("width", width)
+                        .attr("height", height);
 
-                fo.append("xhtml:div")
-                    .attr("class", "node-paper-content")
-                    // Inline styles to force wrapping logic if CSS fails
-                    .style("width", "100%")
-                    .style("height", "100%")
-                    .style("display", "flex")
-                    .style("align-items", "center")
-                    .style("justify-content", "center")
-                    .style("text-align", "center")
-                    .style("overflow", "hidden")
-                    .style("padding", "4px")
-                    .style("box-sizing", "border-box")
-                    .html(d => `<div class="node-paper-title" style="width: 100%; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.2; text-align: center;">${d.title || d.name || 'Untitled'}</div>`);
-
+                    fo.append("xhtml:div")
+                        .attr("class", "node-paper-content")
+                        .style("width", "100%")
+                        .style("height", "100%")
+                        .style("display", "flex")
+                        .style("align-items", "center")
+                        .style("justify-content", "center")
+                        .style("text-align", "center")
+                        .style("overflow", "hidden")
+                        .style("padding", "4px")
+                        .style("box-sizing", "border-box")
+                        .html(d => `<div class="node-paper-title" style="width: 100%; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.2; text-align: center;">${d.title || d.name || 'Untitled'}</div>`);
+                }
 
             } else {
                 // Field (Fallback or Universe non-menu nodes not covered above?? Actually Universe covered in first block)
@@ -653,42 +665,81 @@ export const Graph = ({
                     el.select(".orbit").attr("r", val * 2.5);
                 }
             } else if (isField) {
-                // Field View Styling
-                // Use pre-calculated dimensions
-                const width = d._w || 80;
-                const height = d._h || 50;
+                if (d.isSearchDummy) {
+                    // Search dummy hub node styling
+                    el.select(".search-dummy-orbit")
+                        .attr("r", 90)
+                        .attr("fill", "#6366f1")
+                        .attr("fill-opacity", 0.12)
+                        .attr("stroke", "#6366f1")
+                        .attr("stroke-width", 2)
+                        .attr("stroke-dasharray", "6 3");
 
-                el.select(".node-paper-bg")
-                    .attr("x", -width / 2)
-                    .attr("y", -height / 2)
-                    .attr("width", width)
-                    .attr("height", height);
+                    el.select(".search-dummy-core")
+                        .attr("r", 72)
+                        .attr("fill", "#6366f1")
+                        .attr("fill-opacity", 0.18);
 
-                el.select(".node-paper-card")
-                    .attr("x", -width / 2)
-                    .attr("y", -height / 2)
-                    .attr("width", width)
-                    .attr("height", height)
-                    .attr("fill", cScale(d.xGroup || d.field)) // Color by field
-                    .attr("fill-opacity", 0.2) // Light background
-                    .style("stroke", cScale(d.xGroup || d.field)) // Border color by field
-                    .style("stroke-width", 2);
+                    el.select(".search-dummy-fo")
+                        .attr("x", -72).attr("y", -72)
+                        .attr("width", 144).attr("height", 144);
 
-                el.select(".node-fo-wrapper")
-                    .attr("x", -width / 2)
-                    .attr("y", -height / 2)
-                    .attr("width", width)
-                    .attr("height", height);
+                    el.select(".search-dummy-label")
+                        .style("width", "144px")
+                        .style("height", "144px")
+                        .style("display", "flex")
+                        .style("flex-direction", "column")
+                        .style("align-items", "center")
+                        .style("justify-content", "center")
+                        .style("text-align", "center")
+                        .style("font-family", "Inter, system-ui, sans-serif")
+                        .style("padding", "8px")
+                        .style("box-sizing", "border-box")
+                        .html(`
+                            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6366f1;margin-bottom:4px;">Search</div>
+                            <div style="font-size:13px;font-weight:700;color:#1e293b;line-height:1.3;word-break:break-word;">${d.name || d.title || ''}</div>
+                        `);
+                } else {
+                    // Field View Styling
+                    const width = d._w || 80;
+                    const height = d._h || 50;
 
-                // Adjust font size based on size?
-                // Larger cards can have slightly larger fonts, but keep it readable
-                el.select(".node-paper-title")
-                    .style("font-size", `${Math.min(12, Math.max(9, width / 12))}px`)
-                    .style("width", "100%") // Ensure it takes full width for centering
-                    .style("word-wrap", "break-word")
-                    .style("white-space", "normal")
-                    .style("text-align", "center")
-                    .style("overflow-wrap", "anywhere"); // Break long words if needed
+                    // Colour by nodeType in SEARCH mode, else by field
+                    const nodeTypeColors = { core: '#6366f1', foundation: '#10b981', impact: '#f59e0b' };
+                    const cardColor = (isSearch && d.nodeType && nodeTypeColors[d.nodeType])
+                        ? nodeTypeColors[d.nodeType]
+                        : cScale(d.xGroup || d.field);
+
+                    el.select(".node-paper-bg")
+                        .attr("x", -width / 2)
+                        .attr("y", -height / 2)
+                        .attr("width", width)
+                        .attr("height", height);
+
+                    el.select(".node-paper-card")
+                        .attr("x", -width / 2)
+                        .attr("y", -height / 2)
+                        .attr("width", width)
+                        .attr("height", height)
+                        .attr("fill", cardColor)
+                        .attr("fill-opacity", 0.2)
+                        .style("stroke", cardColor)
+                        .style("stroke-width", 2);
+
+                    el.select(".node-fo-wrapper")
+                        .attr("x", -width / 2)
+                        .attr("y", -height / 2)
+                        .attr("width", width)
+                        .attr("height", height);
+
+                    el.select(".node-paper-title")
+                        .style("font-size", `${Math.min(12, Math.max(9, width / 12))}px`)
+                        .style("width", "100%")
+                        .style("word-wrap", "break-word")
+                        .style("white-space", "normal")
+                        .style("text-align", "center")
+                        .style("overflow-wrap", "anywhere");
+                }
             }
         });
 
@@ -828,10 +879,11 @@ export const Graph = ({
         const isGalaxy = viewMode === 'GALAXY';
         const isField = viewMode === 'FIELD';
         const isDetail = viewMode === 'DETAIL';
+        const isSearch = viewMode === 'SEARCH';
         const isUniverseTimeline = viewMode === 'UNIVERSE' && layoutMode === 'TIMELINE';
         const isUniverseCentral = viewMode === 'UNIVERSE' && layoutMode === 'CENTRAL';
 
-        if (isGalaxy || isField || isDetail || isUniverseTimeline || isUniverseCentral) {
+        if (isGalaxy || isField || isDetail || isSearch || isUniverseTimeline || isUniverseCentral) {
             const gLinks = svg.select(".g-links");
             const gNodes = svg.select(".g-nodes");
             const currentEdges = edges;
@@ -840,7 +892,7 @@ export const Graph = ({
             // - In DETAIL view: hover takes precedence over selected (to show hovered paper's edges)
             // - In FIELD view: hover takes precedence, then selected
             // - In no-selection DETAIL view: nothing to focus
-            const focusNode = hovered || ((isField || isDetail) && selected && !isReturning ? selected : null);
+            const focusNode = hovered || ((isField || isDetail || isSearch) && selected && !isReturning ? selected : null);
             const isHovering = !!hovered;
 
             if (focusNode) {
@@ -848,8 +900,8 @@ export const Graph = ({
                 const connectedNodeIds = new Set();
                 connectedNodeIds.add(focusNode.id);
 
-                if (isGalaxy || isField || isDetail) {
-                    const prefix = isField || isDetail ? "P" : "G";
+                if (isGalaxy || isField || isDetail || isSearch) {
+                    const prefix = (isField || isDetail || isSearch) ? "P" : "G";
                     const keyFn = (s, t) => `${prefix}|${s}|${t}`;
 
                     currentEdges.forEach(e => {
@@ -864,12 +916,12 @@ export const Graph = ({
                 }
 
                 // Update Links
-                if (isGalaxy || isField || isDetail) {
-                    const prefix = isField || isDetail ? "P" : "G";
+                if (isGalaxy || isField || isDetail || isSearch) {
+                    const prefix = (isField || isDetail || isSearch) ? "P" : "G";
                     gLinks.selectAll(".d3-link")
                         .transition("highlight").duration(200)
                         .attr("stroke-opacity", function () {
-                            if (isField || isDetail) return null;
+                            if (isField || isDetail || isSearch) return null;
                             const d = d3.select(this).datum();
                             const s = (d.source.id || d.source);
                             const t = (d.target.id || d.target);
@@ -877,14 +929,13 @@ export const Graph = ({
                             return connectedEdgeIds.has(key) ? 0.8 : 0.05;
                         })
                         .style("opacity", function () {
-                            if (!isField && !isDetail) return null;
+                            if (!isField && !isDetail && !isSearch) return null;
                             const d = d3.select(this).datum();
                             const s = (d.source.id || d.source);
                             const t = (d.target.id || d.target);
                             const key = `${prefix}|${s}|${t}`;
 
-                            if (isDetail) {
-                                // DETAIL view: only show edges connected to the focus node (selected or hovered)
+                            if (isDetail || isSearch) {
                                 return connectedEdgeIds.has(key) ? 1 : 0;
                             }
 
@@ -919,10 +970,11 @@ export const Graph = ({
                     .style("opacity", function () {
                         const d = d3.select(this).datum();
                         if (d.id === focusNode.id) return 1;
+                        if (d.isSearchDummy) return 1; // Dummy always visible
 
-                        if (isGalaxy || isField) {
+                        if (isGalaxy || isField || isSearch) {
                             if (connectedNodeIds.has(d.id)) return 1;
-                            return (isField && selected && !isHovering) ? 0 : 0.1;
+                            return ((isField || isSearch) && selected && !isHovering) ? 0 : 0.1;
                         }
 
                         if (isDetail) {
@@ -946,13 +998,11 @@ export const Graph = ({
                             const d = d3.select(this).datum();
                             return Math.max(1, Math.sqrt(d.weight || 1));
                         });
-                } else if (isDetail) {
-                    // DETAIL view default: hide ALL edges unless a node is selected/hovered
-                    // focusNode is null here but selected may still be set;
-                    // this branch only reached when there's truly no focus (e.g. no selection yet)
+                } else if (isDetail || isSearch) {
+                    // DETAIL/SEARCH view default: show all edges at low opacity
                     gLinks.selectAll(".d3-link")
                         .transition("highlight").duration(200)
-                        .style("opacity", 0)
+                        .style("opacity", isSearch ? 0.5 : 0)
                         .attr("stroke-opacity", null);
                 }
 
