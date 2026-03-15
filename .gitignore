@@ -20,7 +20,12 @@ __pycache__/
 # Env files
 .env/
 
+<<<<<<< HEAD
 
 # claude 
 .claude/worktrees/
 .claude/settings.local.json
+=======
+# Build artefacts
+*.zip
+>>>>>>> tidy/consistent-json-naming
