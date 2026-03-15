@@ -482,6 +482,7 @@ def build_edges_enhanced(
 # -------------------------
 
 def save_json(obj: Any, path: str, frontend_dir: Optional[str]):
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, indent=2, ensure_ascii=False)
     print("[info] Wrote:", path)
@@ -535,14 +536,14 @@ def main():
                         help="Maximum publication year (inclusive)")
 
     # Output filename options
-    parser.add_argument("--output-nodes", type=str, default="nodes.json",
-                        help="Output filename for nodes JSON (default: nodes.json)")
-    parser.add_argument("--output-edges", type=str, default="edges.json",
-                        help="Output filename for edges JSON (default: edges.json)")
-    parser.add_argument("--output-metadata", type=str, default="metadata.json",
-                        help="Output filename for metadata JSON (default: metadata.json)")
-    parser.add_argument("--output-clusters", type=str, default="clusters.json",
-                        help="Output filename for clusters JSON (default: clusters.json)")
+    parser.add_argument("--output-nodes", type=str, default="data/nodes.json",
+                        help="Output filename for nodes JSON (default: data/nodes.json)")
+    parser.add_argument("--output-edges", type=str, default="data/edges.json",
+                        help="Output filename for edges JSON (default: data/edges.json)")
+    parser.add_argument("--output-metadata", type=str, default="data/metadata.json",
+                        help="Output filename for metadata JSON (default: data/metadata.json)")
+    parser.add_argument("--output-clusters", type=str, default="data/clusters.json",
+                        help="Output filename for clusters JSON (default: data/clusters.json)")
 
     args = parser.parse_args()
 
