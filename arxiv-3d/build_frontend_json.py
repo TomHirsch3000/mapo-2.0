@@ -536,14 +536,14 @@ def main():
                         help="Maximum publication year (inclusive)")
 
     # Output filename options
-    parser.add_argument("--output-nodes", type=str, default="data/nodes.json",
-                        help="Output filename for nodes JSON (default: data/nodes.json)")
-    parser.add_argument("--output-edges", type=str, default="data/edges.json",
-                        help="Output filename for edges JSON (default: data/edges.json)")
-    parser.add_argument("--output-metadata", type=str, default="data/metadata.json",
-                        help="Output filename for metadata JSON (default: data/metadata.json)")
-    parser.add_argument("--output-clusters", type=str, default="data/clusters.json",
-                        help="Output filename for clusters JSON (default: data/clusters.json)")
+    parser.add_argument("--output-nodes", type=str, default="data/particle_physics_nodes.json",
+                        help="Output filename for nodes JSON (default: data/particle_physics_nodes.json)")
+    parser.add_argument("--output-edges", type=str, default="data/particle_physics_edges.json",
+                        help="Output filename for edges JSON (default: data/particle_physics_edges.json)")
+    parser.add_argument("--output-metadata", type=str, default="data/particle_physics_metadata.json",
+                        help="Output filename for metadata JSON (default: data/particle_physics_metadata.json)")
+    parser.add_argument("--output-clusters", type=str, default="data/particle_physics_clusters.json",
+                        help="Output filename for clusters JSON (default: data/particle_physics_clusters.json)")
 
     args = parser.parse_args()
 

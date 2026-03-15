@@ -179,19 +179,13 @@ def batch_key(from_year: int, to_year: int) -> str:
 
 def find_galaxy_args() -> list:
     node_files = sorted(glob.glob(str(DATA_DIR / "*_nodes.json")))
-    generic = DATA_DIR / "nodes.json"
-    if generic.exists():
-        node_files = [str(generic)] + node_files
 
     galaxies = []
     for idx, nodes_path in enumerate(node_files, start=1):
         nodes_file = Path(nodes_path).name
-        if nodes_file == "nodes.json":
-            edges_file, meta_file, name = "edges.json", "metadata.json", "Particle Physics"
-        else:
-            base = nodes_file.replace("_nodes.json", "")
-            edges_file = f"{base}_edges.json"
-            meta_file = f"{base}_metadata.json"
+        base = nodes_file.replace("_nodes.json", "")
+        edges_file = f"{base}_edges.json"
+        meta_file = f"{base}_metadata.json"
             name = base.replace("_", " ").title()
         if not (DATA_DIR / edges_file).exists() or not (DATA_DIR / meta_file).exists():
             continue
@@ -274,12 +268,9 @@ def main() -> None:
     DATA_DIR.mkdir(exist_ok=True)
 
     # Output filenames scoped to topic (relative to SCRIPT_DIR / cwd)
-    if slug == "particle_physics":
-        nodes_out, edges_out, meta_out = "data/nodes.json", "data/edges.json", "data/metadata.json"
-    else:
-        nodes_out = f"data/{slug}_nodes.json"
-        edges_out = f"data/{slug}_edges.json"
-        meta_out  = f"data/{slug}_metadata.json"
+    nodes_out = f"data/{slug}_nodes.json"
+    edges_out = f"data/{slug}_edges.json"
+    meta_out  = f"data/{slug}_metadata.json"
 
     # Load checkpoint
     cp = load_checkpoint(db)
