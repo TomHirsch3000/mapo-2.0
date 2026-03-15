@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(grep -r venv /c/Users/TomHi/Documents/GitHub/mapo-2.0/arxiv-3d --include=*.py --include=*.sh --include=*.bat --include=*.cmd -l)",
+      "Bash(find /c/Users/TomHi/Documents/GitHub/mapo-2.0 -name *.json -path */.vscode/*)",
+      "Bash(rm -rf /c/Users/TomHi/Documents/GitHub/mapo-2.0/arxiv-3d/venv)",
+      "Bash(mv /c/Users/TomHi/Documents/GitHub/mapo-2.0/arxiv-3d/venv311 /c/Users/TomHi/Documents/GitHub/mapo-2.0/arxiv-3d/venv)",
+      "Bash(grep -n \"particle_physics_nodes\\\\|particle_physics_edges\\\\|particle_physics_metadata\" /c/Users/TomHi/Documents/GitHub/mapo-2.0/arxiv-3d/*.py)",
+      "Bash(grep -rn \"particle_physics\" /c/Users/TomHi/Documents/GitHub/mapo-2.0/arxiv-3d/*.py)",
+      "Bash(find /c/Users/TomHi/Documents/GitHub/mapo-2.0/arxiv-3d-frontend/src -name *.js -not -path */old/*)",
+      "Bash(mv nodes.json particle_physics_nodes.json)",
+      "Bash(mv edges.json particle_physics_edges.json)",
+      "Bash(mv metadata.json particle_physics_metadata.json)",
+      "Bash(mv clusters.json particle_physics_clusters.json)",
+      "Bash(ls /c/Users/TomHi/Documents/GitHub/mapo-2.0/arxiv-3d-frontend/public/*.json)",
+      "Bash(gh pr:*)"
+    ]
+  }
+}
