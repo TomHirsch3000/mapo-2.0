@@ -789,7 +789,7 @@ export const Graph = ({
         }
 
         // 5. ANIMATION SEQUENCE (Fly-in)
-        if (prevViewMode.current !== viewMode && (viewMode === 'GALAXY' || viewMode === 'FIELD')) {
+        if (prevViewMode.current !== viewMode && (viewMode === 'GALAXY' || viewMode === 'FIELD' || viewMode === 'SEARCH')) {
 
             // A. "Blank Screen" / Start State
             // Already set opacity 0 above.
@@ -829,6 +829,24 @@ export const Graph = ({
             gNodes.style("opacity", 1);
             gLinks.style("opacity", 1);
             allLinks.attr("stroke-opacity", 0.6);
+
+            // Auto-fit for Search view whenever data (re-)loads
+            if (viewMode === 'SEARCH' && currentNodes.length > 1) {
+                const xExtent = d3.extent(currentNodes, d => d.x);
+                const yExtent = d3.extent(currentNodes, d => d.y);
+                const padding = 150;
+                if (xExtent[0] !== undefined && yExtent[0] !== undefined) {
+                    const gw = xExtent[1] - xExtent[0];
+                    const gh = yExtent[1] - yExtent[0];
+                    const scale = Math.min(width / (gw + padding * 2), height / (gh + padding * 2), 2);
+                    const cx = (xExtent[0] + xExtent[1]) / 2;
+                    const cy = (yExtent[0] + yExtent[1]) / 2;
+                    svg.transition().duration(800).call(
+                        zoom.transform,
+                        d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy)
+                    );
+                }
+            }
 
             // Auto-fit for Universe Central on initial load or layout change
             if (viewMode === 'UNIVERSE' && layoutMode === 'CENTRAL' && (firstDataRenderRef.current || prevLayoutMode.current !== layoutMode)) {

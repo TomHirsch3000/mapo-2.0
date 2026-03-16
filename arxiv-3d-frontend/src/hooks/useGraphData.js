@@ -94,6 +94,10 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
     useEffect(() => {
         if (viewMode !== 'SEARCH' || !searchFilter) return;
 
+        // Clear any stale data from a previous view immediately so the graph
+        // doesn't briefly render the wrong nodes while the fetch is in flight.
+        setRawNodes([]);
+        setRawEdges([]);
         setIsLoadingDetail(true);
         if (abortControllerRef.current) abortControllerRef.current.abort();
         const controller = new AbortController();
@@ -411,6 +415,13 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
                 edgeType: e.edgeType || null
             }))
             .filter(e => activeIds.has(e.source) && activeIds.has(e.target) && e.source !== e.target);
+
+        if (viewMode === 'DETAIL') {
+            // Only show edges that directly involve the selected (central) paper.
+            // This prevents cross-paper edges between context nodes from cluttering the view.
+            if (!selected) return [];
+            return paperEdges.filter(e => e.source === selected.id || e.target === selected.id);
+        }
 
         if (viewMode === 'SEARCH') {
             // Add spokes from dummy node to each core paper

@@ -355,6 +355,11 @@
     }
 }
 
+/* Spinner used by the search loading overlay */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 /* ============================================================
    Search Bar Styles
    ============================================================ */

@@ -336,6 +336,18 @@ export default function App() {
         onDetailedViewClick={handleDetailedViewClick}
       />
 
+      {viewMode === 'SEARCH' && isLoadingDetail && (
+        <div style={modalOverlayStyle}>
+          <div style={{ ...modalContentStyle, textAlign: 'center', padding: '40px 30px' }}>
+            <div style={spinnerStyle} />
+            <h3 style={{ margin: '20px 0 8px 0', color: '#1e293b' }}>Searching the Map</h3>
+            <p style={{ color: '#64748b', margin: 0, fontSize: '14px' }}>
+              Querying papers related to <strong style={{ color: '#6366f1' }}>"{searchFilter?.query}"</strong>…
+            </p>
+          </div>
+        </div>
+      )}
+
       {showDetailPrompt && (
         <div style={modalOverlayStyle}>
           <div style={modalContentStyle}>
@@ -416,4 +428,13 @@ const confirmButtonStyle = {
   padding: '10px 20px', backgroundColor: '#6366f1',
   border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer',
   fontWeight: 'bold', boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)', transition: 'all 0.2s'
+};
+
+const spinnerStyle = {
+  width: '40px', height: '40px',
+  border: '3px solid rgba(99, 102, 241, 0.15)',
+  borderTopColor: '#6366f1',
+  borderRadius: '50%',
+  margin: '0 auto',
+  animation: 'spin 0.8s linear infinite'
 };
