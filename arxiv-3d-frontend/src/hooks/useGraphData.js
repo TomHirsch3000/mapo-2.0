@@ -90,42 +90,11 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         }
     };
 
-    // --- Load Search Data (Flask API) ---
-    useEffect(() => {
-        if (viewMode !== 'SEARCH' || !searchFilter) return;
-
-        // Clear any stale data from a previous view immediately so the graph
-        // doesn't briefly render the wrong nodes while the fetch is in flight.
-        setRawNodes([]);
-        setRawEdges([]);
-        setIsLoadingDetail(true);
-        if (abortControllerRef.current) abortControllerRef.current.abort();
-        const controller = new AbortController();
-        abortControllerRef.current = controller;
-
-        const { query, minCitations, maxPapers } = searchFilter;
-        const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-        const url = `${backendUrl}/api/search?query=${encodeURIComponent(query)}&min_citations=${minCitations}&max_papers=${maxPapers}`;
-
-        fetch(url, { signal: controller.signal })
-            .then(res => {
-                if (!res.ok) throw new Error('Search API request failed');
-                return res.json();
-            })
-            .then(data => {
-                setRawNodes(data.nodes || []);
-                setRawEdges(data.edges || []);
-                setIsLoadingDetail(false);
-            })
-            .catch(err => {
-                if (err.name !== 'AbortError') {
-                    console.error('Search failed:', err);
-                    setIsLoadingDetail(false);
-                }
-            });
-
-        return () => controller.abort();
-    }, [viewMode, searchFilter]);
+    // --- Search is handled client-side in the activeNodes memo ---
+    // No API call needed: rawNodes already contains the galaxy's paper data from the
+    // static JSON files. Searching against those is instant and works offline.
+    // The Flask /api/search endpoint is kept for when the DB is populated, but the
+    // primary path is the client-side memo below.
 
     // Process Nodes & Groups
     const { nodes, groupStats, xGroups, groupEdges, yGroups } = useMemo(() => {
@@ -376,12 +345,11 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
             return nodes.filter(n => connectedIndices.has(String(n.id)));
         }
         if (viewMode === 'SEARCH') {
-            // Inject a central dummy node representing the search query
-            const query = searchFilter?.query || '';
+            const query = (searchFilter?.query || '').toLowerCase().trim();
             const dummyNode = {
                 id: 'search-dummy',
-                title: query,
-                name: query,
+                title: searchFilter?.query || '',
+                name: searchFilter?.query || '',
                 isSearchDummy: true,
                 nodeType: 'search_dummy',
                 val: 60,
@@ -390,14 +358,61 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
                 group: 'search',
                 xGroup: 'search',
                 field: 'search',
-                abstract: `Search results for: "${query}". The inner ring shows directly matching papers. The outer ring shows the foundations that support this topic (what these papers cite) and the impact — papers that cited these works.`,
+                abstract: `Search results for: "${searchFilter?.query}". The inner ring shows directly matching papers. The outer ring shows the foundations that support this topic (what these papers cite) and the impact — papers that cited these works.`,
                 authors: '',
                 institutions: ''
             };
-            return [dummyNode, ...nodes];
+
+            if (!query) return [dummyNode];
+
+            // 1. Find core nodes: papers matching the query in title, field, or abstract
+            const coreNodes = nodes
+                .filter(n => {
+                    const t = (n.title || '').toLowerCase();
+                    const f = (n.field || n.xGroup || '').toLowerCase();
+                    const a = (n.abstract || '').toLowerCase();
+                    return t.includes(query) || f.includes(query) || a.includes(query);
+                })
+                .sort((a, b) => (b.citationCount || 0) - (a.citationCount || 0))
+                .slice(0, 50)
+                .map(n => ({ ...n, nodeType: 'core' }));
+
+            if (coreNodes.length === 0) return [dummyNode];
+
+            const coreIds = new Set(coreNodes.map(n => n.id));
+            const nodeMap = new Map(nodes.map(n => [n.id, n]));
+
+            // 2. Find foundation nodes: nodes that core papers cite (outgoing edges from core)
+            const foundationIds = new Set();
+            const impactIds = new Set();
+            rawEdges.forEach(e => {
+                const src = String(e.source?.id ?? e.source);
+                const tgt = String(e.target?.id ?? e.target);
+                if (coreIds.has(src) && !coreIds.has(tgt) && nodeMap.has(tgt)) {
+                    foundationIds.add(tgt);
+                }
+                if (coreIds.has(tgt) && !coreIds.has(src) && nodeMap.has(src)) {
+                    impactIds.add(src);
+                }
+            });
+
+            // Remove overlap: prefer foundation over impact
+            impactIds.forEach(id => { if (foundationIds.has(id)) impactIds.delete(id); });
+
+            const foundationNodes = Array.from(foundationIds)
+                .map(id => ({ ...nodeMap.get(id), nodeType: 'foundation' }))
+                .sort((a, b) => (b.citationCount || 0) - (a.citationCount || 0))
+                .slice(0, 40);
+
+            const impactNodes = Array.from(impactIds)
+                .map(id => ({ ...nodeMap.get(id), nodeType: 'impact' }))
+                .sort((a, b) => (b.citationCount || 0) - (a.citationCount || 0))
+                .slice(0, 40);
+
+            return [dummyNode, ...coreNodes, ...foundationNodes, ...impactNodes];
         }
         return nodes; // Default
-    }, [viewMode, universeNodes, aggregatedNodes, nodes, activeGroup, selected, rawEdges, searchFilter]);
+    }, [viewMode, universeNodes, aggregatedNodes, nodes, activeGroup, selected, rawEdges, searchFilter, searchFilter?.query]);
 
     // Process Edges - Filter based on Active Nodes
     const edges = useMemo(() => {
