@@ -293,7 +293,8 @@ def build_nodes(
             all_author_names,
             all_institution_names,
             work_type,
-            language
+            language,
+            paper_nature
         FROM papers
     """
 
@@ -366,6 +367,7 @@ def build_nodes(
         all_institution_names = r["all_institution_names"]
         work_type = r["work_type"]
         language = r["language"]
+        paper_nature = r["paper_nature"] if "paper_nature" in r.keys() else None
 
         x = (year or 0) - 1950
         y = field_bands.get(ai_primary_field, 0.0)
@@ -399,6 +401,7 @@ def build_nodes(
             "allAuthors": all_author_names,
             "institutions": all_institution_names,
             "workType": work_type,
+            "paperNature": paper_nature,
             "language": language,
             "citationCount": cited_by_count,
             "url": f"https://openalex.org/{paperId}",

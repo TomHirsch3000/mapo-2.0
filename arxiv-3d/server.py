@@ -88,7 +88,8 @@ def get_paper_details(paper_id):
                 "abstract": row['AI_summary'] or row['abstract'] or "No abstract available.",
                 "authors": row['all_author_names'] or row['first_author_name'] or "Unknown",
                 "institutions": row['all_institution_names'] or "",
-                
+                "paperNature": row['paper_nature'] if 'paper_nature' in row.keys() else None,
+
                 # Maintain original DB row under data for any edge cases
                 "data": dict(row)
             }
@@ -189,6 +190,7 @@ def search_topics():
                 "abstract": row['AI_summary'] or row['abstract'] or "No abstract available.",
                 "authors": row['all_author_names'] or row['first_author_name'] or "Unknown",
                 "institutions": row['all_institution_names'] or "",
+                "paperNature": row['paper_nature'] if 'paper_nature' in row.keys() else None,
                 "nodeType": node_type,
                 "data": dict(row)
             }
