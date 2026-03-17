@@ -336,14 +336,25 @@ export default function App() {
         onDetailedViewClick={handleDetailedViewClick}
       />
 
-      {viewMode === 'DETAIL' && isLoadingDetail && (
+      {(viewMode === 'DETAIL' || viewMode === 'SEARCH') && isLoadingDetail && (
         <div style={modalOverlayStyle}>
           <div style={{ ...modalContentStyle, textAlign: 'center', padding: '40px 30px' }}>
             <div style={spinnerStyle} />
-            <h3 style={{ margin: '20px 0 8px 0', color: '#1e293b' }}>Loading Detailed View</h3>
-            <p style={{ color: '#64748b', margin: 0, fontSize: '14px' }}>
-              Querying connected papers…
-            </p>
+            {viewMode === 'SEARCH' ? (
+              <>
+                <h3 style={{ margin: '20px 0 8px 0', color: '#1e293b' }}>Searching the Map</h3>
+                <p style={{ color: '#64748b', margin: 0, fontSize: '14px' }}>
+                  Loading papers across all fields for <strong style={{ color: '#6366f1' }}>"{searchFilter?.query}"</strong>…
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 style={{ margin: '20px 0 8px 0', color: '#1e293b' }}>Loading Detailed View</h3>
+                <p style={{ color: '#64748b', margin: 0, fontSize: '14px' }}>
+                  Querying connected papers…
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}

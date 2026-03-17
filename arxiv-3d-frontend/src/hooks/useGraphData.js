@@ -90,11 +90,34 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         }
     };
 
-    // --- Search is handled client-side in the activeNodes memo ---
-    // No API call needed: rawNodes already contains the galaxy's paper data from the
-    // static JSON files. Searching against those is instant and works offline.
-    // The Flask /api/search endpoint is kept for when the DB is populated, but the
-    // primary path is the client-side memo below.
+    // --- Load all galaxies when searching from UNIVERSE view ---
+    // When activeGalaxy is null (user is in UNIVERSE view), rawNodes is empty.
+    // We need to fetch all galaxy node/edge files so the client-side search has data.
+    useEffect(() => {
+        if (viewMode !== 'SEARCH' || !searchFilter || activeGalaxy || !universeData) return;
+
+        const galaxies = universeData.nodes?.filter(n => n.nodesFile) || [];
+        if (galaxies.length === 0) return;
+
+        setIsLoadingDetail(true);
+        Promise.all(
+            galaxies.map(g =>
+                Promise.all([
+                    fetch(`./${g.nodesFile}`).then(r => r.json()).catch(() => []),
+                    g.edgesFile ? fetch(`./${g.edgesFile}`).then(r => r.json()).catch(() => []) : Promise.resolve([]),
+                ])
+            )
+        ).then(results => {
+            const allNodes = results.flatMap(([n]) => (Array.isArray(n) ? n : []));
+            const allEdges = results.flatMap(([, e]) => (Array.isArray(e) ? e : []));
+            setRawNodes(allNodes);
+            setRawEdges(allEdges);
+            setIsLoadingDetail(false);
+        }).catch(err => {
+            console.error("Failed to load all galaxy data for search:", err);
+            setIsLoadingDetail(false);
+        });
+    }, [viewMode, searchFilter, activeGalaxy, universeData]);
 
     // Process Nodes & Groups
     const { nodes, groupStats, xGroups, groupEdges, yGroups } = useMemo(() => {
