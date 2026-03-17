@@ -90,34 +90,38 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         }
     };
 
-    // --- Load all galaxies when searching from UNIVERSE view ---
-    // When activeGalaxy is null (user is in UNIVERSE view), rawNodes is empty.
-    // We need to fetch all galaxy node/edge files so the client-side search has data.
+    // --- Search: call Flask /api/search endpoint ---
     useEffect(() => {
-        if (viewMode !== 'SEARCH' || !searchFilter || activeGalaxy || !universeData) return;
-
-        const galaxies = universeData.nodes?.filter(n => n.nodesFile) || [];
-        if (galaxies.length === 0) return;
+        if (viewMode !== 'SEARCH' || !searchFilter) return;
 
         setIsLoadingDetail(true);
-        Promise.all(
-            galaxies.map(g =>
-                Promise.all([
-                    fetch(`./${g.nodesFile}`).then(r => r.json()).catch(() => []),
-                    g.edgesFile ? fetch(`./${g.edgesFile}`).then(r => r.json()).catch(() => []) : Promise.resolve([]),
-                ])
-            )
-        ).then(results => {
-            const allNodes = results.flatMap(([n]) => (Array.isArray(n) ? n : []));
-            const allEdges = results.flatMap(([, e]) => (Array.isArray(e) ? e : []));
-            setRawNodes(allNodes);
-            setRawEdges(allEdges);
-            setIsLoadingDetail(false);
-        }).catch(err => {
-            console.error("Failed to load all galaxy data for search:", err);
-            setIsLoadingDetail(false);
-        });
-    }, [viewMode, searchFilter, activeGalaxy, universeData]);
+        setRawNodes([]);
+        setRawEdges([]);
+
+        if (abortControllerRef.current) abortControllerRef.current.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        const { query, minCitations, maxPapers } = searchFilter;
+        const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const url = `${backendUrl}/api/search?query=${encodeURIComponent(query)}&min_citations=${minCitations}&max_papers=${maxPapers}`;
+
+        fetch(url, { signal: controller.signal })
+            .then(res => { if (!res.ok) throw new Error('Search API request failed'); return res.json(); })
+            .then(data => {
+                setRawNodes(data.nodes || []);
+                setRawEdges(data.edges || []);
+                setIsLoadingDetail(false);
+            })
+            .catch(err => {
+                if (err.name !== 'AbortError') {
+                    console.error('Search failed:', err);
+                    setIsLoadingDetail(false);
+                }
+            });
+
+        return () => controller.abort();
+    }, [viewMode, searchFilter]);
 
     // Process Nodes & Groups
     const { nodes, groupStats, xGroups, groupEdges, yGroups } = useMemo(() => {
@@ -368,7 +372,8 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
             return nodes.filter(n => connectedIndices.has(String(n.id)));
         }
         if (viewMode === 'SEARCH') {
-            const query = (searchFilter?.query || '').toLowerCase().trim();
+            // API returns nodes already tagged with nodeType ('core'/'foundation'/'impact')
+            // Just prepend the central dummy node representing the search query
             const dummyNode = {
                 id: 'search-dummy',
                 title: searchFilter?.query || '',
@@ -381,61 +386,14 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
                 group: 'search',
                 xGroup: 'search',
                 field: 'search',
-                abstract: `Search results for: "${searchFilter?.query}". The inner ring shows directly matching papers. The outer ring shows the foundations that support this topic (what these papers cite) and the impact — papers that cited these works.`,
+                abstract: `Search results for: "${searchFilter?.query}". Inner ring = directly matching papers. Outer ring = foundations (what they cite) and impact (what cited them).`,
                 authors: '',
                 institutions: ''
             };
-
-            if (!query) return [dummyNode];
-
-            // 1. Find core nodes: papers matching the query in title, field, or abstract
-            const coreNodes = nodes
-                .filter(n => {
-                    const t = (n.title || '').toLowerCase();
-                    const f = (n.field || n.xGroup || '').toLowerCase();
-                    const a = (n.abstract || '').toLowerCase();
-                    return t.includes(query) || f.includes(query) || a.includes(query);
-                })
-                .sort((a, b) => (b.citationCount || 0) - (a.citationCount || 0))
-                .slice(0, 50)
-                .map(n => ({ ...n, nodeType: 'core' }));
-
-            if (coreNodes.length === 0) return [dummyNode];
-
-            const coreIds = new Set(coreNodes.map(n => n.id));
-            const nodeMap = new Map(nodes.map(n => [n.id, n]));
-
-            // 2. Find foundation nodes: nodes that core papers cite (outgoing edges from core)
-            const foundationIds = new Set();
-            const impactIds = new Set();
-            rawEdges.forEach(e => {
-                const src = String(e.source?.id ?? e.source);
-                const tgt = String(e.target?.id ?? e.target);
-                if (coreIds.has(src) && !coreIds.has(tgt) && nodeMap.has(tgt)) {
-                    foundationIds.add(tgt);
-                }
-                if (coreIds.has(tgt) && !coreIds.has(src) && nodeMap.has(src)) {
-                    impactIds.add(src);
-                }
-            });
-
-            // Remove overlap: prefer foundation over impact
-            impactIds.forEach(id => { if (foundationIds.has(id)) impactIds.delete(id); });
-
-            const foundationNodes = Array.from(foundationIds)
-                .map(id => ({ ...nodeMap.get(id), nodeType: 'foundation' }))
-                .sort((a, b) => (b.citationCount || 0) - (a.citationCount || 0))
-                .slice(0, 40);
-
-            const impactNodes = Array.from(impactIds)
-                .map(id => ({ ...nodeMap.get(id), nodeType: 'impact' }))
-                .sort((a, b) => (b.citationCount || 0) - (a.citationCount || 0))
-                .slice(0, 40);
-
-            return [dummyNode, ...coreNodes, ...foundationNodes, ...impactNodes];
+            return [dummyNode, ...nodes];
         }
         return nodes; // Default
-    }, [viewMode, universeNodes, aggregatedNodes, nodes, activeGroup, selected, rawEdges, searchFilter, searchFilter?.query]);
+    }, [viewMode, universeNodes, aggregatedNodes, nodes, activeGroup, selected, rawEdges, searchFilter]);
 
     // Process Edges - Filter based on Active Nodes
     const edges = useMemo(() => {

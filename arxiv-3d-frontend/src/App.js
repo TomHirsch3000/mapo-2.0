@@ -23,6 +23,10 @@ export default function App() {
 
   // --- Search State ---
   const [searchFilter, setSearchFilter] = useState(null); // { query, minCitations, maxPapers }
+  const [showSearchPrompt, setShowSearchPrompt] = useState(false);
+  const [pendingSearchQuery, setPendingSearchQuery] = useState('');
+  const [minSearchCitations, setMinSearchCitations] = useState(0);
+  const [maxSearchPapers, setMaxSearchPapers] = useState(50);
 
   // --- Layout State ---
   const [layout, setLayout] = useState('CENTRAL'); // 'CENTRAL' | 'TIMELINE'
@@ -70,9 +74,20 @@ export default function App() {
   };
 
   const handleSearch = (query) => {
-    setSearchFilter({ query, minCitations: 0, maxPapers: 50 });
+    setPendingSearchQuery(query);
+    setShowSearchPrompt(true);
+  };
+
+  const confirmSearch = () => {
+    setShowSearchPrompt(false);
+    setSearchFilter({ query: pendingSearchQuery, minCitations: minSearchCitations, maxPapers: maxSearchPapers });
     setViewMode('SEARCH');
     setSelected(null);
+  };
+
+  const cancelSearch = () => {
+    setShowSearchPrompt(false);
+    setPendingSearchQuery('');
   };
 
   const handleBackFromSearch = () => {
@@ -355,6 +370,45 @@ export default function App() {
                 </p>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {showSearchPrompt && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h3 style={{ margin: '0 0 4px 0' }}>Search the Map</h3>
+            <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 20px 0' }}>
+              Querying the database for papers related to <strong style={{ color: '#6366f1' }}>"{pendingSearchQuery}"</strong>
+            </p>
+            <label style={labelStyle}>
+              Minimum Citations
+              <input
+                type="number"
+                min="0"
+                value={minSearchCitations}
+                onChange={e => setMinSearchCitations(Number(e.target.value))}
+                style={inputStyle}
+              />
+            </label>
+            <label style={labelStyle}>
+              Max Core Papers to Return
+              <input
+                type="number"
+                min="1"
+                max="200"
+                value={maxSearchPapers}
+                onChange={e => setMaxSearchPapers(Number(e.target.value))}
+                style={inputStyle}
+              />
+            </label>
+            <p style={{ color: '#94a3b8', fontSize: '12px', margin: '12px 0 0 0' }}>
+              Foundation &amp; impact papers are discovered automatically from citation links.
+            </p>
+            <div style={buttonContainerStyle}>
+              <button onClick={cancelSearch} style={cancelButtonStyle}>Cancel</button>
+              <button onClick={confirmSearch} style={confirmButtonStyle}>Search</button>
+            </div>
           </div>
         </div>
       )}
