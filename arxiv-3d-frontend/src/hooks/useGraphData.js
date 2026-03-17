@@ -7,8 +7,7 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
     const [rawNodes, setRawNodes] = useState([]);
     const [rawEdges, setRawEdges] = useState([]);
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
-    const [searchStats, setSearchStats] = useState(null); // { core, foundation, impact } counts
-    const [searchError, setSearchError] = useState(null); // error string or null
+    const [searchResult, setSearchResult] = useState(null); // { status: 'success'|'error', stats?, message? }
     const abortControllerRef = useRef(null);
 
     const nodeByIdRef = useRef(new Map());
@@ -97,8 +96,7 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         if (viewMode !== 'SEARCH' || !searchFilter) return;
 
         setIsLoadingDetail(true);
-        setSearchStats(null);
-        setSearchError(null);
+        setSearchResult(null);
         setRawNodes([]);
         setRawEdges([]);
 
@@ -114,23 +112,30 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
 
         fetch(url, { signal: controller.signal })
             .then(res => {
-                if (!res.ok) throw new Error(`Server returned ${res.status} ${res.statusText}`);
+                if (!res.ok) throw new Error(`Server returned ${res.status}: ${res.statusText}`);
                 return res.json();
             })
             .then(data => {
                 console.log('[Search] Response:', data);
-                setRawNodes(data.nodes || []);
+                const nodes = data.nodes || [];
+                const stats = data.stats || {
+                    core: nodes.filter(n => n.nodeType === 'core').length,
+                    foundation: nodes.filter(n => n.nodeType === 'foundation').length,
+                    impact: nodes.filter(n => n.nodeType === 'impact').length,
+                };
+                setRawNodes(nodes);
                 setRawEdges(data.edges || []);
-                setSearchStats(data.stats || { core: data.nodes?.length || 0, foundation: 0, impact: 0 });
-                if ((data.nodes || []).length === 0) {
-                    setSearchError('No papers found. Try broader keywords or lower the minimum citations.');
-                }
+                setSearchResult(
+                    nodes.length === 0
+                        ? { status: 'error', message: 'No papers found. Try broader keywords or set Min Citations to 0.' }
+                        : { status: 'success', stats }
+                );
                 setIsLoadingDetail(false);
             })
             .catch(err => {
                 if (err.name !== 'AbortError') {
                     console.error('[Search] Failed:', err);
-                    setSearchError(`Could not reach the server: ${err.message}`);
+                    setSearchResult({ status: 'error', message: `Could not reach the server (${err.message}). Is the Flask backend running?` });
                     setIsLoadingDetail(false);
                 }
             });
@@ -470,7 +475,6 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         clearData,
         isLoadingDetail,
         cancelDetailFetch,
-        searchStats,
-        searchError
+        searchResult
     };
 };

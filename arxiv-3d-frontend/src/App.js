@@ -54,7 +54,7 @@ export default function App() {
   const isReturningRef = useRef(false);
 
   // --- Data Hook ---
-  const { nodes, edges, groupStats, xGroups, yGroups, universeData, rawNodes, rawEdges, isLoadingDetail, cancelDetailFetch, searchStats, searchError } = useGraphData(viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected, detailFilter, setShowTimeoutPrompt, searchFilter);
+  const { nodes, edges, groupStats, xGroups, yGroups, universeData, rawNodes, rawEdges, isLoadingDetail, cancelDetailFetch, searchResult } = useGraphData(viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected, detailFilter, setShowTimeoutPrompt, searchFilter);
 
   // --- Handlers ---
   const handleGalaxyClick = (galaxyId) => {
@@ -344,21 +344,25 @@ export default function App() {
         isLoadingDetail={isLoadingDetail}
       />
 
-      {viewMode === 'SEARCH' && !isLoadingDetail && (searchStats || searchError) && (
+      {viewMode === 'SEARCH' && (
         <div style={searchResultsBannerStyle}>
-          {searchError ? (
-            <span style={{ color: '#ef4444' }}>⚠ {searchError}</span>
-          ) : (
+          {isLoadingDetail ? (
+            <span style={{ color: '#6366f1' }}>Searching for "{searchFilter?.query}"…</span>
+          ) : searchResult?.status === 'error' ? (
+            <span style={{ color: '#ef4444' }}>⚠ {searchResult.message}</span>
+          ) : searchResult?.status === 'success' ? (
             <>
-              <span style={{ color: '#6366f1', fontWeight: 700 }}>{searchStats.core}</span> core
+              <span style={{ color: '#6366f1', fontWeight: 700 }}>{searchResult.stats.core}</span> core
               <span style={dotStyle}>·</span>
-              <span style={{ color: '#10b981', fontWeight: 700 }}>{searchStats.foundation}</span> foundation
+              <span style={{ color: '#10b981', fontWeight: 700 }}>{searchResult.stats.foundation}</span> foundation
               <span style={dotStyle}>·</span>
-              <span style={{ color: '#f59e0b', fontWeight: 700 }}>{searchStats.impact}</span> impact
+              <span style={{ color: '#f59e0b', fontWeight: 700 }}>{searchResult.stats.impact}</span> impact
               <span style={dotStyle}>·</span>
-              <span style={{ color: '#64748b' }}>{(searchStats.core || 0) + (searchStats.foundation || 0) + (searchStats.impact || 0)} papers total</span>
+              <span style={{ color: '#64748b' }}>
+                {(searchResult.stats.core || 0) + (searchResult.stats.foundation || 0) + (searchResult.stats.impact || 0)} papers total
+              </span>
             </>
-          )}
+          ) : null}
         </div>
       )}
 
