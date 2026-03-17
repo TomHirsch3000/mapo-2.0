@@ -7,6 +7,8 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
     const [rawNodes, setRawNodes] = useState([]);
     const [rawEdges, setRawEdges] = useState([]);
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+    const [searchStats, setSearchStats] = useState(null); // { core, foundation, impact } counts
+    const [searchError, setSearchError] = useState(null); // error string or null
     const abortControllerRef = useRef(null);
 
     const nodeByIdRef = useRef(new Map());
@@ -95,6 +97,8 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         if (viewMode !== 'SEARCH' || !searchFilter) return;
 
         setIsLoadingDetail(true);
+        setSearchStats(null);
+        setSearchError(null);
         setRawNodes([]);
         setRawEdges([]);
 
@@ -106,16 +110,27 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
         const url = `${backendUrl}/api/search?query=${encodeURIComponent(query)}&min_citations=${minCitations}&max_papers=${maxPapers}`;
 
+        console.log('[Search] Fetching:', url);
+
         fetch(url, { signal: controller.signal })
-            .then(res => { if (!res.ok) throw new Error('Search API request failed'); return res.json(); })
+            .then(res => {
+                if (!res.ok) throw new Error(`Server returned ${res.status} ${res.statusText}`);
+                return res.json();
+            })
             .then(data => {
+                console.log('[Search] Response:', data);
                 setRawNodes(data.nodes || []);
                 setRawEdges(data.edges || []);
+                setSearchStats(data.stats || { core: data.nodes?.length || 0, foundation: 0, impact: 0 });
+                if ((data.nodes || []).length === 0) {
+                    setSearchError('No papers found. Try broader keywords or lower the minimum citations.');
+                }
                 setIsLoadingDetail(false);
             })
             .catch(err => {
                 if (err.name !== 'AbortError') {
-                    console.error('Search failed:', err);
+                    console.error('[Search] Failed:', err);
+                    setSearchError(`Could not reach the server: ${err.message}`);
                     setIsLoadingDetail(false);
                 }
             });
@@ -454,6 +469,8 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         nodeByIdRef,
         clearData,
         isLoadingDetail,
-        cancelDetailFetch
+        cancelDetailFetch,
+        searchStats,
+        searchError
     };
 };

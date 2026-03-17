@@ -54,7 +54,7 @@ export default function App() {
   const isReturningRef = useRef(false);
 
   // --- Data Hook ---
-  const { nodes, edges, groupStats, xGroups, yGroups, universeData, rawNodes, rawEdges, isLoadingDetail, cancelDetailFetch } = useGraphData(viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected, detailFilter, setShowTimeoutPrompt, searchFilter);
+  const { nodes, edges, groupStats, xGroups, yGroups, universeData, rawNodes, rawEdges, isLoadingDetail, cancelDetailFetch, searchStats, searchError } = useGraphData(viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected, detailFilter, setShowTimeoutPrompt, searchFilter);
 
   // --- Handlers ---
   const handleGalaxyClick = (galaxyId) => {
@@ -344,6 +344,24 @@ export default function App() {
         isLoadingDetail={isLoadingDetail}
       />
 
+      {viewMode === 'SEARCH' && !isLoadingDetail && (searchStats || searchError) && (
+        <div style={searchResultsBannerStyle}>
+          {searchError ? (
+            <span style={{ color: '#ef4444' }}>⚠ {searchError}</span>
+          ) : (
+            <>
+              <span style={{ color: '#6366f1', fontWeight: 700 }}>{searchStats.core}</span> core
+              <span style={dotStyle}>·</span>
+              <span style={{ color: '#10b981', fontWeight: 700 }}>{searchStats.foundation}</span> foundation
+              <span style={dotStyle}>·</span>
+              <span style={{ color: '#f59e0b', fontWeight: 700 }}>{searchStats.impact}</span> impact
+              <span style={dotStyle}>·</span>
+              <span style={{ color: '#64748b' }}>{(searchStats.core || 0) + (searchStats.foundation || 0) + (searchStats.impact || 0)} papers total</span>
+            </>
+          )}
+        </div>
+      )}
+
       <FooterPanel
         selected={selected}
         hovered={hovered}
@@ -493,6 +511,32 @@ const confirmButtonStyle = {
   padding: '10px 20px', backgroundColor: '#6366f1',
   border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer',
   fontWeight: 'bold', boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)', transition: 'all 0.2s'
+};
+
+const searchResultsBannerStyle = {
+  position: 'fixed',
+  top: 72,
+  left: '50%',
+  transform: 'translateX(-50%)',
+  backgroundColor: 'rgba(255,255,255,0.92)',
+  backdropFilter: 'blur(8px)',
+  border: '1px solid rgba(0,0,0,0.08)',
+  borderRadius: '20px',
+  padding: '6px 18px',
+  fontSize: '13px',
+  fontFamily: 'Inter, sans-serif',
+  boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+  zIndex: 100,
+  pointerEvents: 'none',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  whiteSpace: 'nowrap',
+};
+
+const dotStyle = {
+  color: '#cbd5e1',
+  fontSize: '16px',
 };
 
 const spinnerStyle = {
