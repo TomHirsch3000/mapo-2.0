@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "homepage": ".",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
   "dependencies": {
     "@react-three/drei": "^10.0.7",
     "@react-three/fiber": "^9.1.2",
@@ -19,6 +22,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "start:all": "concurrently \"cd ../arxiv-3d && python server.py\" \"react-scripts start\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

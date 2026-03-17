@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "flask-api",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["arxiv-3d/server.py"],
+      "port": 5000
+    },
+    {
+      "name": "react-frontend",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "cd arxiv-3d-frontend && npm start"],
+      "port": 3000
+    }
+  ]
+}

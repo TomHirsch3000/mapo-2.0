@@ -122,6 +122,7 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
                     core: nodes.filter(n => n.nodeType === 'core').length,
                     foundation: nodes.filter(n => n.nodeType === 'foundation').length,
                     impact: nodes.filter(n => n.nodeType === 'impact').length,
+                    evidence: nodes.filter(n => n.nodeType === 'evidence').length,
                 };
                 setRawNodes(nodes);
                 setRawEdges(data.edges || []);

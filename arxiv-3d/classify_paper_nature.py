@@ -9,7 +9,16 @@ Assigns each paper a 'paper_nature' value:
   phenomenological — uses theory + real data to extract parameters/constraints
   review          — synthesis, overview, no new evidence or theory
 
-Also stores 'paper_nature_score' (int) — the winning keyword hit count,
+Scoring is WEIGHTED:
+  - HARD experimental keywords (collaboration names, specific detector terms): 3 pts each
+  - SOFT experimental keywords (data language): 1 pt each
+  - All other categories: 1 pt per keyword hit
+
+A paper is only classified 'experimental' if its weighted experimental score >= 3
+AND its experimental score > theoretical score.  This prevents theory papers that
+mention "data" or "observed" from being falsely flagged as experimental.
+
+Also stores 'paper_nature_score' (int) — the winning weighted score,
 useful for inspecting borderline cases.
 
 Usage:
@@ -25,34 +34,55 @@ from typing import Optional
 
 
 # ---------------------------------------------------------------------------
-# Keyword lists
-# Each entry is matched as a lowercase substring of the combined text field.
-# Collaboration names are padded with spaces to avoid false partial matches.
+# Keyword lists — experimental split into HARD (3 pts) and SOFT (1 pt)
+# All other categories score 1 pt per hit.
 # ---------------------------------------------------------------------------
 
-EXPERIMENTAL_KEYWORDS = [
-    # Instrumentation
+# HARD: specific enough that one hit almost certainly means "experimental paper"
+EXPERIMENTAL_HARD = [
+    # Named collaborations — very strong signal
+    " cms ", "cms collaboration", "cms detector",
+    " atlas ", "atlas collaboration", "atlas detector",
+    " alice ", "alice collaboration",
+    " lhcb ", "lhcb collaboration",
+    "cdf collaboration", "d0 collaboration",
+    "belle collaboration", "belle ii",
+    "babar collaboration",
+    "delphi collaboration", " opal ", "aleph collaboration",
+    "na62", "na48", "na49",
+    "star collaboration", "phenix collaboration",
+    "brahms", "phobos collaboration",
+    "pierre auger", "icecube collaboration", "antares collaboration",
+    "planck collaboration", "wmap",
+    "super-kamiokande", "kamland", "daya bay", "nova experiment",
+    "t2k collaboration", "miniboone",
+    # Specific hardware / detector components
+    "drift chamber", "silicon tracker", "vertex detector",
+    "time projection chamber", " tpc ", "electromagnetic calorimeter",
+    "hadronic calorimeter", "muon spectrometer",
+    "integrated luminosity", "inverse femtobarn", "inverse picobarn",
+    # Definitive result language
+    "we report the observation", "we report the discovery",
+    "first observation of", "direct observation of",
+    "evidence for the", "observation of the",
+    "discovery of the",
+]
+
+# SOFT: useful signal but common enough to appear in theory papers too
+EXPERIMENTAL_SOFT = [
+    # Instrumentation (generic)
     "detector", "telescope", "accelerator", "collider", "spectrometer",
     "calorimeter", "apparatus", "luminosity", "beam dump",
-    "drift chamber", "silicon tracker", "vertex detector", "muon chamber",
-    # Major collaborations (space-padded to avoid e.g. "atlas" in "catalyst")
-    " cms ", " atlas ", " alice ", " lhcb ", " lhc ",
-    "fermilab", "belle ", " babar", "delphi", " opal ", " aleph ",
-    "cdf collaboration", "d0 collaboration", "na62", "na48", "compass",
-    "brahms", "phobos", "star collaboration", "phenix",
-    "auger", "icecube", "antares",
+    "fermilab", " lhc ",
     # Data & measurement language
-    "measurement of", "we measure", "we report", "we present",
-    "measured value", "we observed", "we detect", "we search for",
     "data sample", "data set", "event selection", "event yield",
     "systematic uncertainty", "statistical uncertainty", "signal yield",
     "background estimation", "signal region", "control region",
-    "calibration", "reconstruction efficiency", "trigger", "readout",
-    # Statistical / result language
-    "confidence level", "exclusion limit", "upper limit",
+    "calibration", "reconstruction efficiency", "trigger efficiency",
+    "confidence level", "exclusion limit", "upper limit at",
     "cross section measurement", "branching fraction measurement",
-    "invariant mass", "transverse momentum distribution",
-    "collected data", "integrated luminosity",
+    "invariant mass spectrum", "transverse momentum distribution",
+    "collected data", "collected at",
 ]
 
 THEORETICAL_KEYWORDS = [
@@ -73,7 +103,7 @@ THEORETICAL_KEYWORDS = [
     "anomalous dimension", "beta function", "running coupling",
     "fixed point", "conjecture", "theorem", "proof",
     "ansatz", "variational principle", "ward identity",
-    "operator product expansion", "ope",
+    "operator product expansion",
     "dispersion relation", "unitarity cut",
     # Qualitative theory language
     "spontaneous symmetry breaking", "symmetry breaking mechanism",
@@ -83,26 +113,20 @@ THEORETICAL_KEYWORDS = [
 ]
 
 PHENOMENOLOGICAL_KEYWORDS = [
-    # Explicit label
     "phenomenological", "phenomenology",
-    # Fitting and extraction
     "we fit", "global fit", "best fit", "fit to data",
     "we constrain", "we extract", "parameter extraction",
     "extraction of", "determination of",
     "parton distribution", "pdf fit", "parton shower",
     "form factor", "decay constant", "coupling constant extraction",
-    # QCD / precision calculations applied to data
     "nlo calculation", "nnlo calculation", "qcd correction",
     "next-to-leading order", "next-to-next-to-leading",
     "fixed-order", "resummation", "jet cross section",
     "fragmentation function", "hadronic matrix element",
-    # Simulation / event generation applied to data
     "monte carlo", "event generator", "pythia", "herwig",
     "geant4", "sherpa", "madgraph",
-    # Lattice (sits between theory and experiment)
     "lattice qcd", "lattice calculation", "lattice simulation",
     "sum rules", "qcd sum rules",
-    # Re-analysis / updated constraints
     "updated analysis", "re-analysis", "reanalysis",
     "we update", "updated constraints", "global analysis",
 ]
@@ -116,6 +140,10 @@ REVIEW_KEYWORDS = [
     "historical overview", "pedagogical",
     "proceedings of", "conference proceedings",
 ]
+
+# Minimum weighted experimental score to be classified as experimental.
+# A single collaboration name (3 pts) qualifies; pure soft-keyword papers need 3+ hits.
+EXPERIMENTAL_THRESHOLD = 3
 
 # Tie-breaking priority (earlier = wins when scores equal)
 PRIORITY = ["review", "experimental", "phenomenological", "theoretical"]
@@ -152,12 +180,20 @@ def ensure_columns(conn: sqlite3.Connection):
 # ---------------------------------------------------------------------------
 
 def score_text(text: str) -> dict:
-    """Return keyword hit counts per category for the given (lowercased) text."""
+    """
+    Return weighted scores per category.
+    Experimental uses hard (3 pts) + soft (1 pt) keywords.
+    All other categories score 1 pt per keyword hit.
+    """
+    exp_score = (
+        sum(3 for kw in EXPERIMENTAL_HARD if kw in text) +
+        sum(1 for kw in EXPERIMENTAL_SOFT if kw in text)
+    )
     return {
-        "experimental":    sum(1 for kw in EXPERIMENTAL_KEYWORDS    if kw in text),
-        "theoretical":     sum(1 for kw in THEORETICAL_KEYWORDS     if kw in text),
-        "phenomenological":sum(1 for kw in PHENOMENOLOGICAL_KEYWORDS if kw in text),
-        "review":          sum(1 for kw in REVIEW_KEYWORDS           if kw in text),
+        "experimental":     exp_score,
+        "theoretical":      sum(1 for kw in THEORETICAL_KEYWORDS     if kw in text),
+        "phenomenological": sum(1 for kw in PHENOMENOLOGICAL_KEYWORDS if kw in text),
+        "review":           sum(1 for kw in REVIEW_KEYWORDS           if kw in text),
     }
 
 
@@ -166,14 +202,22 @@ def classify(title: Optional[str], abstract: Optional[str],
     """
     Returns (nature: str, score: int).
     'nature' is one of: experimental, theoretical, phenomenological, review, unknown.
-    'score' is the winning keyword count.
+    'score' is the winning weighted score.
     """
-    # Hard override: OpenAlex marks it as a review article
-    if work_type and "review" in work_type.lower():
+    # Hard override: OpenAlex type = review, or title starts with "review of"
+    title_lc = (title or "").lower().strip()
+    if (work_type and "review" in work_type.lower()) or \
+       title_lc.startswith("review of") or title_lc.startswith("a review of"):
         return "review", 99
 
     combined = " ".join(filter(None, [title, abstract, concepts_json])).lower()
     scores = score_text(combined)
+
+    # Experimental requires a minimum threshold AND must beat theoretical score.
+    # This prevents theory papers that mention "data" or "observed" from qualifying.
+    if scores["experimental"] < EXPERIMENTAL_THRESHOLD or \
+       scores["experimental"] <= scores["theoretical"]:
+        scores["experimental"] = 0
 
     best_score = max(scores.values())
     if best_score == 0:
