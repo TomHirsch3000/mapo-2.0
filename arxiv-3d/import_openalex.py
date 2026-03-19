@@ -6,10 +6,17 @@ Supports either --concept-id or --topic-name. Use --reset to overwrite from scra
 """
 
 import argparse
+import io
 import json
 import sqlite3
 import sys
 import time
+
+# Force UTF-8 stdout/stderr on Windows to avoid cp1252 encoding errors
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+if sys.stderr.encoding and sys.stderr.encoding.lower() != "utf-8":
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -44,7 +51,11 @@ OPENALEX_SELECT_FIELDS: List[str] = [
 # HTTP utils
 # -----------------------------
 def safe_get_json(url: str, params: Dict[str, Any],
-                  max_retries: int = 6, base_sleep: float = 0.8) -> Dict[str, Any]:
+                  max_retries: int = 6, base_sleep: float = 0.8,
+                  api_key: Optional[str] = None) -> Dict[str, Any]:
+    if api_key:
+        params = dict(params)
+        params["api_key"] = api_key
     qs = urllib.parse.urlencode(params, doseq=True, safe=":,")
     full = f"{url}?{qs}" if qs else url
     for attempt in range(1, max_retries + 1):
@@ -261,14 +272,14 @@ def insert_or_replace_work(conn: sqlite3.Connection, work: Dict[str, Any]):
 # -----------------------------
 # Concept resolution
 # -----------------------------
-def resolve_concept_name(name: str, mailto: str) -> str:
+def resolve_concept_name(name: str, mailto: str, api_key: Optional[str] = None) -> str:
     params = {
         "filter": f"display_name.search:{name}",
         "sort": "relevance_score:desc",
         "per_page": 1,
         "mailto": mailto,
     }
-    data = safe_get_json(CONCEPTS_URL, params)
+    data = safe_get_json(CONCEPTS_URL, params, api_key=api_key)
     results = data.get("results", [])
     if not results:
         params = {
@@ -277,7 +288,7 @@ def resolve_concept_name(name: str, mailto: str) -> str:
             "per_page": 1,
             "mailto": mailto,
         }
-        data = safe_get_json(CONCEPTS_URL, params)
+        data = safe_get_json(CONCEPTS_URL, params, api_key=api_key)
         results = data.get("results", [])
     if not results:
         raise RuntimeError(f"No OpenAlex concept found for '{name}'")
@@ -311,9 +322,11 @@ def import_openalex(args):
     conn = open_db(args.db)
     ensure_schema(conn, reset=args.reset)
 
+    api_key = getattr(args, "api_key", None) or None
+
     if args.topic_name and not args.concept_id:
         print(f"[info] Resolving topic '{args.topic_name}' → concept ID")
-        args.concept_id = resolve_concept_name(args.topic_name, args.email)
+        args.concept_id = resolve_concept_name(args.topic_name, args.email, api_key=api_key)
 
     if not args.concept_id:
         raise SystemExit("Provide --topic-name or --concept-id")
@@ -327,6 +340,8 @@ def import_openalex(args):
 
     select_str = ",".join(OPENALEX_SELECT_FIELDS)
 
+    throttle = 0.05 if api_key else 0.2
+
     while cursor and inserted < target:
         params = {
             "per_page": per_page,
@@ -338,7 +353,7 @@ def import_openalex(args):
         }
 
         print(f"[debug] Requesting page cursor={cursor}…")
-        data = safe_get_json(WORKS_URL, params)
+        data = safe_get_json(WORKS_URL, params, api_key=api_key)
         results = data.get("results", [])
         next_cursor = (data.get("meta") or {}).get("next_cursor")
 
@@ -351,7 +366,7 @@ def import_openalex(args):
 
         print(f"[debug] Inserted so far: {inserted}")
         cursor = next_cursor
-        time.sleep(0.2)
+        time.sleep(throttle)
 
     print(f"[info] Done. Total inserted: {inserted}")
     conn.close()
@@ -368,6 +383,8 @@ def parse_args(argv=None):
     p.add_argument("--db", type=str, default="papers.db")
     p.add_argument("--sample", type=int, default=0)
     p.add_argument("--email", type=str, required=True)
+    p.add_argument("--api-key", type=str, default=None,
+                   help="OpenAlex API key for higher rate limits")
     p.add_argument("--reset", action="store_true")
     return p.parse_args(argv)
 

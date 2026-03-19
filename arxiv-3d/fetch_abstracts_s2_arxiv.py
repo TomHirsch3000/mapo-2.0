@@ -1,8 +1,16 @@
 import argparse
+import io
 import logging
 import sqlite3
+import sys
 import time
 from typing import Optional, Dict, Any
+
+# Force UTF-8 stdout/stderr on Windows to avoid cp1252 encoding errors
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+if sys.stderr.encoding and sys.stderr.encoding.lower() != "utf-8":
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 import requests
 import xml.etree.ElementTree as ET

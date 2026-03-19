@@ -13,7 +13,7 @@ QUICK START — add a new physics topic:
         --email your@email.com
 
 STEP-BY-STEP DEFAULTS:
-    Step 1 — Import      : downloads papers in 10-year batches (1950 → now), no per-batch limit
+    Step 1 — Import      : downloads papers in 10-year batches (1800 → now), no per-batch limit
     Step 2 — Citations   : builds citation edges (already resumable internally)
     Step 3 — Abstracts   : fills missing abstracts (already resumable internally)
     Step 4 — AI metadata : runs AI on up to --ai-sample papers, --ai-batch-size at a time
@@ -24,7 +24,7 @@ STEP-BY-STEP DEFAULTS:
 TUNING PARAMETERS:
     --papers-per-batch 500   Limit papers fetched per year-range (0 = no limit)
     --year-batch-size  10    How many years per import batch (default: 10)
-    --year-start       1950  First publication year to import (default: 1950)
+    --year-start       1800  First publication year to import (default: 1800)
     --year-end         2025  Last publication year to import (default: current year)
     --ai-sample        500   Total papers to run AI on (0 = all; can run again for more)
     --ai-batch-size    200   Papers processed per AI subprocess call
@@ -186,7 +186,7 @@ def find_galaxy_args() -> list:
         base = nodes_file.replace("_nodes.json", "")
         edges_file = f"{base}_edges.json"
         meta_file = f"{base}_metadata.json"
-            name = base.replace("_", " ").title()
+        name = base.replace("_", " ").title()
         if not (DATA_DIR / edges_file).exists() or not (DATA_DIR / meta_file).exists():
             continue
         galaxies.append(f"{idx}:{name}:data/{nodes_file}:data/{edges_file}:data/{meta_file}")
@@ -211,14 +211,16 @@ def parse_args() -> argparse.Namespace:
                    help="SQLite DB filename, e.g. papers_astrophysics.db")
     p.add_argument("--email", required=True,
                    help="Email for OpenAlex polite pool")
+    p.add_argument("--api-key", type=str, default=None,
+                   help="OpenAlex API key for higher rate limits")
 
     # Import batching
-    p.add_argument("--year-start", type=int, default=1950,
-                   help="First publication year to import (default: 1950)")
+    p.add_argument("--year-start", type=int, default=1800,
+                   help="First publication year to import (default: 1800)")
     p.add_argument("--year-end", type=int, default=datetime.date.today().year,
                    help="Last publication year to import (default: current year)")
-    p.add_argument("--year-batch-size", type=int, default=10,
-                   help="Years per import batch (default: 10). Increase to 20+ for sparse topics.")
+    p.add_argument("--year-batch-size", type=int, default=1,
+                   help="Years per import batch (default: 1). Use 10+ for very sparse topics.")
     p.add_argument("--papers-per-batch", type=int, default=0,
                    help="Max papers per year-range batch (default: 0 = no limit). "
                         "Use e.g. 500 to cap each decade.")
@@ -232,8 +234,8 @@ def parse_args() -> argparse.Namespace:
                         "Reduce to 50-100 if Ollama is slow.")
 
     # Visualization
-    p.add_argument("--min-citations", type=int, default=5,
-                   help="Min citations to include in visualization (default: 5)")
+    p.add_argument("--min-citations", type=int, default=0,
+                   help="Min citations to include in visualization (default: 0)")
     p.add_argument("--frontend-dir", type=str,
                    default=str(SCRIPT_DIR.parent / "arxiv-3d-frontend" / "public"),
                    help="Directory to copy JSON files into for the frontend")
@@ -331,6 +333,8 @@ def main() -> None:
                 "--from-year", str(from_y),
                 "--to-year",   str(to_y),
             ]
+            if args.api_key:
+                cmd += ["--api-key", args.api_key]
             if args.papers_per_batch > 0:
                 cmd += ["--sample", str(args.papers_per_batch)]
             if args.reset_import:
