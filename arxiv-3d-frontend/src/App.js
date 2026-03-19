@@ -357,9 +357,13 @@ export default function App() {
               <span style={{ color: '#10b981', fontWeight: 700 }}>{searchResult.stats.foundation}</span> foundation
               <span style={dotStyle}>·</span>
               <span style={{ color: '#f59e0b', fontWeight: 700 }}>{searchResult.stats.impact}</span> impact
+              {(searchResult.stats.evidence || 0) > 0 && <>
+                <span style={dotStyle}>·</span>
+                <span style={{ color: '#22c55e', fontWeight: 700 }}>{searchResult.stats.evidence}</span> experimental evidence
+              </>}
               <span style={dotStyle}>·</span>
               <span style={{ color: '#64748b' }}>
-                {(searchResult.stats.core || 0) + (searchResult.stats.foundation || 0) + (searchResult.stats.impact || 0)} papers total
+                {(searchResult.stats.core || 0) + (searchResult.stats.foundation || 0) + (searchResult.stats.impact || 0) + (searchResult.stats.evidence || 0)} papers total
               </span>
             </>
           ) : null}
