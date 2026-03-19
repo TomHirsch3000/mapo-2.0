@@ -525,3 +525,38 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* ── Vertical card layout for experimental/phenomenological papers ── */
+.node-paper-vertical {
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.node-paper-vertical .node-paper-title {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    flex-shrink: 0;
+    margin-bottom: 2px;
+}
+
+.node-paper-icon-wrap {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.node-paper-icon {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    opacity: 0.85;
+    border-radius: 4px;
+    transition: opacity 0.2s ease;
+}
+
+.node-paper-icon:hover {
+    opacity: 1;
+}

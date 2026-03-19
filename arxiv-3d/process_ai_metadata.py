@@ -327,6 +327,9 @@ def process_ai(
     if conditions:
         q += " WHERE " + " AND ".join(f"({c})" for c in conditions)
 
+    # Always order by citation count so batches pick the most-cited papers first
+    q += " ORDER BY cited_by_count DESC"
+
     if limit_rows is not None:
         q += " LIMIT ?"
         params.append(limit_rows)

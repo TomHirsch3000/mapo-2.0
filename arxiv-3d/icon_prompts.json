@@ -1,0 +1,577 @@
+{
+  "atlas-detector": {
+    "prompt": "Scientific illustration of the ATLAS detector cross-section, massive toroidal magnet system with eight barrel superconducting coils arranged radially around a central beam pipe, layered cylindrical structure with inner tracking detector, calorimeters and muon spectrometer, cutaway view showing concentric layers, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "cms-detector": {
+    "prompt": "Scientific illustration of the CMS detector cross-section, compact cylindrical solenoid magnet, dense layered structure with silicon pixel tracker at center, crystal electromagnetic calorimeter, hadron calorimeter and muon chambers, distinctive red iron return yoke segments, cutaway view, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "lhcb-detector": {
+    "prompt": "Scientific illustration of the LHCb forward spectrometer, single-arm detector extending to one side of the collision point, wedge-shaped cross-section with vertex locator, RICH detectors, tracking stations and calorimeters arranged along the beam axis, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "alice-detector": {
+    "prompt": "Scientific illustration of the ALICE detector with dense particle tracks radiating from a central heavy-ion collision point, time projection chamber showing thousands of curved colored tracks in a magnetic field, cylindrical detector cross-section, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "tevatron-cdf": {
+    "prompt": "Scientific illustration of the CDF detector at Tevatron, cylindrical collider detector with central tracking chamber, solenoid magnet, calorimeter wedges and muon drift chambers, proton-antiproton collision event display with particle tracks, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "tevatron-d0": {
+    "prompt": "Scientific illustration of the D0 detector cross-section, hermetic detector with liquid argon calorimeter, central fiber tracker, muon toroid system, distinctive lack of central solenoid in original design, layered concentric structure, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "tevatron": {
+    "prompt": "Scientific illustration of the Tevatron circular accelerator ring viewed from above, large synchrotron ring with beam injection line, proton and antiproton beams circulating in opposite directions shown with arrows, collision points marked, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "hera-h1": {
+    "prompt": "Scientific illustration of the H1 detector at HERA, asymmetric detector designed for electron-proton collisions, forward and backward calorimeters of different sizes, central jet chamber, liquid argon calorimeter, cutaway view, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "hera-zeus": {
+    "prompt": "Scientific illustration of the ZEUS detector at HERA, compensating uranium-scintillator calorimeter surrounding central tracking detector, barrel and endcap sections, asymmetric design for electron-proton scattering, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "hera": {
+    "prompt": "Scientific illustration of deep inelastic scattering diagram, electron exchanging a virtual photon with a proton revealing internal quarks, momentum transfer arrow, scattered electron and hadronic jet emerging, Feynman-diagram-style layout, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "belle-experiment": {
+    "prompt": "Scientific illustration of the Belle II detector, hermetic cylindrical detector with vertex detector at center surrounded by drift chamber, aerogel RICH counter, electromagnetic calorimeter of CsI crystals, and KLM detector layers, electron-positron collision, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "babar-experiment": {
+    "prompt": "Scientific illustration of the BaBar detector at SLAC, asymmetric B-factory detector with silicon vertex tracker, drift chamber, DIRC Cherenkov ring imaging detector shown as quartz bars, EMC and instrumented flux return, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "kekb": {
+    "prompt": "Scientific illustration of an asymmetric energy electron-positron collider ring, two storage rings of different circumferences intersecting at an interaction point, beam crossing angle diagram, B meson pair production schematic, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "lep-delphi": {
+    "prompt": "Scientific illustration of the DELPHI detector at LEP, cylindrical detector with time projection chamber as central tracker, barrel RICH detectors, hadron calorimeter, forward chambers, distinctive barrel and endcap geometry, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "lep-opal": {
+    "prompt": "Scientific illustration of the OPAL detector at LEP, central jet chamber with large drift volume, lead glass electromagnetic calorimeter blocks, muon barrel detector, pressure vessel containing tracking, cylindrical cutaway, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "lep-aleph": {
+    "prompt": "Scientific illustration of the ALEPH detector at LEP, time projection chamber surrounded by electromagnetic calorimeter of lead-wire-chamber sandwich, superconducting solenoid, iron return yoke with muon chambers, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "lep-l3": {
+    "prompt": "Scientific illustration of the L3 detector at LEP, distinctive large volume magnet with BGO crystal electromagnetic calorimeter, precision muon spectrometer with drift chambers in huge octagonal support structure, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "lep": {
+    "prompt": "Scientific illustration of the LEP circular collider tunnel cross-section, electron and positron beams circulating in opposite directions in a large underground ring, RF cavities for acceleration, bending magnets along the arc, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "super-kamiokande": {
+    "prompt": "Scientific illustration of the Super-Kamiokande detector, massive cylindrical underground water tank lined with thousands of golden photomultiplier tubes on the inner walls, Cherenkov light ring pattern from a neutrino interaction shown inside, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "miniboone": {
+    "prompt": "Scientific illustration of the MiniBooNE detector, large spherical tank filled with mineral oil, inner surface covered with photomultiplier tubes detecting Cherenkov light, neutrino beam entering from the left, ring-shaped light pattern, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "icecube": {
+    "prompt": "Scientific illustration of the IceCube neutrino observatory, vertical strings of digital optical modules deployed deep in Antarctic ice shown as a 3D grid of glowing sensors beneath the ice surface, neutrino track shown as a diagonal light trail through the array, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "sno": {
+    "prompt": "Scientific illustration of the SNO detector, geodesic acrylic sphere filled with heavy water suspended inside a larger cavity filled with light water, photomultiplier tubes on surrounding support structure, underground cavern setting, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "t2k": {
+    "prompt": "Scientific illustration of the T2K long-baseline neutrino experiment, neutrino beam path shown as a dashed line from accelerator facility through Earth's crust to a far detector hundreds of kilometers away, near detector and far detector shown at endpoints, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "nova-neutrino": {
+    "prompt": "Scientific illustration of the NOvA detector, long rectangular segmented detector made of PVC cells filled with liquid scintillator, shown as a tall modular block structure, neutrino event display with particle track through cells, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "dune": {
+    "prompt": "Scientific illustration of the DUNE liquid argon time projection chamber, large rectangular cryostat with wire plane arrays inside, ionization tracks of particles drifting to readout planes, underground cavern housing four massive modules, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "double-chooz": {
+    "prompt": "Scientific illustration of a reactor neutrino detector, nested cylindrical vessels with inner target of gadolinium-doped scintillator, gamma catcher layer, buffer oil layer, and outer water shield with photomultiplier tubes, nuclear reactor shown nearby, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "daya-bay": {
+    "prompt": "Scientific illustration of the Daya Bay experiment layout, multiple identical cylindrical antineutrino detectors arranged in underground halls at different distances from nuclear reactor cores, detector cross-section showing nested acrylic vessels, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "borexino": {
+    "prompt": "Scientific illustration of the Borexino detector, concentric spherical nylon vessels containing ultra-pure liquid scintillator, surrounded by photomultiplier tubes on a stainless steel sphere, water tank outer shield, solar neutrino interaction flash at center, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "antares": {
+    "prompt": "Scientific illustration of the ANTARES underwater neutrino telescope, vertical detection lines anchored to the Mediterranean sea floor with optical modules arranged along cables, upward-going muon track from neutrino interaction shown as a blue Cherenkov cone, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "minos": {
+    "prompt": "Scientific illustration of the MINOS detector, octagonal magnetized steel plates alternating with scintillator strips, coil running through the center creating a toroidal magnetic field, muon track curving through the plates, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "rhic-star": {
+    "prompt": "Scientific illustration of the STAR detector at RHIC, large time projection chamber at center surrounded by barrel electromagnetic calorimeter, full azimuthal coverage, gold-ion collision event with hundreds of particle tracks spraying radially outward, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "rhic-phenix": {
+    "prompt": "Scientific illustration of the PHENIX detector at RHIC, two central arm spectrometers covering limited azimuthal angle, muon arms at forward angles, distinctive open geometry with drift chambers and RICH detectors in the arms, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "rhic": {
+    "prompt": "Scientific illustration of the RHIC collider complex viewed from above, two intersecting superconducting storage rings with multiple interaction points, beam injection chain from linac through booster and AGS, hexagonal ring shape, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "na62": {
+    "prompt": "Scientific illustration of the NA62 experiment, in-flight kaon decay setup with long vacuum decay vessel, upstream kaon tagger, straw tracker stations downstream, ring-imaging Cherenkov counters, photon vetoes along the beamline, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "na48-na49": {
+    "prompt": "Scientific illustration of a fixed-target experiment at the CERN SPS, proton beam striking a stationary target producing secondary particles, magnetic spectrometer with wire chambers downstream, calorimeter wall at the end, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "compass": {
+    "prompt": "Scientific illustration of the COMPASS spectrometer, long two-stage magnetic spectrometer with large and small aperture magnets, polarized target, RICH detector, multiple tracking stations with different technologies, muon beam entering from left, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "lhc-forward": {
+    "prompt": "Scientific illustration of forward physics detectors near the LHC beam pipe, Roman pot detectors approaching the beam very closely from above and below, small calorimeters positioned at zero-degree angle far from the interaction point, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "fermilab-fixed": {
+    "prompt": "Scientific illustration of a Fermilab fixed-target beamline, high-energy proton beam extracted from main ring hitting a target, secondary beam formation with focusing magnets and collimators, decay pipe, detector hall at the end, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "xenon-dm": {
+    "prompt": "Scientific illustration of a dual-phase liquid xenon time projection chamber, cylindrical vessel with liquid xenon below and xenon gas above, top and bottom photomultiplier tube arrays, ionization electrons drifting upward producing electroluminescence signal at liquid surface, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "lux-dm": {
+    "prompt": "Scientific illustration of the LUX-ZEPLIN dark matter detector, large titanium cryostat containing liquid xenon TPC, surrounded by outer liquid xenon skin veto and gadolinium-loaded liquid scintillator neutron veto, inside a water tank, underground, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "pandax-dm": {
+    "prompt": "Scientific illustration of the PandaX dark matter detector, dual-phase xenon TPC with copper field cage rings, PTFE reflector panels, SiPM photosensor arrays at top and bottom, stainless steel vessel, underground laboratory shielding, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "cdms-dm": {
+    "prompt": "Scientific illustration of a cryogenic dark matter detector, stack of germanium and silicon crystal pucks cooled to millikelvin temperatures in a dilution refrigerator, phonon and ionization sensors on crystal surfaces, concentric copper shielding cans, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "admx-axion": {
+    "prompt": "Scientific illustration of the ADMX axion detector, large cylindrical microwave cavity inside a superconducting solenoid magnet, tuning rod mechanism inside the cavity, quantum-limited amplifier chain, cryogenic insert, searching for axion-to-photon conversion, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "ligo-gw": {
+    "prompt": "Scientific illustration of a LIGO interferometer, L-shaped laser interferometer with two long perpendicular arms, laser source at the vertex splitting into two beams, mirrors at the ends of each arm, interference pattern at the photodetector, gravitational wave distorting the arms, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "auger-cosmic": {
+    "prompt": "Scientific illustration of the Pierre Auger cosmic ray observatory, extensive air shower cascade from an ultra-high energy cosmic ray entering the atmosphere, surface water Cherenkov tank array on the ground, fluorescence telescope viewing the shower from the side, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "fermi-lat": {
+    "prompt": "Scientific illustration of the Fermi LAT gamma-ray space telescope, box-shaped satellite with layered silicon strip tracker and cesium iodide calorimeter, anti-coincidence detector shield, solar panels, gamma ray entering from above converting to electron-positron pair, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "hubble-telescope": {
+    "prompt": "Scientific illustration of the Hubble Space Telescope, cylindrical body with primary mirror at one end, solar panel wings extended on both sides, aperture door open, light path through Cassegrain reflector optics shown inside, orbiting above Earth, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "jwst-telescope": {
+    "prompt": "Scientific illustration of the James Webb Space Telescope, distinctive hexagonal gold mirror segments arranged in a honeycomb pattern, five-layer diamond-shaped sunshield below, instrument module behind the mirror, deployed configuration in space, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "planck-satellite": {
+    "prompt": "Scientific illustration of the Planck satellite, spinning spacecraft with large primary reflector feeding focal plane instruments cooled to near absolute zero, sunshield and solar panels at the base, full-sky CMB temperature map shown as an oval projection nearby, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "higgs-discovery": {
+    "prompt": "Scientific illustration of the Higgs boson discovery signal, invariant mass histogram showing a clear resonance bump peak at 125 GeV above smooth background, four-lepton golden channel event display with two pairs of oppositely charged lepton tracks, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "higgs-properties": {
+    "prompt": "Scientific illustration of Higgs boson coupling measurements, spider web diagram showing measured coupling strengths to different particles radiating from center, particles of different masses arranged around the web with coupling proportional to mass, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "higgs-search": {
+    "prompt": "Scientific illustration of Higgs boson exclusion limits, Brazilian flag band plot showing expected and observed exclusion confidence levels as a function of hypothetical Higgs mass, horizontal line at signal strength of one, colored confidence bands, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "higgs-boson": {
+    "prompt": "Scientific illustration of the Higgs field mechanism, Mexican hat potential energy surface in 3D with a ball sitting in the circular valley minimum, radial excitation representing the Higgs boson, symmetric potential shape, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "top-quark": {
+    "prompt": "Scientific illustration of top quark pair production and decay, two top quarks produced from gluon fusion each decaying to a W boson and b-quark, one W decaying to leptons and the other to jets, six-particle final state topology shown as branching tree, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "w-boson": {
+    "prompt": "Scientific illustration of W boson production and leptonic decay, quark-antiquark annihilation producing a W boson shown as a wavy propagator line decaying to a charged lepton and neutrino, missing transverse energy indicated by dashed arrow, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "z-boson": {
+    "prompt": "Scientific illustration of Z boson resonance, electron-positron pair annihilating into a Z boson which decays to a fermion-antifermion pair, sharp Breit-Wigner resonance peak shape shown at 91 GeV, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "electroweak-precision": {
+    "prompt": "Scientific illustration of electroweak precision observables, elliptical confidence contour plots in a two-parameter plane with overlapping bands from different measurements all intersecting at a common point, pull diagram with horizontal bars, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "diboson": {
+    "prompt": "Scientific illustration of diboson production, two massive gauge bosons produced simultaneously at a collider vertex shown as two wavy lines emerging from a triple gauge coupling point, each boson decaying to lepton pairs creating four-lepton final state, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "jet-production": {
+    "prompt": "Scientific illustration of collider jet production, two collimated sprays of hadron particles emerging back-to-back from a hard scattering point, cone-shaped jet boundaries containing multiple particle tracks, transverse view of a dijet event, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "jet-substructure": {
+    "prompt": "Scientific illustration of jet substructure analysis, a single fat jet shown in cross-section revealing internal two-prong or three-prong energy cluster substructure, angular separation between subjets visible, grooming procedure removing soft radiation at the periphery, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "charmonium": {
+    "prompt": "Scientific illustration of charmonium energy level spectrum, horizontal lines at different heights representing J/psi, psi-prime, chi_c and other cc-bar states, vertical arrows showing radiative and hadronic transitions between levels, charm quark pair bound state orbital diagram, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "bottomonium": {
+    "prompt": "Scientific illustration of bottomonium spectroscopy, energy level diagram with Upsilon states at different heights connected by transition arrows, b-quark and anti-b-quark orbiting each other in a potential well, heavier and more tightly bound system than charmonium, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "tetraquark": {
+    "prompt": "Scientific illustration of a tetraquark exotic hadron, four colored quarks arranged in a compact cluster with gluon field lines binding them, two quarks and two antiquarks in a diquark-antidiquark configuration, color flux tubes connecting the constituents, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "pentaquark": {
+    "prompt": "Scientific illustration of a pentaquark state, five quarks shown as colored spheres arranged in a molecular-like baryon-meson bound configuration, four quarks and one antiquark connected by color flux tubes, distinctive five-body structure, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "exotic-hadrons": {
+    "prompt": "Scientific illustration of exotic hadron states, a glueball shown as a knotted loop of gluon field lines with no quarks, a hybrid meson with a quark-antiquark pair plus an excited gluon flux tube vibrating between them, unusual bound states, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "quarkonium": {
+    "prompt": "Scientific illustration of heavy quarkonium, a heavy quark and antiquark orbiting each other connected by a color flux tube string, Cornell potential curve showing Coulomb-like short range and linear confining long range behavior, bound state wave function, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "b-meson-cp": {
+    "prompt": "Scientific illustration of CP violation in B meson decays, B0 and anti-B0 mesons shown with interference pattern between mixing and decay amplitudes, asymmetry between matter and antimatter decay rates depicted as unequal wave amplitudes, time-dependent oscillation, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "b-meson-decay": {
+    "prompt": "Scientific illustration of B meson decay topology, B hadron flying a measurable distance from the primary vertex before decaying at a displaced secondary vertex, decay products fanning out from the secondary vertex, vertex detector layers shown, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "charm-physics": {
+    "prompt": "Scientific illustration of D meson physics, charm quark hadronizing into a D meson shown decaying through weak interaction to kaon and pion final states, short decay length, Cabibbo-favored decay tree diagram, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "kaon-physics": {
+    "prompt": "Scientific illustration of kaon decay, long-lived neutral kaon beam propagating and decaying to two or three pions, K-long and K-short interference pattern, regeneration effect at a material slab, CP violation in the kaon system, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "pion-physics": {
+    "prompt": "Scientific illustration of pion as the lightest meson, quark-antiquark pair connected by a short color flux tube, pion cloud surrounding a nucleon showing the role as force carrier of the strong nuclear force, Yukawa potential diagram, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "baryon-spectroscopy": {
+    "prompt": "Scientific illustration of baryon resonance spectrum, multiple excited baryon states arranged by mass and quantum numbers in a level scheme, three quarks in different orbital configurations inside each state, Regge trajectory plot of spin versus mass squared, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "neutrino-oscillation": {
+    "prompt": "Scientific illustration of neutrino flavor oscillation, three sinusoidal probability waves for electron muon and tau neutrino flavors oscillating as a function of distance traveled, flavor conversion shown by changing colors along the beam path, PMNS mixing visualization, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "neutrino-cross-section": {
+    "prompt": "Scientific illustration of neutrino-nucleon scattering, neutrino approaching a nucleon and exchanging a W or Z boson, showing charged current deep inelastic scattering with a hadronic shower and outgoing charged lepton, cross-section rising linearly with energy, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "neutrino-mass": {
+    "prompt": "Scientific illustration of neutrinoless double beta decay, two neutrons in a nucleus simultaneously converting to protons emitting two electrons but no neutrinos, Majorana neutrino exchanged as virtual particle between the vertices, nuclear isotope diagram, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "sterile-neutrino": {
+    "prompt": "Scientific illustration of sterile neutrino mixing, three active neutrino flavors shown as interconnected nodes with a fourth isolated heavy sterile neutrino connected by dashed mixing lines, mass eigenstate spectrum with a gap to the heavy state, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "neutrino-astro": {
+    "prompt": "Scientific illustration of astrophysical neutrino sources, the Sun emitting solar neutrinos, a supernova explosion releasing a burst of neutrinos, and the Earth's atmosphere producing atmospheric neutrinos from cosmic ray showers, neutrino paths converging on a detector, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "dark-matter-direct": {
+    "prompt": "Scientific illustration of dark matter direct detection, a WIMP particle from the galactic halo elastically scattering off a target nucleus inside a shielded underground detector, nuclear recoil producing a small energy signal, exclusion limit curve in cross-section versus mass plane, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "dark-matter-collider": {
+    "prompt": "Scientific illustration of dark matter production at a collider, proton-proton collision producing an initial state radiation jet recoiling against invisible dark matter particles shown as dashed lines, large missing transverse momentum arrow, mono-jet event topology, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "dark-matter-indirect": {
+    "prompt": "Scientific illustration of dark matter indirect detection, two dark matter particles annihilating in the galactic halo producing gamma rays and antimatter particles, galactic center glowing with excess emission, space telescope observing the signal, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "dark-matter-model": {
+    "prompt": "Scientific illustration of WIMP dark matter models, Feynman diagram showing dark matter particle coupling to Standard Model particles through a mediator, thermal relic abundance freeze-out curve, parameter space with allowed regions, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "dark-matter": {
+    "prompt": "Scientific illustration of dark matter evidence, galaxy rotation curve showing flat velocity profile at large radii compared to expected Keplerian decline, luminous disk galaxy embedded in a large spherical dark matter halo shown as a translucent sphere, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "susy-search": {
+    "prompt": "Scientific illustration of supersymmetry search at a collider, cascade decay chain of heavy sparticles producing jets leptons and missing energy from the lightest supersymmetric particle escaping detection, exclusion contour in gluino versus neutralino mass plane, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "susy-spectrum": {
+    "prompt": "Scientific illustration of the SUSY mass spectrum, vertical mass scale with horizontal bars representing squarks gluinos sleptons charginos and neutralinos at different mass levels, arrows showing allowed decay chains between states, lightest state at the bottom, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "susy": {
+    "prompt": "Scientific illustration of supersymmetry concept, Standard Model particles on the left mirrored by their superpartner particles on the right connected by dashed symmetry lines, fermion-boson pairs linked across a vertical symmetry axis, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "axion-search": {
+    "prompt": "Scientific illustration of axion detection experiment, strong magnetic field region where an axion converts to a detectable microwave photon inside a resonant cavity, superconducting magnet bore with cavity insert, signal amplification chain, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "axion": {
+    "prompt": "Scientific illustration of the axion particle concept, tilted Mexican hat potential with explicit symmetry breaking creating a shallow valley, axion as the angular degree of freedom rolling around the bottom, connection to strong CP problem resolution, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "quark-gluon-plasma": {
+    "prompt": "Scientific illustration of quark-gluon plasma formation, heavy ion collision creating a hot fireball where quarks and gluons are deconfined, expanding plasma cooling and hadronizing into final state particles, temperature-density phase diagram showing the QGP region, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "heavy-ion-flow": {
+    "prompt": "Scientific illustration of elliptic flow in heavy-ion collisions, almond-shaped overlap region from a non-central collision, pressure gradient converting spatial anisotropy into momentum anisotropy, azimuthal particle distribution showing cos-2-phi modulation, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "heavy-ion": {
+    "prompt": "Scientific illustration of heavy-ion collision, two large nuclei shown as clusters of protons and neutrons approaching each other at high speed, violent collision producing hundreds of particles spraying outward in all directions, fireball at the center, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "parton-distribution": {
+    "prompt": "Scientific illustration of parton distribution functions, proton shown with internal quark and gluon constituents, PDF curves showing probability of finding different parton flavors as a function of momentum fraction x, valence quarks peaking at moderate x and gluons at low x, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "fragmentation": {
+    "prompt": "Scientific illustration of quark fragmentation and hadronization, a high-energy quark producing a chain of quark-antiquark pairs from the color field string breaking, hadrons forming sequentially along the jet axis, string breaking cascade, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "qcd-resummation": {
+    "prompt": "Scientific illustration of QCD soft gluon resummation, hard scattering vertex emitting multiple soft and collinear gluon radiation shown as increasingly soft wavy lines, Sudakov form factor suppressing the no-emission probability, ordered emission cascade, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "nlo-nnlo": {
+    "prompt": "Scientific illustration of higher-order QCD corrections, tree-level Feynman diagram alongside one-loop and two-loop diagrams with virtual gluon corrections shown as internal loops, perturbative series with decreasing correction terms, increasing diagram complexity, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "lattice-qcd": {
+    "prompt": "Scientific illustration of lattice QCD, four-dimensional spacetime discretized into a regular cubic lattice grid, gauge field links between lattice sites shown as colored bonds, quark fields on the nodes, Wilson loop path highlighted on the lattice, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "monte-carlo-sim": {
+    "prompt": "Scientific illustration of Monte Carlo event generation, flowchart from hard scattering matrix element through parton shower branching tree to hadronization and detector simulation, random sampling visualization with scattered points filling a distribution shape, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "detector-rd": {
+    "prompt": "Scientific illustration of particle detector R&D, silicon pixel sensor wafer with bump-bonded readout chip, cross-section showing depletion zone charge collection, wire chamber with field and sense wires, scintillating crystal coupled to photodetector, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "accelerator-rd": {
+    "prompt": "Scientific illustration of particle accelerator technology, superconducting RF cavity with standing wave field pattern inside, quadrupole magnet cross-section showing four-fold field symmetry, beam optics diagram with focusing and defocusing elements, beam envelope, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "cosmic-ray": {
+    "prompt": "Scientific illustration of a cosmic ray extensive air shower, primary cosmic ray particle entering the atmosphere from above and producing a branching cascade of secondary particles spreading into a cone shape, electromagnetic and hadronic shower components, particles reaching ground level, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "cmb-observation": {
+    "prompt": "Scientific illustration of cosmic microwave background observations, full-sky oval Mollweide projection map showing temperature anisotropy hot and cold spots in red and blue, angular power spectrum curve with acoustic peaks below, primordial fluctuation pattern, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "gravitational-wave": {
+    "prompt": "Scientific illustration of gravitational waves from a binary merger, two compact objects spiraling inward along a shrinking orbit, spacetime ripples propagating outward as concentric rings in a grid-like fabric of space, inspiral-merger-ringdown waveform signal, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "muon-g2": {
+    "prompt": "Scientific illustration of the muon g-2 experiment, muon storage ring with muons circling inside a precisely uniform magnetic field, spin precession vector rotating relative to the momentum direction, anomalous precession frequency measurement, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "edm-measurement": {
+    "prompt": "Scientific illustration of electric dipole moment search, a spinning particle with slight charge asymmetry along its spin axis placed in parallel electric and magnetic fields, precession frequency shift measurement, time-reversal violation signature, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "alpha-qed": {
+    "prompt": "Scientific illustration of fine structure constant measurement, electron in a Penning trap orbiting in a magnetic field, cyclotron and spin-flip frequencies being compared with extreme precision, quantum electrodynamics vertex correction loop diagram, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "rare-decay": {
+    "prompt": "Scientific illustration of rare and forbidden decays, flavor-changing neutral current loop diagram with virtual heavy particles in the loop enabling a suppressed transition, branching ratio orders of magnitude below normal decays, lepton flavor violation with mu converting to electron, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "bsm-search": {
+    "prompt": "Scientific illustration of beyond Standard Model search, bump hunt in an invariant mass spectrum showing a small excess peak above smooth Standard Model background at high mass, new heavy resonance signal, discovery significance evaluation, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "collider-general": {
+    "prompt": "Scientific illustration of a general particle collider, two opposing particle beams converging at a central interaction point inside a cylindrical detector, beam pipes entering from both sides, concentric detector layers surrounding the collision point, particle tracks spraying outward, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "neutrino-general": {
+    "prompt": "Scientific illustration of neutrino physics, ghostly neutrino particle passing through matter almost undetected, rare weak interaction with a nucleus producing a charged lepton and hadronic debris, extremely small cross-section visualized by a neutrino beam traversing Earth, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "qcd-general": {
+    "prompt": "Scientific illustration of quantum chromodynamics, three quarks inside a proton connected by gluon field lines in red green and blue colors, asymptotic freedom shown by weakening coupling at short distance, confinement shown by strengthening color field at large distance, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "electroweak-general": {
+    "prompt": "Scientific illustration of the electroweak interaction, unified electromagnetic and weak forces shown as a symmetry breaking diagram, massless photon and massive W and Z bosons emerging from a common gauge symmetry, Weinberg angle mixing relationship, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "hadron-general": {
+    "prompt": "Scientific illustration of hadron physics, meson shown as quark-antiquark pair and baryon shown as three quarks, both bound by gluon color force lines, arranged side by side to show the two hadron families, SU3 flavor multiplet arrangement, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "lepton-general": {
+    "prompt": "Scientific illustration of the lepton family, three generations of charged leptons of increasing mass shown as spheres of increasing size alongside their corresponding neutrinos shown as small ghostly spheres, arranged in a generational pattern, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "nuclear-general": {
+    "prompt": "Scientific illustration of nuclear physics, atomic nucleus composed of clustered protons and neutrons held together by the strong nuclear force, nuclear binding energy curve showing iron peak, alpha particle emission from a radioactive nucleus, shell model energy levels, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "cosmology-general": {
+    "prompt": "Scientific illustration of Big Bang cosmology, expanding universe timeline from initial singularity through inflation to formation of atoms stars and galaxies, cone-shaped spacetime diagram widening with time, cosmic evolution epochs shown as bands, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  },
+  "astroparticle": {
+    "prompt": "Scientific illustration of astroparticle physics, high-energy particles from cosmic sources including a gamma-ray burst, active galactic nucleus jet, and supernova remnant, particles traveling through space to ground-based and space-based detectors on and above Earth, clean lines, white background, no text",
+    "sample_titles": [],
+    "abstract_count": 0
+  }
+}

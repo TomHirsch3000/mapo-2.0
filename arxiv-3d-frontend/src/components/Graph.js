@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useMemo, useState } from 'react';
 import * as d3 from 'd3';
 import { roundedHexagonPath, getDeterministicPoint, hashString, EDGE_COLORS, getEdgeId, sanitizeId, generateHexPositions } from '../utils/d3-helpers';
 import { LayoutEngine } from '../modules/LayoutEngine';
+import { getIconPath, shouldShowIcon } from '../config/categoryIcons';
 
 export const Graph = ({
     nodes,
@@ -76,12 +77,19 @@ export const Graph = ({
         if (isField) {
             currentNodes.forEach(n => {
                 const cites = n.citationCount || 0;
-                // Sizing based on citations (Square root scale for better distribution)
-                // Min width 80px, grows with citations.
-                // Example: 0 cites = 80px, 100 cites = 80 + 10*3 = 110px, 1000 cites = 80 + 31*3 = 173px
-                n._w = 80 + Math.sqrt(cites) * 3;
-                // Height allows for title wrapping. Base 50px.
-                n._h = 50 + Math.sqrt(cites) * 1.5;
+                const hasIcon = shouldShowIcon(n);
+
+                if (hasIcon) {
+                    // Experimental/phenomenological: vertical/square card (title top, icon below)
+                    n._w = 70 + Math.sqrt(cites) * 2;
+                    n._h = 100 + Math.sqrt(cites) * 2.5;
+                    n._hasIcon = true;
+                } else {
+                    // Theoretical/review/unknown: horizontal text-only card
+                    n._w = 80 + Math.sqrt(cites) * 3;
+                    n._h = 50 + Math.sqrt(cites) * 1.5;
+                    n._hasIcon = false;
+                }
             });
         }
 
@@ -422,17 +430,26 @@ export const Graph = ({
                         .attr("height", height);
 
                     fo.append("xhtml:div")
-                        .attr("class", "node-paper-content")
+                        .attr("class", d => `node-paper-content${d._hasIcon ? ' node-paper-vertical' : ''}`)
                         .style("width", "100%")
                         .style("height", "100%")
                         .style("display", "flex")
+                        .style("flex-direction", d => d._hasIcon ? "column" : "row")
                         .style("align-items", "center")
-                        .style("justify-content", "center")
+                        .style("justify-content", d => d._hasIcon ? "flex-start" : "center")
                         .style("text-align", "center")
                         .style("overflow", "hidden")
                         .style("padding", "4px")
                         .style("box-sizing", "border-box")
-                        .html(d => `<div class="node-paper-title" style="width: 100%; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.2; text-align: center;">${d.title || d.name || 'Untitled'}</div>`);
+                        .html(d => {
+                            const title = `<div class="node-paper-title" style="width: 100%; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.2; text-align: center;">${d.title || d.name || 'Untitled'}</div>`;
+                            if (d._hasIcon) {
+                                const iconPath = getIconPath(d);
+                                const iconUrl = process.env.PUBLIC_URL + '/icons/' + iconPath;
+                                return title + `<div class="node-paper-icon-wrap" style="flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; min-height: 0;"><img class="node-paper-icon" src="${iconUrl}" alt="" style="max-width: 90%; max-height: 90%; object-fit: contain;" /></div>`;
+                            }
+                            return title;
+                        });
                 }
 
             } else {
