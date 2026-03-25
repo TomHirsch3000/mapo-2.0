@@ -72,8 +72,43 @@ def column_names(conn):
     return {r[1] for r in conn.execute("PRAGMA table_info(papers)").fetchall()}
 
 
+def _safe(row, col, default=""):
+    """Safely get a column value from a Row, returning default if missing."""
+    return row[col] if col in row.keys() else default
+
+
+def format_node(row, node_type=None):
+    """Format a DB row into a frontend-ready node dict."""
+    yr = row['year'] if 'year' in row.keys() else None
+    pub_date = _safe(row, 'publicationDate')
+    if not yr and pub_date:
+        try:
+            yr = int(pub_date.split('-')[0])
+        except Exception:
+            yr = 2000
+
+    cite_count = _safe(row, 'cited_by_count', 0) or _safe(row, 'citationCount', 0) or 0
+
+    node = {
+        "id": row['paperId'],
+        "title": row['title'],
+        "year": yr,
+        "citationCount": cite_count,
+        "primaryField": _safe(row, 'AI_primary_field') or _safe(row, 'primary_concept') or "Unassigned",
+        "abstract": _safe(row, 'AI_summary') or _safe(row, 'abstract') or "No abstract available.",
+        "authors": _safe(row, 'all_author_names') or _safe(row, 'first_author_name') or _safe(row, 'authors') or "Unknown",
+        "institutions": _safe(row, 'all_institution_names') or "",
+        "paperNature": _safe(row, 'paper_nature') or None,
+        "iconCategory": _safe(row, 'icon_category') or None,
+        "data": dict(row),
+    }
+    if node_type:
+        node["nodeType"] = node_type
+    return node
+
+
 # ---------------------------------------------------------------------------
-# /api/paper/<id>/details  — single-paper neighbourhood
+# /api/paper/<id>/details  -- single-paper neighbourhood
 # ---------------------------------------------------------------------------
 
 @app.route('/api/paper/<string:paper_id>/details', methods=['GET'])
@@ -84,87 +119,63 @@ def get_paper_details(paper_id):
     except ValueError:
         return jsonify({"error": "Invalid min_citations or max_papers parameter. Must be an integer."}), 400
 
-    conn = get_db_connection()
-    try:
-        # 1. Get all connected edge pairs where the paper is source or target
-        edges_query = """
-            SELECT source, target 
-            FROM citations 
-            WHERE source = ? OR target = ?
-        """
-        raw_edges = conn.execute(edges_query, (paper_id, paper_id)).fetchall()
-        
-        # Determine the unique set of paper IDs involved (the central paper + all connected)
-        connected_ids = set([paper_id])
-        for row in raw_edges:
-            connected_ids.add(row['source'])
-            connected_ids.add(row['target'])
-            
-        if not connected_ids:
-            return jsonify({"nodes": [], "edges": []})
-            
-        # 2. Query node details for the connected papers, filtering by min_citations
-        # We always include the central selected paper regardless of its citation count
-        placeholders = ','.join(['?'] * len(connected_ids))
-        nodes_query = f"""
-            SELECT * 
-            FROM papers 
-            WHERE paperId IN ({placeholders}) 
-            AND (cited_by_count >= ? OR paperId = ?)
-            LIMIT ?
-        """
-        
-        params = list(connected_ids) + [min_citations, paper_id, max_papers]
-        raw_nodes = conn.execute(nodes_query, params).fetchall()
-        
-        # Re-verify the set of valid node IDs after the filter and limit
-        valid_node_ids = set([row['paperId'] for row in raw_nodes])
-        
-        # 3. Filter edges to only include those where both source and target are in the final valid nodes list
-        valid_edges = []
-        for row in raw_edges:
-            if row['source'] in valid_node_ids and row['target'] in valid_node_ids:
-                valid_edges.append({
-                    "source": row['source'],
-                    "target": row['target'],
-                    "importance": 1 # Default importance
-                })
-                
-        # 4. Format the nodes for the frontend
-        formatted_nodes = []
-        for row in raw_nodes:
-            # Reconstruct the expected properties from the SQLite schema
-            yr = row['year']
-            if not yr and row['publicationDate']:
-                try:
-                    yr = int(row['publicationDate'].split('-')[0])
-                except:
-                    yr = 2000
-                    
-            node = {
-                "id": row['paperId'],
-                "title": row['title'],
-                "year": yr,
-                "citationCount": row['cited_by_count'] or 0,
-                "primaryField": row['AI_primary_field'] or row['primary_concept'] or "Unassigned",
-                "abstract": row['AI_summary'] or row['abstract'] or "No abstract available.",
-                "authors": row['all_author_names'] or row['first_author_name'] or "Unknown",
-                "institutions": row['all_institution_names'] or "",
-                "paperNature": row['paper_nature'] if 'paper_nature' in row.keys() else None,
+    # Search across all databases for this paper
+    for db_path in get_all_db_paths():
+        conn = open_conn(db_path)
+        try:
+            # Check if this paper exists in this DB
+            check = conn.execute("SELECT 1 FROM papers WHERE paperId = ?", (paper_id,)).fetchone()
+            if not check:
+                continue
 
-                # Maintain original DB row under data for any edge cases
-                "data": dict(row)
-            }
-            formatted_nodes.append(node)
-            
-        return jsonify({
-            "nodes": formatted_nodes,
-            "edges": valid_edges
-        })
+            # 1. Get all connected edge pairs where the paper is source or target
+            raw_edges = conn.execute(
+                "SELECT source, target FROM citations WHERE source = ? OR target = ?",
+                (paper_id, paper_id)
+            ).fetchall()
+
+            # Determine the unique set of paper IDs involved
+            connected_ids = {paper_id}
+            for row in raw_edges:
+                connected_ids.add(row['source'])
+                connected_ids.add(row['target'])
+
+            if not connected_ids:
+                return jsonify({"nodes": [], "edges": []})
+
+            # 2. Query node details, filtering by min_citations
+            # Always include the central paper regardless of citation count
+            placeholders = ','.join(['?'] * len(connected_ids))
+            params = list(connected_ids) + [min_citations, paper_id, max_papers]
+            raw_nodes = conn.execute(
+                f"SELECT * FROM papers WHERE paperId IN ({placeholders}) "
+                f"AND (cited_by_count >= ? OR paperId = ?) LIMIT ?",
+                params
+            ).fetchall()
+
+            # Re-verify valid node IDs after filter
+            valid_node_ids = {row['paperId'] for row in raw_nodes}
+
+            # 3. Filter edges to only include valid nodes on both ends
+            valid_edges = []
+            for row in raw_edges:
+                if row['source'] in valid_node_ids and row['target'] in valid_node_ids:
+                    valid_edges.append({
+                        "source": row['source'],
+                        "target": row['target'],
+                        "importance": 1,
+                    })
+
+            # 4. Format nodes
+            formatted_nodes = [format_node(row) for row in raw_nodes]
+
+            return jsonify({
+                "nodes": formatted_nodes,
+                "edges": valid_edges,
+            })
 
         except Exception as e:
-            conn.close()
-            return jsonify({"error": str(e)}), 500
+            print(f"[error] DB {db_path}: {e}")
         finally:
             conn.close()
 
@@ -172,7 +183,7 @@ def get_paper_details(paper_id):
 
 
 # ---------------------------------------------------------------------------
-# /api/search  — cross-database search with experimental evidence step
+# /api/search  -- cross-database search with foundation/impact/evidence steps
 # ---------------------------------------------------------------------------
 
 @app.route('/api/search', methods=['GET'])
@@ -195,28 +206,41 @@ def search_topics():
     all_nodes = []
     all_edges = []
     seen_edges = set()
-    seen_node_ids = set()   # deduplicate across DBs
+    seen_node_ids = set()
     stats = {"core": 0, "foundation": 0, "impact": 0, "evidence": 0}
 
     for db_path in all_db_paths:
-        topic = topic_from_db_path(db_path)
         conn = open_conn(db_path)
 
         try:
+            # Check table exists
+            tables = {r[0] for r in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall()}
+            if 'papers' not in tables:
+                continue
+
             cols = column_names(conn)
             has_nature = 'paper_nature' in cols
 
             # ------------------------------------------------------------------
-            # 1. Core papers — match the search query
+            # 1. Core papers -- match the search query
             # ------------------------------------------------------------------
-            core_rows = conn.execute("""
-                SELECT * FROM papers
-                WHERE (title LIKE ? OR AI_summary LIKE ? OR abstract LIKE ? OR AI_primary_field LIKE ?)
-                  AND cited_by_count >= ?
-                ORDER BY cited_by_count DESC
-                LIMIT ?
-            """, (search_term, search_term, search_term, search_term,
-                  min_citations, max_papers)).fetchall()
+            # Build WHERE clause based on available columns
+            search_cols = ['title']
+            for opt_col in ['AI_summary', 'abstract', 'AI_primary_field', 'summary']:
+                if opt_col in cols:
+                    search_cols.append(opt_col)
+            where_parts = ' OR '.join(f'{c} LIKE ?' for c in search_cols)
+            search_params = [search_term] * len(search_cols)
+
+            cite_col = 'cited_by_count' if 'cited_by_count' in cols else 'citationCount'
+
+            core_rows = conn.execute(
+                f"SELECT * FROM papers WHERE ({where_parts}) "
+                f"AND {cite_col} >= ? ORDER BY {cite_col} DESC LIMIT ?",
+                search_params + [min_citations, max_papers]
+            ).fetchall()
 
             if not core_rows:
                 continue
@@ -226,7 +250,7 @@ def search_topics():
             core_ph = ','.join(['?'] * len(core_id_list))
 
             # ------------------------------------------------------------------
-            # 2. Foundation papers — papers that core papers cite
+            # 2. Foundation papers -- papers that core papers cite
             # ------------------------------------------------------------------
             foundation_edge_rows = conn.execute(
                 f"SELECT source, target FROM citations WHERE source IN ({core_ph}) LIMIT 500",
@@ -235,7 +259,7 @@ def search_topics():
             foundation_target_ids = {r['target'] for r in foundation_edge_rows} - core_ids
 
             # ------------------------------------------------------------------
-            # 3. Impact papers — papers that cite core papers
+            # 3. Impact papers -- papers that cite core papers
             # ------------------------------------------------------------------
             impact_edge_rows = conn.execute(
                 f"SELECT source, target FROM citations WHERE target IN ({core_ph}) LIMIT 500",
@@ -252,38 +276,43 @@ def search_topics():
                 ph = ','.join(['?'] * len(ids))
                 return conn.execute(
                     f"SELECT * FROM papers WHERE paperId IN ({ph}) "
-                    f"ORDER BY cited_by_count DESC LIMIT {limit}",
+                    f"ORDER BY {cite_col} DESC LIMIT {limit}",
                     ids
                 ).fetchall()
 
             foundation_rows = fetch_by_ids(foundation_target_ids, MAX_CONTEXT)
             impact_rows = fetch_by_ids(impact_source_ids, MAX_CONTEXT)
 
-        valid_foundation_ids = set(r['paperId'] for r in foundation_rows)
-        valid_impact_ids = set(r['paperId'] for r in impact_rows)
+            valid_foundation_ids = {r['paperId'] for r in foundation_rows}
+            valid_impact_ids = {r['paperId'] for r in impact_rows}
 
-        # 5. Format nodes
-        def format_node(row, node_type):
-            yr = row['year']
-            if not yr and row['publicationDate']:
-                try:
-                    yr = int(row['publicationDate'].split('-')[0])
-                except Exception:
-                    yr = 2000
-            return {
-                "id": row['paperId'],
-                "title": row['title'],
-                "year": yr,
-                "citationCount": row['cited_by_count'] or 0,
-                "primaryField": row['AI_primary_field'] or row['primary_concept'] or "Unassigned",
-                "abstract": row['AI_summary'] or row['abstract'] or "No abstract available.",
-                "authors": row['all_author_names'] or row['first_author_name'] or "Unknown",
-                "institutions": row['all_institution_names'] or "",
-                "paperNature": row['paper_nature'] if 'paper_nature' in row.keys() else None,
-                "nodeType": node_type,
-                "data": dict(row)
-            }
+            # ------------------------------------------------------------------
+            # 4. Evidence papers -- experimental papers connected to core
+            # ------------------------------------------------------------------
+            evidence_rows = []
+            valid_evidence_ids = set()
+            if has_nature:
+                # Find experimental papers among foundation + impact
+                context_ids = valid_foundation_ids | valid_impact_ids
+                if context_ids:
+                    ctx_list = list(context_ids)
+                    ctx_ph = ','.join(['?'] * len(ctx_list))
+                    evidence_rows = conn.execute(
+                        f"SELECT * FROM papers WHERE paperId IN ({ctx_ph}) "
+                        f"AND paper_nature = 'experimental' "
+                        f"ORDER BY cited_by_count DESC LIMIT {MAX_CONTEXT}",
+                        ctx_list
+                    ).fetchall()
+                    valid_evidence_ids = {r['paperId'] for r in evidence_rows}
 
+            # ------------------------------------------------------------------
+            # 5. Collect all valid node IDs for edge filtering
+            # ------------------------------------------------------------------
+            all_valid_ids = core_ids | valid_foundation_ids | valid_impact_ids | valid_evidence_ids
+
+            # ------------------------------------------------------------------
+            # 6. Format nodes (deduplicate across DBs)
+            # ------------------------------------------------------------------
             for row in core_rows:
                 if row['paperId'] not in seen_node_ids:
                     all_nodes.append(format_node(row, 'core'))
@@ -305,7 +334,7 @@ def search_topics():
                     seen_node_ids.add(row['paperId'])
 
             # ------------------------------------------------------------------
-            # 6. Edges between valid nodes
+            # 7. Edges between valid nodes
             # ------------------------------------------------------------------
             def add_edge(source, target, edge_type):
                 key = f"{source}|{target}"
@@ -324,16 +353,16 @@ def search_topics():
             # Edges connecting evidence nodes to the core
             if valid_evidence_ids:
                 ev_and_core = core_id_list + list(valid_evidence_ids)
-                ev_ph2 = ','.join(['?'] * len(ev_and_core))
+                ev_ph = ','.join(['?'] * len(ev_and_core))
                 for er in conn.execute(
                     f"SELECT source, target FROM citations "
-                    f"WHERE (source IN ({ev_ph2}) AND target IN ({ev_ph2})) LIMIT 500",
+                    f"WHERE source IN ({ev_ph}) AND target IN ({ev_ph}) LIMIT 500",
                     ev_and_core + ev_and_core
                 ).fetchall():
                     add_edge(er['source'], er['target'], 'evidence')
 
             # ------------------------------------------------------------------
-            # 7. Accumulate stats
+            # 8. Accumulate stats
             # ------------------------------------------------------------------
             stats["core"] += len(core_rows)
             stats["foundation"] += len(valid_foundation_ids)
@@ -362,5 +391,6 @@ def search_topics():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"[info] Starting server on port {port}")
+    print(f"[info] DB directory: {DB_DIR}")
     print(f"[info] Databases found: {[topic_from_db_path(p) for p in get_all_db_paths()]}")
     app.run(host='0.0.0.0', port=port, debug=True)

@@ -18,6 +18,7 @@ npm start
 
 cd C:\Users\TomHi\Documents\GitHub\mapo-2.0\arxiv-3d-frontend\src && npm start
 
+npm run start:all
 
 
 -------------------------------------------------
