@@ -206,10 +206,14 @@
     "2002-2002"
   ],
   "steps_done": [
-    2
+    2,
+    4,
+    5,
+    6,
+    7
   ],
-  "ai_processed": 0,
+  "ai_processed": 1000,
   "topic": "Optics",
   "db": "papers_optics.db",
-  "updated": "2026-03-19T16:09:21"
+  "updated": "2026-03-25T13:44:00"
 }

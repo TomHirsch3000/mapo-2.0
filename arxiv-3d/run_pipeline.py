@@ -451,6 +451,8 @@ def main() -> None:
         ]
         if args.skip_mislabel:
             cmd.append("--skip-mislabel")
+        if args.ai_sample > 0:
+            cmd += ["--limit", str(args.ai_sample)]
         run_cmd(cmd, "5 — Clean and standardize field classifications")
         mark_step_done(db, cp, 5)
 
@@ -467,6 +469,8 @@ def main() -> None:
             "--min-citations", str(args.min_citations),
             "--compute-clusters",
         ]
+        if args.ai_sample > 0:
+            cmd += ["--top-n", str(args.ai_sample)]
         if args.frontend_dir:
             cmd += ["--frontend-dir", args.frontend_dir]
         run_cmd(cmd, "6 — Build nodes/edges JSON for frontend")

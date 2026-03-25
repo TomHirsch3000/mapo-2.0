@@ -128,13 +128,18 @@ def find_clusters(
     clusters = {}
     cluster_id = 0
     
-    def dfs(node, cid):
-        visited.add(node)
-        clusters[node] = cid
-        for neighbor in adj[node]:
-            if neighbor not in visited and len(adj[neighbor]) >= connection_threshold:
-                dfs(neighbor, cid)
-    
+    def dfs(start, cid):
+        stack = [start]
+        while stack:
+            node = stack.pop()
+            if node in visited:
+                continue
+            visited.add(node)
+            clusters[node] = cid
+            for neighbor in adj[node]:
+                if neighbor not in visited and len(adj[neighbor]) >= connection_threshold:
+                    stack.append(neighbor)
+
     for node in node_ids:
         if node not in visited and len(adj[node]) >= connection_threshold:
             dfs(node, cluster_id)

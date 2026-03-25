@@ -1,0 +1,34 @@
+[
+  {
+    "source": "W116253160",
+    "target": "W2125041345",
+    "weight": 1.0,
+    "importance": 17.75823926109592,
+    "sourceField": "Biomolecular Physics",
+    "targetField": "Physical Chemistry"
+  },
+  {
+    "source": "W1480546554",
+    "target": "W2003370853",
+    "weight": 1.0,
+    "importance": 16.425349735881433,
+    "sourceField": "Computer Science",
+    "targetField": "Computer Vision"
+  },
+  {
+    "source": "W1497599070",
+    "target": "W1999908130",
+    "weight": 1.0,
+    "importance": 16.247838877533418,
+    "sourceField": "Neural Computation",
+    "targetField": "Neurophysics"
+  },
+  {
+    "source": "W1492360552",
+    "target": "W1828224642",
+    "weight": 1.0,
+    "importance": 15.506646422782836,
+    "sourceField": "Cardiac Physiology",
+    "targetField": "Pharmacology"
+  }
+]
