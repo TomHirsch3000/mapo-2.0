@@ -118,3 +118,27 @@ run for astrophysics
   --min-citations 10 ^
   --frontend-dir ../arxiv-3d-frontend/public
 ```
+
+run for particle physics (with experimental boost — guarantees top 500 experimental/phenomenological papers are included even if below the top-N citation threshold)
+```bash
+  python build_frontend_json.py ^
+  --db papers_particle_physics_all.db ^
+  --output-nodes particle_physics_nodes.json ^
+  --output-edges particle_physics_edges.json ^
+  --output-metadata particle_physics_metadata.json ^
+  --output-clusters particle_physics_clusters.json ^
+  --min-citations 10 ^
+  --top-n 2000 ^
+  --experimental-boost 500 ^
+  --compute-clusters ^
+  --frontend-dir ../arxiv-3d-frontend/public
+```
+
+**`--experimental-boost N`** flag: after selecting the main top-N papers, also queries the top N experimental/phenomenological papers (by citations) and merges them in, deduplicating by paperId. This ensures experimental papers are well-represented even if they fall below the general citation threshold. The output JSON also includes `paperNature` and `iconCategory` fields for each paper.
+
+**Note**: After running, also ensure `universe.json` has the correct `nodesFile` path for particle physics (`particle_physics_nodes.json`, not `data/particle_physics_nodes.json`).
+
+### Autocomplete search
+The search bar supports type-ahead autocomplete. As the user types, it matches paper titles from all loaded galaxy JSON files client-side (no server call). Selecting a suggestion navigates directly to that paper's galaxy and field view. If the user types and presses Search without selecting a suggestion, the normal server-based topic search runs instead.
+
+The autocomplete index is built at startup by fetching all galaxy `nodesFile` JSONs (the same files already served as static assets). With ~8400 papers across 4 galaxies, this is a fast, lightweight operation cached by the browser.

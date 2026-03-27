@@ -1,0 +1,2330 @@
+[
+  {
+    "source": "W1970127494",
+    "target": "W2106140689",
+    "weight": 1.0,
+    "importance": 21.340115660243356,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1970127494",
+    "target": "W2017196167",
+    "weight": 1.0,
+    "importance": 21.196042983310246,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1970127494",
+    "target": "W2323178299",
+    "weight": 1.0,
+    "importance": 20.509809087952895,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1991794210",
+    "target": "W2035266068",
+    "weight": 1.0,
+    "importance": 20.3541773340404,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1991794210",
+    "target": "W2017196167",
+    "weight": 1.0,
+    "importance": 19.846919546655542,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1970127494",
+    "target": "W2010785223",
+    "weight": 1.0,
+    "importance": 19.606239528060897,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Physical and Theoretical Chemistry"
+  },
+  {
+    "source": "W1991794210",
+    "target": "W2041638382",
+    "weight": 1.0,
+    "importance": 19.230553334413027,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1970127494",
+    "target": "W2115878464",
+    "weight": 1.0,
+    "importance": 19.149960248497564,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1995796806",
+    "target": "W3039083618",
+    "weight": 1.0,
+    "importance": 19.03210311623379,
+    "sourceField": "Electronic, Optical and Magnetic Materials",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1972758026",
+    "target": "W1991794210",
+    "weight": 1.0,
+    "importance": 18.683604851678368,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1991794210",
+    "target": "W2146462263",
+    "weight": 1.0,
+    "importance": 18.670760476977364,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1889142700",
+    "target": "W2029403139",
+    "weight": 1.0,
+    "importance": 18.621336301118113,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1972758026",
+    "target": "W2106140689",
+    "weight": 1.0,
+    "importance": 18.610835540657966,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1491824558",
+    "target": "W2106140689",
+    "weight": 1.0,
+    "importance": 18.593909889774626,
+    "sourceField": "Molecular Biology",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1998727969",
+    "target": "W2078206416",
+    "weight": 1.0,
+    "importance": 18.47428956543667,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Computer Vision and Pattern Recognition"
+  },
+  {
+    "source": "W1972758026",
+    "target": "W2017196167",
+    "weight": 1.0,
+    "importance": 18.46676286372486,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1550186202",
+    "target": "W2001930367",
+    "weight": 1.0,
+    "importance": 18.41978516303947,
+    "sourceField": "Geophysics",
+    "targetField": "Computational Theory and Mathematics"
+  },
+  {
+    "source": "W1977482735",
+    "target": "W2106140689",
+    "weight": 1.0,
+    "importance": 17.977078159777726,
+    "sourceField": "Molecular Biology",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1553608069",
+    "target": "W1607071030",
+    "weight": 1.0,
+    "importance": 17.927340817105097,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1550186202",
+    "target": "W2086634221",
+    "weight": 1.0,
+    "importance": 17.782475036077745,
+    "sourceField": "Geophysics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1989925383",
+    "target": "W2106140689",
+    "weight": 1.0,
+    "importance": 17.770679945629304,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1972758026",
+    "target": "W2126479355",
+    "weight": 1.0,
+    "importance": 17.753922297730323,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1971723555",
+    "target": "W2124614417",
+    "weight": 1.0,
+    "importance": 17.68156266934362,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Physical and Theoretical Chemistry"
+  },
+  {
+    "source": "W1889142700",
+    "target": "W2141586044",
+    "weight": 1.0,
+    "importance": 17.653453732381195,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1971723555",
+    "target": "W1607071030",
+    "weight": 1.0,
+    "importance": 17.644112301493287,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1889142700",
+    "target": "W2144012213",
+    "weight": 1.0,
+    "importance": 17.508238397534612,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W2001263565",
+    "target": "W2073775990",
+    "weight": 1.0,
+    "importance": 17.481100146428158,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Mechanics of Materials"
+  },
+  {
+    "source": "W1550186202",
+    "target": "W2088380112",
+    "weight": 1.0,
+    "importance": 17.436862067062325,
+    "sourceField": "Geophysics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1971717868",
+    "target": "W1680579736",
+    "weight": 1.0,
+    "importance": 17.434423559672265,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1983708969",
+    "target": "W2168795429",
+    "weight": 1.0,
+    "importance": 17.4258199070929,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Global and Planetary Change"
+  },
+  {
+    "source": "W1889142700",
+    "target": "W2088299329",
+    "weight": 1.0,
+    "importance": 17.384348590687424,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1550186202",
+    "target": "W2010785223",
+    "weight": 1.0,
+    "importance": 17.38417713299185,
+    "sourceField": "Geophysics",
+    "targetField": "Physical and Theoretical Chemistry"
+  },
+  {
+    "source": "W1995318398",
+    "target": "W2032231305",
+    "weight": 1.0,
+    "importance": 17.377845071548172,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1965135771",
+    "target": "W2591181672",
+    "weight": 1.0,
+    "importance": 17.354253427480046,
+    "sourceField": "Mechanics of Materials",
+    "targetField": "Civil and Structural Engineering"
+  },
+  {
+    "source": "W1987820481",
+    "target": "W3039083618",
+    "weight": 1.0,
+    "importance": 17.352710069131913,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1983708969",
+    "target": "W1981401379",
+    "weight": 1.0,
+    "importance": 17.3363906808102,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1984628949",
+    "target": "W2073775990",
+    "weight": 1.0,
+    "importance": 17.31462199911893,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Mechanics of Materials"
+  },
+  {
+    "source": "W1972758026",
+    "target": "W2146462263",
+    "weight": 1.0,
+    "importance": 17.29060379404668,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1590661973",
+    "target": "W2094055587",
+    "weight": 1.0,
+    "importance": 17.285333597031876,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1972758026",
+    "target": "W2086634221",
+    "weight": 1.0,
+    "importance": 17.275257311561404,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1972199097",
+    "target": "W3039083618",
+    "weight": 1.0,
+    "importance": 17.246994502875648,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1981451973",
+    "target": "W2038533471",
+    "weight": 1.0,
+    "importance": 17.24395659981526,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Electronic, Optical and Magnetic Materials"
+  },
+  {
+    "source": "W1550186202",
+    "target": "W2067328332",
+    "weight": 1.0,
+    "importance": 17.24072601582518,
+    "sourceField": "Geophysics",
+    "targetField": "Geophysics"
+  },
+  {
+    "source": "W1975997599",
+    "target": "W2081693079",
+    "weight": 1.0,
+    "importance": 17.238640323523903,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Materials Chemistry"
+  },
+  {
+    "source": "W1960471763",
+    "target": "W2105658614",
+    "weight": 1.0,
+    "importance": 17.208262241578716,
+    "sourceField": "Geophysics",
+    "targetField": "Geophysics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W1971230011",
+    "weight": 1.0,
+    "importance": 17.191187547020697,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1971723555",
+    "target": "W2055931342",
+    "weight": 1.0,
+    "importance": 17.183458175491094,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1977482735",
+    "target": "W2323178299",
+    "weight": 1.0,
+    "importance": 17.146771587487265,
+    "sourceField": "Molecular Biology",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W2000545789",
+    "target": "W2124614417",
+    "weight": 1.0,
+    "importance": 17.1401764382249,
+    "sourceField": "Molecular Biology",
+    "targetField": "Physical and Theoretical Chemistry"
+  },
+  {
+    "source": "W1555237261",
+    "target": "W1992204683",
+    "weight": 1.0,
+    "importance": 17.110763142198138,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2095721433",
+    "weight": 1.0,
+    "importance": 17.102259027099144,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1973861971",
+    "target": "W2096742001",
+    "weight": 1.0,
+    "importance": 17.09568070975814,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W2001582136",
+    "target": "W2029403139",
+    "weight": 1.0,
+    "importance": 17.06131158426746,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1995318398",
+    "target": "W1552736770",
+    "weight": 1.0,
+    "importance": 17.0562247796802,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1526160613",
+    "target": "W1607071030",
+    "weight": 1.0,
+    "importance": 17.05262166483743,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1555237261",
+    "target": "W1971230011",
+    "weight": 1.0,
+    "importance": 17.031107372750036,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2097455345",
+    "weight": 1.0,
+    "importance": 17.0052983997382,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1647151594",
+    "target": "W1965075382",
+    "weight": 1.0,
+    "importance": 16.98771531578989,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1992906507",
+    "target": "W1607071030",
+    "weight": 1.0,
+    "importance": 16.94918607758919,
+    "sourceField": "Applied Mathematics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1550186202",
+    "target": "W2115878464",
+    "weight": 1.0,
+    "importance": 16.927897853428515,
+    "sourceField": "Geophysics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1995794402",
+    "target": "W2055563809",
+    "weight": 1.0,
+    "importance": 16.911628563433673,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Spectroscopy"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W1989972931",
+    "weight": 1.0,
+    "importance": 16.881007904780667,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1989925383",
+    "target": "W2085266415",
+    "weight": 1.0,
+    "importance": 16.858094976083148,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Organic Chemistry"
+  },
+  {
+    "source": "W1972758026",
+    "target": "W2017835622",
+    "weight": 1.0,
+    "importance": 16.82727168039487,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Molecular Biology"
+  },
+  {
+    "source": "W1971723555",
+    "target": "W2155788949",
+    "weight": 1.0,
+    "importance": 16.799521959682053,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1528850474",
+    "target": "W3038698521",
+    "weight": 1.0,
+    "importance": 16.771345929801015,
+    "sourceField": "Control and Systems Engineering",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1998727969",
+    "target": "W1967008192",
+    "weight": 1.0,
+    "importance": 16.758164471163834,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Mathematical Physics"
+  },
+  {
+    "source": "W1990056747",
+    "target": "W1552736770",
+    "weight": 1.0,
+    "importance": 16.715484951511158,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1633869374",
+    "target": "W2033305412",
+    "weight": 1.0,
+    "importance": 16.670166821133797,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Earth-Surface Processes"
+  },
+  {
+    "source": "W1972758026",
+    "target": "W1977482735",
+    "weight": 1.0,
+    "importance": 16.66969078786744,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Molecular Biology"
+  },
+  {
+    "source": "W1668732012",
+    "target": "W3038698521",
+    "weight": 1.0,
+    "importance": 16.658770908456685,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1977482735",
+    "target": "W2146462263",
+    "weight": 1.0,
+    "importance": 16.656846413166434,
+    "sourceField": "Molecular Biology",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1579236455",
+    "target": "W1594759473",
+    "weight": 1.0,
+    "importance": 16.633448949318737,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Control and Systems Engineering"
+  },
+  {
+    "source": "W1526160613",
+    "target": "W2055931342",
+    "weight": 1.0,
+    "importance": 16.591967538835235,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1995794402",
+    "target": "W2038083805",
+    "weight": 1.0,
+    "importance": 16.58435684853444,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Electronic, Optical and Magnetic Materials"
+  },
+  {
+    "source": "W2007274640",
+    "target": "W3038698521",
+    "weight": 1.0,
+    "importance": 16.56625044835851,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1978893684",
+    "target": "W2084041890",
+    "weight": 1.0,
+    "importance": 16.558530977292378,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Mechanical Engineering"
+  },
+  {
+    "source": "W2006842594",
+    "target": "W2022308914",
+    "weight": 1.0,
+    "importance": 16.552797956200592,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Mechanical Engineering"
+  },
+  {
+    "source": "W1980450508",
+    "target": "W2039457516",
+    "weight": 1.0,
+    "importance": 16.549196536493135,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W2007274640",
+    "target": "W1552736770",
+    "weight": 1.0,
+    "importance": 16.540906448993802,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1984391316",
+    "target": "W1967008192",
+    "weight": 1.0,
+    "importance": 16.526829676994332,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Mathematical Physics"
+  },
+  {
+    "source": "W2005241888",
+    "target": "W2041638382",
+    "weight": 1.0,
+    "importance": 16.525138180948822,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W131810239",
+    "target": "W1680579736",
+    "weight": 1.0,
+    "importance": 16.516720014434814,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W2000545789",
+    "target": "W2503576964",
+    "weight": 1.0,
+    "importance": 16.506599934022574,
+    "sourceField": "Molecular Biology",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W2003034707",
+    "target": "W2018763953",
+    "weight": 1.0,
+    "importance": 16.49470994813993,
+    "sourceField": "Molecular Medicine",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W2029403139",
+    "weight": 1.0,
+    "importance": 16.47490804545029,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1987010236",
+    "target": "W1971230011",
+    "weight": 1.0,
+    "importance": 16.455119735283574,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1994090126",
+    "target": "W1552736770",
+    "weight": 1.0,
+    "importance": 16.452017137179972,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1820051232",
+    "target": "W1577668191",
+    "weight": 1.0,
+    "importance": 16.438432408070085,
+    "sourceField": "Artificial Intelligence",
+    "targetField": "Artificial Intelligence"
+  },
+  {
+    "source": "W1989871863",
+    "target": "W1680579736",
+    "weight": 1.0,
+    "importance": 16.429263632616955,
+    "sourceField": "Computer Graphics and Computer-Aided Design",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W1555237261",
+    "weight": 1.0,
+    "importance": 16.415479879906204,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2144012213",
+    "weight": 1.0,
+    "importance": 16.372342442323735,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1966702659",
+    "target": "W1992204683",
+    "weight": 1.0,
+    "importance": 16.34570855979819,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W2006636051",
+    "target": "W2096680516",
+    "weight": 1.0,
+    "importance": 16.329709145909803,
+    "sourceField": "Electrochemistry",
+    "targetField": "Electrochemistry"
+  },
+  {
+    "source": "W1998494366",
+    "target": "W2051912022",
+    "weight": 1.0,
+    "importance": 16.325479670638778,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Materials Chemistry"
+  },
+  {
+    "source": "W1995318398",
+    "target": "W2124138287",
+    "weight": 1.0,
+    "importance": 16.308498052931633,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1976953979",
+    "target": "W2078936766",
+    "weight": 1.0,
+    "importance": 16.28986843119953,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Surgery"
+  },
+  {
+    "source": "W1579236455",
+    "target": "W1531885144",
+    "weight": 1.0,
+    "importance": 16.27801684927222,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Atmospheric Science"
+  },
+  {
+    "source": "W1763748250",
+    "target": "W2144012213",
+    "weight": 1.0,
+    "importance": 16.274084525983397,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1996117239",
+    "target": "W2078936766",
+    "weight": 1.0,
+    "importance": 16.27165415548439,
+    "sourceField": "Surgery",
+    "targetField": "Surgery"
+  },
+  {
+    "source": "W1987010236",
+    "target": "W1973861971",
+    "weight": 1.0,
+    "importance": 16.266936257266682,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1875842236",
+    "target": "W2083206954",
+    "weight": 1.0,
+    "importance": 16.261564800099528,
+    "sourceField": "Computer Vision and Pattern Recognition",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2101862267",
+    "weight": 1.0,
+    "importance": 16.25297831770061,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1922715780",
+    "target": "W1885639605",
+    "weight": 1.0,
+    "importance": 16.2512055172531,
+    "sourceField": "Cognitive Neuroscience",
+    "targetField": "Cognitive Neuroscience"
+  },
+  {
+    "source": "W1633869374",
+    "target": "W2055059354",
+    "weight": 1.0,
+    "importance": 16.249360552030254,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1491824558",
+    "target": "W2079199763",
+    "weight": 1.0,
+    "importance": 16.24366906268176,
+    "sourceField": "Molecular Biology",
+    "targetField": "Molecular Biology"
+  },
+  {
+    "source": "W1979176272",
+    "target": "W1976638764",
+    "weight": 1.0,
+    "importance": 16.238799572227553,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1990910798",
+    "target": "W2028948400",
+    "weight": 1.0,
+    "importance": 16.22666651791947,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1579236455",
+    "target": "W2103463156",
+    "weight": 1.0,
+    "importance": 16.18850378715222,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Theory and Mathematics"
+  },
+  {
+    "source": "W1980851479",
+    "target": "W1989972931",
+    "weight": 1.0,
+    "importance": 16.177492696081295,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1983708969",
+    "target": "W2062474936",
+    "weight": 1.0,
+    "importance": 16.17707374151524,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2158117921",
+    "weight": 1.0,
+    "importance": 16.162519152260245,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1996224306",
+    "target": "W1995062017",
+    "weight": 1.0,
+    "importance": 16.16037322560764,
+    "sourceField": "Fluid Flow and Transfer Processes",
+    "targetField": "Fluid Flow and Transfer Processes"
+  },
+  {
+    "source": "W1875348914",
+    "target": "W1577668191",
+    "weight": 1.0,
+    "importance": 16.15202276230735,
+    "sourceField": "Artificial Intelligence",
+    "targetField": "Artificial Intelligence"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2001582136",
+    "weight": 1.0,
+    "importance": 16.151431292537083,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1922715780",
+    "target": "W1496777766",
+    "weight": 1.0,
+    "importance": 16.128955469092617,
+    "sourceField": "Cognitive Neuroscience",
+    "targetField": "Control and Systems Engineering"
+  },
+  {
+    "source": "W2000545789",
+    "target": "W2264936970",
+    "weight": 1.0,
+    "importance": 16.11518812820762,
+    "sourceField": "Molecular Biology",
+    "targetField": "Molecular Biology"
+  },
+  {
+    "source": "W1528850474",
+    "target": "W2062691475",
+    "weight": 1.0,
+    "importance": 16.10679514002211,
+    "sourceField": "Control and Systems Engineering",
+    "targetField": "Control and Systems Engineering"
+  },
+  {
+    "source": "W1998727969",
+    "target": "W1994006347",
+    "weight": 1.0,
+    "importance": 16.09544075581084,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W2095721433",
+    "weight": 1.0,
+    "importance": 16.091726726642197,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1965709657",
+    "target": "W2006730584",
+    "weight": 1.0,
+    "importance": 16.089955402094006,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1977004640",
+    "target": "W2264936970",
+    "weight": 1.0,
+    "importance": 16.08982332884624,
+    "sourceField": "Molecular Biology",
+    "targetField": "Molecular Biology"
+  },
+  {
+    "source": "W1536348985",
+    "target": "W3102905031",
+    "weight": 1.0,
+    "importance": 16.088436432675252,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Applied Mathematics"
+  },
+  {
+    "source": "W1998727969",
+    "target": "W1598573928",
+    "weight": 1.0,
+    "importance": 16.078960982103123,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1966702659",
+    "target": "W1973861971",
+    "weight": 1.0,
+    "importance": 16.077869312333195,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1965709657",
+    "target": "W3003076039",
+    "weight": 1.0,
+    "importance": 16.07599408813961,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1990056747",
+    "target": "W2076602648",
+    "weight": 1.0,
+    "importance": 16.047273106640432,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1990386756",
+    "target": "W2156621121",
+    "weight": 1.0,
+    "importance": 16.042640802943623,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1986168108",
+    "target": "W2034251480",
+    "weight": 1.0,
+    "importance": 16.033001380599433,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1983447135",
+    "target": "W1965075382",
+    "weight": 1.0,
+    "importance": 16.032116758954395,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1982933896",
+    "target": "W2979559266",
+    "weight": 1.0,
+    "importance": 16.026790121825854,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Earth-Surface Processes"
+  },
+  {
+    "source": "W1579236455",
+    "target": "W2033305412",
+    "weight": 1.0,
+    "importance": 16.019845684211695,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Earth-Surface Processes"
+  },
+  {
+    "source": "W1555237261",
+    "target": "W1998768335",
+    "weight": 1.0,
+    "importance": 16.01001477179804,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2169912865",
+    "weight": 1.0,
+    "importance": 16.009571803905967,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1633869374",
+    "target": "W2090530203",
+    "weight": 1.0,
+    "importance": 15.99700337078729,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Ocean Engineering"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W2097455345",
+    "weight": 1.0,
+    "importance": 15.99476609928125,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1579236455",
+    "target": "W1633669915",
+    "weight": 1.0,
+    "importance": 15.988218373914059,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Oceanography"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2137113888",
+    "weight": 1.0,
+    "importance": 15.9798933666839,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1528850474",
+    "target": "W2246023205",
+    "weight": 1.0,
+    "importance": 15.979061029021516,
+    "sourceField": "Control and Systems Engineering",
+    "targetField": "Control and Systems Engineering"
+  },
+  {
+    "source": "W1763748250",
+    "target": "W2025148421",
+    "weight": 1.0,
+    "importance": 15.977318988929264,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2153135464",
+    "weight": 1.0,
+    "importance": 15.960537923730943,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1555237261",
+    "target": "W2035784745",
+    "weight": 1.0,
+    "importance": 15.958920067422063,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W2001582136",
+    "target": "W1536348985",
+    "weight": 1.0,
+    "importance": 15.946053519374896,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1998494366",
+    "target": "W1965135771",
+    "weight": 1.0,
+    "importance": 15.943557722977404,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Mechanics of Materials"
+  },
+  {
+    "source": "W1963596092",
+    "target": "W2035286224",
+    "weight": 1.0,
+    "importance": 15.934377839854829,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1536348985",
+    "target": "W2088842637",
+    "weight": 1.0,
+    "importance": 15.932116011531114,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1986168108",
+    "target": "W2086612234",
+    "weight": 1.0,
+    "importance": 15.930268325196671,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Statistics and Probability"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W1958232190",
+    "weight": 1.0,
+    "importance": 15.927422314946446,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W2064575216",
+    "weight": 1.0,
+    "importance": 15.92301001884243,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2073509179",
+    "weight": 1.0,
+    "importance": 15.914837444107366,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Condensed Matter Physics"
+  },
+  {
+    "source": "W1965135771",
+    "target": "W1536348985",
+    "weight": 1.0,
+    "importance": 15.909244352084537,
+    "sourceField": "Mechanics of Materials",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1536348985",
+    "target": "W1982001674",
+    "weight": 1.0,
+    "importance": 15.900027696979613,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1988388205",
+    "target": "W1998727969",
+    "weight": 1.0,
+    "importance": 15.876498372173362,
+    "sourceField": "Condensed Matter Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1835935525",
+    "target": "W1621033879",
+    "weight": 1.0,
+    "importance": 15.850425334260635,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1555237261",
+    "target": "W2169912865",
+    "weight": 1.0,
+    "importance": 15.849491629635306,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1536348985",
+    "target": "W1621033879",
+    "weight": 1.0,
+    "importance": 15.84457286106445,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2154120281",
+    "weight": 1.0,
+    "importance": 15.839492242439743,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1995318398",
+    "target": "W2110023503",
+    "weight": 1.0,
+    "importance": 15.835169584094142,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1191599655",
+    "target": "W2158782408",
+    "weight": 1.0,
+    "importance": 15.830289570817904,
+    "sourceField": "Artificial Intelligence",
+    "targetField": "Control and Systems Engineering"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2036482104",
+    "weight": 1.0,
+    "importance": 15.827338856389463,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1966330485",
+    "target": "W1971717868",
+    "weight": 1.0,
+    "importance": 15.804281490368183,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Materials Chemistry"
+  },
+  {
+    "source": "W1963596092",
+    "target": "W4229701008",
+    "weight": 1.0,
+    "importance": 15.794382588772311,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1885639605",
+    "target": "W2067440245",
+    "weight": 1.0,
+    "importance": 15.791358078371502,
+    "sourceField": "Cognitive Neuroscience",
+    "targetField": "Control and Systems Engineering"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2160168896",
+    "weight": 1.0,
+    "importance": 15.78720331768066,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W135694094",
+    "target": "W2051912022",
+    "weight": 1.0,
+    "importance": 15.769885635349905,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Materials Chemistry"
+  },
+  {
+    "source": "W1996117239",
+    "target": "W1521324828",
+    "weight": 1.0,
+    "importance": 15.76877559341093,
+    "sourceField": "Surgery",
+    "targetField": "Surgery"
+  },
+  {
+    "source": "W1986147552",
+    "target": "W2796590481",
+    "weight": 1.0,
+    "importance": 15.768645261253074,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1536348985",
+    "target": "W2019482884",
+    "weight": 1.0,
+    "importance": 15.761191252125396,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Applied Mathematics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2097968935",
+    "weight": 1.0,
+    "importance": 15.759712105333556,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1981297107",
+    "target": "W1885639605",
+    "weight": 1.0,
+    "importance": 15.731519076018978,
+    "sourceField": "Neurology",
+    "targetField": "Cognitive Neuroscience"
+  },
+  {
+    "source": "W1983436447",
+    "target": "W2060489052",
+    "weight": 1.0,
+    "importance": 15.724023051087197,
+    "sourceField": "Electrical and Electronic Engineering",
+    "targetField": "Mechanics of Materials"
+  },
+  {
+    "source": "W1555237261",
+    "target": "W3013347551",
+    "weight": 1.0,
+    "importance": 15.712472930429971,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Numerical Analysis"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2043908961",
+    "weight": 1.0,
+    "importance": 15.708957555683826,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1995318398",
+    "target": "W1987881172",
+    "weight": 1.0,
+    "importance": 15.70158744164089,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W2000883601",
+    "target": "W2138256018",
+    "weight": 1.0,
+    "importance": 15.700666103541618,
+    "sourceField": "Condensed Matter Physics",
+    "targetField": "Atmospheric Science"
+  },
+  {
+    "source": "W2001582136",
+    "target": "W2273792492",
+    "weight": 1.0,
+    "importance": 15.699230512118618,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1528850474",
+    "target": "W2118357359",
+    "weight": 1.0,
+    "importance": 15.68693266264757,
+    "sourceField": "Control and Systems Engineering",
+    "targetField": "Civil and Structural Engineering"
+  },
+  {
+    "source": "W1555237261",
+    "target": "W1987010236",
+    "weight": 1.0,
+    "importance": 15.679412068169082,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1998494366",
+    "target": "W135694094",
+    "weight": 1.0,
+    "importance": 15.67783721434935,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Materials Chemistry"
+  },
+  {
+    "source": "W1536348985",
+    "target": "W2082384340",
+    "weight": 1.0,
+    "importance": 15.675272541771061,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Fluid Flow and Transfer Processes"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2007959513",
+    "weight": 1.0,
+    "importance": 15.673010950155007,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1983436447",
+    "target": "W2010785223",
+    "weight": 1.0,
+    "importance": 15.670068597993861,
+    "sourceField": "Electrical and Electronic Engineering",
+    "targetField": "Physical and Theoretical Chemistry"
+  },
+  {
+    "source": "W1982933896",
+    "target": "W1538135945",
+    "weight": 1.0,
+    "importance": 15.664971478745791,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1982933896",
+    "target": "W2050962398",
+    "weight": 1.0,
+    "importance": 15.661120382843693,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2023724948",
+    "weight": 1.0,
+    "importance": 15.656119713399814,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2152565162",
+    "weight": 1.0,
+    "importance": 15.655488599462803,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W3037060671",
+    "weight": 1.0,
+    "importance": 15.653592864297906,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1972859350",
+    "target": "W1528840936",
+    "weight": 1.0,
+    "importance": 15.643467424729211,
+    "sourceField": "Molecular Biology",
+    "targetField": "Control and Systems Engineering"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2050673266",
+    "weight": 1.0,
+    "importance": 15.638938253519125,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W2000761434",
+    "target": "W2060471433",
+    "weight": 1.0,
+    "importance": 15.636603885041929,
+    "sourceField": "Mechanics of Materials",
+    "targetField": "Mechanics of Materials"
+  },
+  {
+    "source": "W131810239",
+    "target": "W3003076039",
+    "weight": 1.0,
+    "importance": 15.63160111102442,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W4246028735",
+    "weight": 1.0,
+    "importance": 15.630559216420277,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1579236455",
+    "target": "W3013347551",
+    "weight": 1.0,
+    "importance": 15.624252996712649,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Numerical Analysis"
+  },
+  {
+    "source": "W1990386756",
+    "target": "W2116952160",
+    "weight": 1.0,
+    "importance": 15.62410878945248,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1994090126",
+    "target": "W1997093580",
+    "weight": 1.0,
+    "importance": 15.618625970369543,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1995794402",
+    "target": "W2013183108",
+    "weight": 1.0,
+    "importance": 15.612166851487526,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Computational Theory and Mathematics"
+  },
+  {
+    "source": "W1579236455",
+    "target": "W3037934031",
+    "weight": 1.0,
+    "importance": 15.61043850226946,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Fluid Flow and Transfer Processes"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W1985071512",
+    "weight": 1.0,
+    "importance": 15.608306989361171,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W131810239",
+    "target": "W1536348985",
+    "weight": 1.0,
+    "importance": 15.599379478530565,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1978893684",
+    "target": "W2965916475",
+    "weight": 1.0,
+    "importance": 15.599086466348133,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Applied Mathematics"
+  },
+  {
+    "source": "W1990386756",
+    "target": "W2089444942",
+    "weight": 1.0,
+    "importance": 15.597860563377544,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1990386756",
+    "target": "W2596393192",
+    "weight": 1.0,
+    "importance": 15.591704172088232,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Ocean Engineering"
+  },
+  {
+    "source": "W1555237261",
+    "target": "W3004198491",
+    "weight": 1.0,
+    "importance": 15.57719785820062,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1986168108",
+    "target": "W1974623591",
+    "weight": 1.0,
+    "importance": 15.571845937733666,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1973787174",
+    "target": "W2050730625",
+    "weight": 1.0,
+    "importance": 15.571620396792799,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1536348985",
+    "target": "W2048267518",
+    "weight": 1.0,
+    "importance": 15.570136015362689,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1553608069",
+    "target": "W2086209713",
+    "weight": 1.0,
+    "importance": 15.561520984122964,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1973787174",
+    "target": "W2315127070",
+    "weight": 1.0,
+    "importance": 15.560008244452735,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W2004188331",
+    "target": "W2162982196",
+    "weight": 1.0,
+    "importance": 15.555305454916605,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1977521613",
+    "target": "W2088380112",
+    "weight": 1.0,
+    "importance": 15.553784858718675,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1980851479",
+    "target": "W2052045615",
+    "weight": 1.0,
+    "importance": 15.511589178698852,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1996224306",
+    "target": "W2055863460",
+    "weight": 1.0,
+    "importance": 15.500172448157546,
+    "sourceField": "Fluid Flow and Transfer Processes",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W2001757193",
+    "target": "W2044951073",
+    "weight": 1.0,
+    "importance": 15.491297850939908,
+    "sourceField": "Physical Therapy, Sports Therapy and Rehabilitation",
+    "targetField": "Physical Therapy, Sports Therapy and Rehabilitation"
+  },
+  {
+    "source": "W1997360736",
+    "target": "W2051912022",
+    "weight": 1.0,
+    "importance": 15.490837703913131,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Materials Chemistry"
+  },
+  {
+    "source": "W1966330485",
+    "target": "W1998494366",
+    "weight": 1.0,
+    "importance": 15.486316345345521,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Materials Chemistry"
+  },
+  {
+    "source": "W1994563353",
+    "target": "W3003076039",
+    "weight": 1.0,
+    "importance": 15.475363789478376,
+    "sourceField": "Mechanical Engineering",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1983708969",
+    "target": "W3037934031",
+    "weight": 1.0,
+    "importance": 15.474185391899743,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Fluid Flow and Transfer Processes"
+  },
+  {
+    "source": "W1984628949",
+    "target": "W2504044668",
+    "weight": 1.0,
+    "importance": 15.4692393852513,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Mechanics of Materials"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W1763748250",
+    "weight": 1.0,
+    "importance": 15.466769837379577,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1973787174",
+    "target": "W2022708042",
+    "weight": 1.0,
+    "importance": 15.466071219687379,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1996117239",
+    "target": "W2086801037",
+    "weight": 1.0,
+    "importance": 15.452847254795689,
+    "sourceField": "Surgery",
+    "targetField": "Pulmonary and Respiratory Medicine"
+  },
+  {
+    "source": "W1995318398",
+    "target": "W1659282975",
+    "weight": 1.0,
+    "importance": 15.450968786565998,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Economics and Econometrics"
+  },
+  {
+    "source": "W1536348985",
+    "target": "W2243423914",
+    "weight": 1.0,
+    "importance": 15.4042519677146,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1990056747",
+    "target": "W2033870813",
+    "weight": 1.0,
+    "importance": 15.388081975896434,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1966702659",
+    "target": "W3003408334",
+    "weight": 1.0,
+    "importance": 15.375326200124665,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W2001263565",
+    "target": "W1984628949",
+    "weight": 1.0,
+    "importance": 15.37227907171874,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1590661973",
+    "target": "W2064649132",
+    "weight": 1.0,
+    "importance": 15.34341905812703,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1995318398",
+    "target": "W2223094112",
+    "weight": 1.0,
+    "importance": 15.321379238322624,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1922715780",
+    "target": "W2067440245",
+    "weight": 1.0,
+    "importance": 15.3010052497032,
+    "sourceField": "Cognitive Neuroscience",
+    "targetField": "Control and Systems Engineering"
+  },
+  {
+    "source": "W2006078294",
+    "target": "W2033882205",
+    "weight": 1.0,
+    "importance": 15.298591281521851,
+    "sourceField": "Mechanics of Materials",
+    "targetField": "Mechanics of Materials"
+  },
+  {
+    "source": "W1994090126",
+    "target": "W2170649178",
+    "weight": 1.0,
+    "importance": 15.290938563304062,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W2001582136",
+    "target": "W2012102669",
+    "weight": 1.0,
+    "importance": 15.290795398857266,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1668732012",
+    "target": "W1982001674",
+    "weight": 1.0,
+    "importance": 15.287279615985497,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1971723555",
+    "target": "W1982999858",
+    "weight": 1.0,
+    "importance": 15.255893640123318,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W2001582136",
+    "target": "W2007959513",
+    "weight": 1.0,
+    "importance": 15.248882188515225,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1971723555",
+    "target": "W2115463092",
+    "weight": 1.0,
+    "importance": 15.247866841173867,
+    "sourceField": "Computational Mechanics",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W1966330485",
+    "target": "W2138533896",
+    "weight": 1.0,
+    "importance": 15.231712932189158,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Materials Chemistry"
+  },
+  {
+    "source": "W1996013733",
+    "target": "W1992470331",
+    "weight": 1.0,
+    "importance": 15.217025742399642,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1583839029",
+    "target": "W2072197860",
+    "weight": 1.0,
+    "importance": 15.214802582298125,
+    "sourceField": "Strategy and Management",
+    "targetField": "Economics and Econometrics"
+  },
+  {
+    "source": "W1988996307",
+    "target": "W1994006347",
+    "weight": 1.0,
+    "importance": 15.200704563915403,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1992906507",
+    "target": "W1633669915",
+    "weight": 1.0,
+    "importance": 15.195819039399368,
+    "sourceField": "Applied Mathematics",
+    "targetField": "Oceanography"
+  },
+  {
+    "source": "W131810239",
+    "target": "W2019482884",
+    "weight": 1.0,
+    "importance": 15.195766222803474,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Applied Mathematics"
+  },
+  {
+    "source": "W1966702659",
+    "target": "W2035784745",
+    "weight": 1.0,
+    "importance": 15.193865485022117,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W2097909025",
+    "weight": 1.0,
+    "importance": 15.190036947322165,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W2001582136",
+    "target": "W2231659680",
+    "weight": 1.0,
+    "importance": 15.167494490726355,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1994090126",
+    "target": "W2056471637",
+    "weight": 1.0,
+    "importance": 15.156498666540738,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Electrical and Electronic Engineering"
+  },
+  {
+    "source": "W1995318398",
+    "target": "W2130860507",
+    "weight": 1.0,
+    "importance": 15.156482186419883,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Applied Mathematics"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W2153344483",
+    "weight": 1.0,
+    "importance": 15.142435680818952,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1995318398",
+    "target": "W2009447971",
+    "weight": 1.0,
+    "importance": 15.141667100634741,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W2231773349",
+    "weight": 1.0,
+    "importance": 15.128519723741366,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1974760079",
+    "target": "W2026650271",
+    "weight": 1.0,
+    "importance": 15.123216153923767,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1990056747",
+    "target": "W4296239410",
+    "weight": 1.0,
+    "importance": 15.116987497250243,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1972199097",
+    "target": "W2273792492",
+    "weight": 1.0,
+    "importance": 15.085504783387954,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1965135771",
+    "target": "W2108114869",
+    "weight": 1.0,
+    "importance": 15.08172690823563,
+    "sourceField": "Mechanics of Materials",
+    "targetField": "Mechanics of Materials"
+  },
+  {
+    "source": "W1987820481",
+    "target": "W4233730359",
+    "weight": 1.0,
+    "importance": 15.05548351037124,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1966702659",
+    "target": "W2992431360",
+    "weight": 1.0,
+    "importance": 15.013289821854721,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Theoretical Computer Science"
+  },
+  {
+    "source": "W1989871863",
+    "target": "W226196830",
+    "weight": 1.0,
+    "importance": 15.009199665876917,
+    "sourceField": "Computer Graphics and Computer-Aided Design",
+    "targetField": "Aerospace Engineering"
+  },
+  {
+    "source": "W1988996307",
+    "target": "W2007274640",
+    "weight": 1.0,
+    "importance": 14.96748065843652,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W1984330431",
+    "weight": 1.0,
+    "importance": 14.96616106349628,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1987702006",
+    "target": "W2055639835",
+    "weight": 1.0,
+    "importance": 14.965884781190972,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W2103819762",
+    "weight": 1.0,
+    "importance": 14.959269237458358,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1528850474",
+    "target": "W2049819040",
+    "weight": 1.0,
+    "importance": 14.95497556068079,
+    "sourceField": "Control and Systems Engineering",
+    "targetField": "Civil and Structural Engineering"
+  },
+  {
+    "source": "W1994090126",
+    "target": "W2072225793",
+    "weight": 1.0,
+    "importance": 14.950241959922018,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "History and Philosophy of Science"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W2040216147",
+    "weight": 1.0,
+    "importance": 14.942532445102835,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W2007556342",
+    "target": "W2055863460",
+    "weight": 1.0,
+    "importance": 14.92533475759623,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1963596092",
+    "target": "W2029339103",
+    "weight": 1.0,
+    "importance": 14.923554230974911,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1528850474",
+    "target": "W1975537977",
+    "weight": 1.0,
+    "importance": 14.919816937815057,
+    "sourceField": "Control and Systems Engineering",
+    "targetField": "Control and Systems Engineering"
+  },
+  {
+    "source": "W1966702659",
+    "target": "W1987010236",
+    "weight": 1.0,
+    "importance": 14.914357485769134,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1963612147",
+    "target": "W2992431360",
+    "weight": 1.0,
+    "importance": 14.909056702032203,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Theoretical Computer Science"
+  },
+  {
+    "source": "W1965149705",
+    "target": "W2061756614",
+    "weight": 1.0,
+    "importance": 14.899558634848365,
+    "sourceField": "Mechanical Engineering",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W2054457171",
+    "weight": 1.0,
+    "importance": 14.893531288211868,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1983467746",
+    "target": "W1598573928",
+    "weight": 1.0,
+    "importance": 14.86697044060464,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W2028483511",
+    "weight": 1.0,
+    "importance": 14.857947478856047,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W2004203093",
+    "target": "W1585894047",
+    "weight": 1.0,
+    "importance": 14.852400622671041,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1510374214",
+    "target": "W1996686235",
+    "weight": 1.0,
+    "importance": 14.844084428752245,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W135694094",
+    "target": "W1997360736",
+    "weight": 1.0,
+    "importance": 14.843195247623703,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Materials Chemistry"
+  },
+  {
+    "source": "W1966330485",
+    "target": "W2138425920",
+    "weight": 1.0,
+    "importance": 14.83640019554501,
+    "sourceField": "Materials Chemistry",
+    "targetField": "Materials Chemistry"
+  },
+  {
+    "source": "W1990910798",
+    "target": "W1510374214",
+    "weight": 1.0,
+    "importance": 14.83195571730563,
+    "sourceField": "Atomic and Molecular Physics, and Optics",
+    "targetField": "Atomic and Molecular Physics, and Optics"
+  },
+  {
+    "source": "W1972270832",
+    "target": "W2065351060",
+    "weight": 1.0,
+    "importance": 14.82871019100645,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1575877217",
+    "target": "W2031320386",
+    "weight": 1.0,
+    "importance": 14.747366717576037,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  },
+  {
+    "source": "W2007959513",
+    "target": "W2231659680",
+    "weight": 1.0,
+    "importance": 14.689074148344279,
+    "sourceField": "Astronomy and Astrophysics",
+    "targetField": "Astronomy and Astrophysics"
+  },
+  {
+    "source": "W1990077491",
+    "target": "W1968372207",
+    "weight": 1.0,
+    "importance": 14.683182311015951,
+    "sourceField": "Oceanography",
+    "targetField": "Computational Mechanics"
+  },
+  {
+    "source": "W2008342119",
+    "target": "W1874450194",
+    "weight": 1.0,
+    "importance": 14.662880701453277,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W2000883601",
+    "target": "W2039876742",
+    "weight": 1.0,
+    "importance": 14.659089941950846,
+    "sourceField": "Condensed Matter Physics",
+    "targetField": "Oceanography"
+  },
+  {
+    "source": "W1996013733",
+    "target": "W2037929372",
+    "weight": 1.0,
+    "importance": 14.657141965718143,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1994563353",
+    "target": "W2061257553",
+    "weight": 1.0,
+    "importance": 14.64693161776066,
+    "sourceField": "Mechanical Engineering",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W1972199097",
+    "target": "W2504207971",
+    "weight": 1.0,
+    "importance": 14.617002596599,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1972270832",
+    "target": "W2027886127",
+    "weight": 1.0,
+    "importance": 14.611938342664935,
+    "sourceField": "Biomedical Engineering",
+    "targetField": "Biomedical Engineering"
+  },
+  {
+    "source": "W2007779595",
+    "target": "W1977521613",
+    "weight": 1.0,
+    "importance": 14.604301953441695,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1968833481",
+    "target": "W1985071512",
+    "weight": 1.0,
+    "importance": 14.597774688904224,
+    "sourceField": "Nuclear and High Energy Physics",
+    "targetField": "Nuclear and High Energy Physics"
+  },
+  {
+    "source": "W1994090126",
+    "target": "W1983467746",
+    "weight": 1.0,
+    "importance": 14.561336997019646,
+    "sourceField": "Statistical and Nonlinear Physics",
+    "targetField": "Statistical and Nonlinear Physics"
+  }
+]

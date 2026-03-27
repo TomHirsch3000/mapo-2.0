@@ -16,7 +16,9 @@ export const ControlPanel = ({
     onBackFromSearch,
     onLayoutChange,
     onGroupingChange,
-    onSearch
+    onSearch,
+    paperIndex,
+    onAutocompleteSelect
 }) => {
 
     const layoutOptions = [
@@ -91,7 +93,7 @@ export const ControlPanel = ({
 
             {/* Search Bar — always visible, top-right */}
             <div style={{ position: 'absolute', top: 20, right: 20, pointerEvents: 'auto' }}>
-                <SearchBar onSearch={onSearch} currentQuery={searchQuery} />
+                <SearchBar onSearch={onSearch} currentQuery={searchQuery} paperIndex={paperIndex} onAutocompleteSelect={onAutocompleteSelect} />
             </div>
 
             <div className="galaxy-title">

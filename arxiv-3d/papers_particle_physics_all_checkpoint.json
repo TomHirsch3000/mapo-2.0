@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "import_batches_done": [],
+  "steps_done": [
+    6,
+    7
+  ],
+  "ai_processed": 0,
+  "topic": "Particle Physics",
+  "db": "papers_particle_physics_all.db",
+  "updated": "2026-03-27T11:24:16"
+}

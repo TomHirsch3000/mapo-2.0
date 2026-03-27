@@ -4,31 +4,31 @@
     "target": "W2125041345",
     "weight": 1.0,
     "importance": 17.75823926109592,
-    "sourceField": "Biomolecular Physics",
-    "targetField": "Physical Chemistry"
+    "sourceField": "Molecular Biology",
+    "targetField": "Plant Science"
   },
   {
     "source": "W1480546554",
     "target": "W2003370853",
     "weight": 1.0,
     "importance": 16.425349735881433,
-    "sourceField": "Computer Science",
-    "targetField": "Computer Vision"
+    "sourceField": "Computer Vision and Pattern Recognition",
+    "targetField": "Cognitive Neuroscience"
   },
   {
     "source": "W1497599070",
     "target": "W1999908130",
     "weight": 1.0,
     "importance": 16.247838877533418,
-    "sourceField": "Neural Computation",
-    "targetField": "Neurophysics"
+    "sourceField": "Cognitive Neuroscience",
+    "targetField": "Cognitive Neuroscience"
   },
   {
     "source": "W1492360552",
     "target": "W1828224642",
     "weight": 1.0,
     "importance": 15.506646422782836,
-    "sourceField": "Cardiac Physiology",
-    "targetField": "Pharmacology"
+    "sourceField": "Cardiology and Cardiovascular Medicine",
+    "targetField": "Cardiology and Cardiovascular Medicine"
   }
 ]

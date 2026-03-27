@@ -195,23 +195,59 @@ def detect_citation_columns(conn: sqlite3.Connection):
 # Y-axis mapping
 # -------------------------
 
+def _galaxy_field_for_band(row) -> Optional[str]:
+    """
+    Priority order for the galaxy (Y-axis grouping) field:
+      1. oa_primary_subfield  (OpenAlex Topics hierarchy — most reliable)
+      2. AI_primary_field     (LLM-assigned)
+      3. primary_concept      (OpenAlex Concepts — legacy fallback)
+    """
+    keys = row.keys() if hasattr(row, "keys") else []
+    if "oa_primary_subfield" in keys:
+        v = row["oa_primary_subfield"]
+        if v and str(v).strip():
+            return str(v).strip()
+    v = row["AI_primary_field"] if "AI_primary_field" in keys else None
+    if v and str(v).strip():
+        return str(v).strip()
+    v = row["primary_concept"] if "primary_concept" in keys else None
+    if v and str(v).strip():
+        return str(v).strip()
+    return None
+
+
 def build_field_bands(conn: sqlite3.Connection) -> Dict[str, float]:
-    """Stable mapping AI_primary_field -> Y coordinate band."""
-    rows = conn.execute("""
-        SELECT DISTINCT AI_primary_field
-        FROM papers
-        WHERE AI_primary_field IS NOT NULL AND TRIM(AI_primary_field) <> ''
-    """).fetchall()
-    fields = sorted(r[0] for r in rows)
+    """Stable mapping galaxy-field -> Y coordinate band.
+
+    Uses oa_primary_subfield where available, falls back to AI_primary_field,
+    then primary_concept.
+    """
+    db_cols = {r[1] for r in conn.execute("PRAGMA table_info(papers)").fetchall()}
+
+    select_parts = []
+    if "oa_primary_subfield" in db_cols:
+        select_parts.append("oa_primary_subfield")
+    select_parts.append("AI_primary_field")
+    if "primary_concept" in db_cols:
+        select_parts.append("primary_concept")
+
+    rows = conn.execute(f"SELECT {', '.join(select_parts)} FROM papers").fetchall()
+
+    seen: set = set()
+    for r in rows:
+        val = _galaxy_field_for_band(r)
+        if val:
+            seen.add(val)
+
+    fields = sorted(seen)
     if not fields:
-        print("[warn] No AI_primary_field values found; Y=0 for all nodes")
+        print("[warn] No galaxy field values found; Y=0 for all nodes")
         return {}
 
     band_step = 3.0
-    offset = - (len(fields) - 1) * band_step / 2.0
+    offset = -(len(fields) - 1) * band_step / 2.0
     mapping = {f: offset + i * band_step for i, f in enumerate(fields)}
-
-    print(f"[info] Field bands: {len(mapping)} distinct AI_primary_field values")
+    print(f"[info] Field bands: {len(mapping)} distinct galaxy-field values")
     return mapping
 
 
@@ -277,12 +313,33 @@ def build_nodes(
     authors: Optional[List[str]] = None,
     year_from: Optional[int] = None,
     year_to: Optional[int] = None,
+    paper_nature_filter: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
     """Build node dicts for the frontend using the requested fields and filters."""
 
     print("[info] Building nodes…")
 
-    base_query = """
+    # Detect which optional columns exist
+    db_cols = {r[1] for r in conn.execute("PRAGMA table_info(papers)").fetchall()}
+    has_paper_nature   = "paper_nature"        in db_cols
+    has_icon_category  = "icon_category"       in db_cols
+    has_oa_subfield    = "oa_primary_subfield" in db_cols
+    has_oa_topic       = "oa_primary_topic"    in db_cols
+    has_primary_concept= "primary_concept"     in db_cols
+
+    optional_cols = ""
+    if has_paper_nature:
+        optional_cols += ",\n            paper_nature"
+    if has_icon_category:
+        optional_cols += ",\n            icon_category"
+    if has_oa_subfield:
+        optional_cols += ",\n            oa_primary_subfield"
+    if has_oa_topic:
+        optional_cols += ",\n            oa_primary_topic"
+    if has_primary_concept:
+        optional_cols += ",\n            primary_concept"
+
+    base_query = f"""
         SELECT
             paperId,
             title,
@@ -298,8 +355,7 @@ def build_nodes(
             all_author_names,
             all_institution_names,
             work_type,
-            language,
-            paper_nature
+            language{optional_cols}
         FROM papers
     """
 
@@ -335,6 +391,11 @@ def build_nodes(
             conditions.append("all_author_names LIKE ?")
             params.append(f"%{a}%")
 
+    if paper_nature_filter and has_paper_nature:
+        placeholders = ", ".join("?" for _ in paper_nature_filter)
+        conditions.append(f"paper_nature IN ({placeholders})")
+        params.extend(paper_nature_filter)
+
     q = base_query
     if conditions:
         q += " WHERE " + " AND ".join(f"({c})" for c in conditions)
@@ -357,39 +418,47 @@ def build_nodes(
     nodes: List[Dict[str, Any]] = []
 
     for r in rows:
-        paperId = r["paperId"]
-        title = r["title"]
-        abstract = r["abstract"]
-        ai_summary = r["AI_summary"]
-        ai_primary_field = r["AI_primary_field"]
-        cited_by_count = r["cited_by_count"]
-        year = r["year"]
-        publicationDate = r["publicationDate"]
-        doi = r["doi"]
-        journal_name = r["journal_name"]
-        first_author_name = r["first_author_name"]
-        all_author_names = r["all_author_names"]
-        all_institution_names = r["all_institution_names"]
-        work_type = r["work_type"]
-        language = r["language"]
-        paper_nature = r["paper_nature"] if "paper_nature" in r.keys() else None
+        rkeys = r.keys()
+        paperId              = r["paperId"]
+        title                = r["title"]
+        abstract             = r["abstract"]
+        ai_summary           = r["AI_summary"]
+        ai_primary_field     = r["AI_primary_field"]
+        cited_by_count       = r["cited_by_count"]
+        year                 = r["year"]
+        publicationDate      = r["publicationDate"]
+        doi                  = r["doi"]
+        journal_name         = r["journal_name"]
+        first_author_name    = r["first_author_name"]
+        all_author_names     = r["all_author_names"]
+        all_institution_names= r["all_institution_names"]
+        work_type            = r["work_type"]
+        language             = r["language"]
+        paper_nature         = r["paper_nature"]  if "paper_nature"         in rkeys else None
+        icon_category        = r["icon_category"] if "icon_category"        in rkeys else None
+        oa_subfield          = r["oa_primary_subfield"] if "oa_primary_subfield" in rkeys else None
+        oa_topic             = r["oa_primary_topic"]    if "oa_primary_topic"    in rkeys else None
+        primary_concept      = r["primary_concept"]     if "primary_concept"     in rkeys else None
+
+        # Galaxy field: OA subfield → AI primary field → primary_concept
+        galaxy_field = (
+            (oa_subfield      if oa_subfield      and str(oa_subfield).strip()      else None) or
+            (ai_primary_field if ai_primary_field  and str(ai_primary_field).strip() else None) or
+            (primary_concept  if primary_concept   and str(primary_concept).strip()  else None)
+        )
+
+        # Topic field: OA topic → AI primary field (as topic) → primary_concept
+        topic_field = (
+            (oa_topic         if oa_topic          and str(oa_topic).strip()         else None) or
+            (ai_primary_field if ai_primary_field  and str(ai_primary_field).strip() else None) or
+            (primary_concept  if primary_concept   and str(primary_concept).strip()  else None)
+        )
 
         x = (year or 0) - 1950
-        y = field_bands.get(ai_primary_field, 0.0)
+        y = field_bands.get(galaxy_field, 0.0)
         z = math.log1p(cited_by_count or 0) * 10.0
 
         size = get_size_from_citations(cited_by_count)
-        
-        # Enforce Title Case except for specific acronyms
-        if ai_primary_field:
-            if ai_primary_field.lower() in ["high energy physics", "high-energy physics"]:
-                ai_primary_field = "High Energy Physics"
-            elif ai_primary_field.lower() in ["particle physics", "elementary particle physics"]:
-                ai_primary_field = "Particle Physics"
-            elif "qcd" in ai_primary_field.lower() or "quantum chromodynamics" in ai_primary_field.lower():
-                ai_primary_field = "Quantum Chromodynamics"
-            else:
-                ai_primary_field = ai_primary_field.title()
 
         node = {
             "id": paperId,
@@ -397,7 +466,8 @@ def build_nodes(
             "title": title,
             "abstract": abstract,
             "summary": ai_summary,
-            "primaryField": ai_primary_field,
+            "primaryField": galaxy_field,
+            "topic": topic_field,
             "year": year,
             "publicationDate": publicationDate,
             "doi": doi,
@@ -407,6 +477,7 @@ def build_nodes(
             "institutions": all_institution_names,
             "workType": work_type,
             "paperNature": paper_nature,
+            "iconCategory": icon_category,
             "language": language,
             "citationCount": cited_by_count,
             "url": f"https://openalex.org/{paperId}",
@@ -530,6 +601,8 @@ def main():
                         help="Compute and export cluster information")
     parser.add_argument("--cluster-threshold", type=int, default=2,
                         help="Minimum connections for clustering (default: 2)")
+    parser.add_argument("--experimental-boost", type=int, default=0,
+                        help="Also include top N experimental/phenomenological papers, merged with main set")
 
     # Filters
     parser.add_argument("--field", action="append", default=None,
@@ -569,6 +642,22 @@ def main():
         year_to=args.year_to,
     )
     
+    # Experimental boost: merge in top N experimental/phenomenological papers
+    if args.experimental_boost > 0:
+        exp_nodes = build_nodes(
+            conn,
+            min_citations=args.min_citations,
+            top_n=args.experimental_boost,
+            fields=args.field,
+            year_from=args.year_from,
+            year_to=args.year_to,
+            paper_nature_filter=['experimental', 'phenomenological'],
+        )
+        existing_ids = {n['id'] for n in all_nodes}
+        new_exp = [n for n in exp_nodes if n['id'] not in existing_ids]
+        all_nodes.extend(new_exp)
+        print(f"[info] Experimental boost: added {len(new_exp)} new papers (from {len(exp_nodes)} exp/phenom)")
+
     # Build edges for all nodes
     all_edges = build_edges_enhanced(conn, all_nodes)
     

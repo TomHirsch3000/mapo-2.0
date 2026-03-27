@@ -8,6 +8,7 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
     const [rawEdges, setRawEdges] = useState([]);
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
     const [searchResult, setSearchResult] = useState(null); // { status: 'success'|'error', stats?, message? }
+    const [paperIndex, setPaperIndex] = useState([]); // flat list of {id, title, primaryField, galaxyId, galaxyName}
     const abortControllerRef = useRef(null);
 
     const nodeByIdRef = useRef(new Map());
@@ -21,6 +22,28 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
             })
             .catch(err => console.error("Failed to load universe data:", err));
     }, []);
+
+    // Build paper title index from all galaxies (for autocomplete)
+    useEffect(() => {
+        if (!universeData) return;
+        const galaxiesWithPapers = (universeData.nodes || []).filter(g => g.hasPapers && g.nodesFile);
+        Promise.all(
+            galaxiesWithPapers.map(g =>
+                fetch(`./${g.nodesFile}`)
+                    .then(r => r.json())
+                    .then(nodes => nodes.map(n => ({
+                        id: n.id || n.paperId,
+                        title: n.title ? n.title.replace(/<[^>]+>/g, '') : '',
+                        primaryField: n.primaryField,
+                        galaxyId: g.id,
+                        galaxyName: g.name,
+                    })))
+                    .catch(() => [])
+            )
+        ).then(arrays => {
+            setPaperIndex(arrays.flat());
+        });
+    }, [universeData]);
 
     // Load Galaxy Data
     useEffect(() => {
@@ -181,11 +204,14 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
                 xGroup,
                 yGroup,
                 field: d.primaryField,
+                primaryField: d.primaryField,
                 abstract: d.abstract || d.AI_summary || "No abstract available.",
                 authors: d.allAuthors || d.firstAuthor || "Unknown",
                 institutions: d.institutions,
                 val: Math.min(50, Math.max(5, Math.sqrt(cites) * 2)),
                 nodeType: d.nodeType || null, // Preserved from search API response
+                paperNature: d.paperNature || null,
+                iconCategory: d.iconCategory || null,
                 data: d // Keep original data accessible
             };
 
@@ -476,6 +502,7 @@ export const useGraphData = (viewMode, activeGalaxy, groupingMode, yGroupingMode
         clearData,
         isLoadingDetail,
         cancelDetailFetch,
-        searchResult
+        searchResult,
+        paperIndex
     };
 };

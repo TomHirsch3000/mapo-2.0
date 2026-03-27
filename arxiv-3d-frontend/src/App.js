@@ -53,8 +53,11 @@ export default function App() {
   // unless we want to restore specific layouts per view level. For now, global Layout persistence is requested.
   const isReturningRef = useRef(false);
 
+  // --- Autocomplete State ---
+  const [pendingAutocompleteId, setPendingAutocompleteId] = useState(null);
+
   // --- Data Hook ---
-  const { nodes, edges, groupStats, xGroups, yGroups, universeData, rawNodes, rawEdges, isLoadingDetail, cancelDetailFetch, searchResult } = useGraphData(viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected, detailFilter, setShowTimeoutPrompt, searchFilter);
+  const { nodes, edges, groupStats, xGroups, yGroups, universeData, rawNodes, rawEdges, isLoadingDetail, cancelDetailFetch, searchResult, paperIndex } = useGraphData(viewMode, activeGalaxy, groupingMode, yGroupingMode, activeGroup, selected, detailFilter, setShowTimeoutPrompt, searchFilter);
 
   // --- Handlers ---
   const handleGalaxyClick = (galaxyId) => {
@@ -178,6 +181,28 @@ export default function App() {
     setShowDetailPrompt(false);
     setActiveDoubleClickPaper(null);
   };
+
+  // Navigate directly to a paper from autocomplete (no server search)
+  const handleAutocompleteSelect = (paper) => {
+    // paper = { id, title, primaryField, galaxyId, galaxyName }
+    setActiveGalaxy(paper.galaxyId);
+    setActiveGroup(paper.primaryField);
+    setViewMode('FIELD');
+    setSearchFilter(null);
+    setSelected(null);
+    setPendingAutocompleteId(paper.id);
+  };
+
+  // Once galaxy data loads, select the pending autocomplete paper
+  useEffect(() => {
+    if (!pendingAutocompleteId || nodes.length === 0) return;
+    const found = nodes.find(n => n.id === pendingAutocompleteId);
+    if (found) {
+      setSelected(found);
+      if (found.group) setActiveGroup(found.group);
+      setPendingAutocompleteId(null);
+    }
+  }, [nodes, pendingAutocompleteId]);
 
   const handleTimeoutCancel = () => {
     setShowTimeoutPrompt(false);
@@ -316,6 +341,8 @@ export default function App() {
         onLayoutChange={setLayout}
         onGroupingChange={setGrouping}
         onSearch={handleSearch}
+        paperIndex={paperIndex}
+        onAutocompleteSelect={handleAutocompleteSelect}
       />
 
       <Graph

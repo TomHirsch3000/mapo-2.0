@@ -457,6 +457,66 @@
 }
 
 /* ============================================================
+   Autocomplete Dropdown
+   ============================================================ */
+
+.autocomplete-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    list-style: none;
+    margin: 0;
+    padding: 4px;
+    z-index: 200;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.autocomplete-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    gap: 8px;
+    transition: background 0.1s;
+}
+
+.autocomplete-item.highlighted,
+.autocomplete-item:hover {
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.autocomplete-title {
+    flex: 1;
+    font-size: 0.85rem;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Inter', sans-serif;
+}
+
+.autocomplete-galaxy {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    color: #94a3b8;
+    background: rgba(0, 0, 0, 0.04);
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ============================================================
    Search View Node Styles
    ============================================================ */
 
