@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "homepage",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "docs", "-p", "4000"],
+      "port": 4000
+    },
+    {
       "name": "flask-api",
       "runtimeExecutable": "python",
       "runtimeArgs": ["arxiv-3d/server.py"],

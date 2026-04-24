@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tom Hirsch — Product Manager & Data Scientist</title>
+  <meta name="description" content="Product Manager and Data Scientist with 10+ years building data-driven products. Creator of Mapo — interactive 3D knowledge graph explorers.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <div class="hex-logo"></div>
+        Tom Hirsch
+      </a>
+      <ul class="nav-links">
+        <li><a href="#mapo">Mapo</a></li>
+        <li><a href="#dataviz">Data Viz</a></li>
+        <li><a href="#contact" class="btn btn-sm btn-primary">Get in touch</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hex-pattern" aria-hidden="true"></div>
+    <div class="container">
+      <div class="hero-inner">
+
+        <div class="hero-text">
+          <p class="eyebrow">Product Manager &amp; Data Scientist</p>
+          <h1>Tom Hirsch</h1>
+          <p class="hero-bio">
+            10+ years building data-driven products and leading high-performing teams.
+            I bridge analytics and strategy — turning complex data into decisions
+            that drive real outcomes.
+          </p>
+          <div class="hero-actions">
+            <a href="#mapo" class="btn btn-primary">Explore Mapo</a>
+            <a href="#dataviz" class="btn btn-secondary">Data Viz Consulting</a>
+          </div>
+        </div>
+
+        <div class="hero-hex-cluster" aria-hidden="true">
+          <div class="hex-cluster">
+            <div class="hex hex-a green"></div>
+            <div class="hex hex-b orange"></div>
+            <div class="hex hex-c green-light"></div>
+            <div class="hex hex-d orange-light"></div>
+            <div class="hex hex-e green-mid"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- MAPO -->
+  <section id="mapo" class="section section-alt">
+    <div class="container">
+
+      <div class="section-header">
+        <span class="tag">Open Source Project</span>
+        <h2>Mapo</h2>
+        <p class="section-desc">
+          An interactive visualisation of academic papers arranged as a graph.
+          Mapo answers one question: <em>why do we think this is true?</em>
+        </p>
+        <div class="mapo-site-links">
+          <a href="https://mapo.infinityfreeapp.com/?i=1" class="site-pill" target="_blank" rel="noopener">
+            <span class="pill-dot green"></span> Map of Physics
+          </a>
+          <a href="https://mapo-food.infinityfreeapp.com/?i=1" class="site-pill" target="_blank" rel="noopener">
+            <span class="pill-dot orange"></span> Map of Food Science
+          </a>
+        </div>
+      </div>
+
+      <div class="mapo-tabs">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="vision">Purpose &amp; Vision</button>
+          <button class="tab-btn" data-tab="guide">User Guide</button>
+          <button class="tab-btn" data-tab="tech">Under the Hood</button>
+        </div>
+
+        <!-- PURPOSE & VISION -->
+        <div class="tab-panel active" id="tab-vision">
+          <div class="tab-grid">
+            <div class="tab-text">
+              <h3>Why does Mapo exist?</h3>
+              <p>
+                Most people hold beliefs about the world without knowing what the actual
+                evidence is. Mapo is built for people who want to go deeper — to find a topic
+                and understand all its sources without having to dive fully into the literature.
+              </p>
+              <p>
+                It is an interactive 2D visualisation of academic papers arranged as a graph,
+                designed around immersion, smoothness, and a premium feel. The design philosophy
+                treats knowledge exploration as something that should be beautiful, not clinical.
+              </p>
+              <h3>The vision</h3>
+              <p>
+                Mapo is a framework, not just two websites. The pipeline works for any
+                research domain. The long-term vision is a connected atlas of human knowledge —
+                every field navigable as a graph, with AI-generated summaries making every
+                node accessible to a non-specialist.
+              </p>
+            </div>
+            <div class="tab-visual">
+              <div class="vision-cards">
+                <div class="vision-card">
+                  <div class="hex-icon green"></div>
+                  <div>
+                    <h4>Navigate or search — discover the structure</h4>
+                    <p>Explore how things are connected. What observations led to this theory? What has been tested? What does it predict?</p>
+                  </div>
+                </div>
+                <div class="vision-card">
+                  <div class="hex-icon orange"></div>
+                  <div>
+                    <h4>Structure emerges</h4>
+                    <p>Clusters reveal schools of thought, research frontiers, and the lineage of ideas</p>
+                  </div>
+                </div>
+                <div class="vision-card">
+                  <div class="hex-icon green"></div>
+                  <div>
+                    <h4>Any domain</h4>
+                    <p>The pipeline generalises — physics and food science today, more to come</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- USER GUIDE -->
+        <div class="tab-panel" id="tab-guide">
+          <div class="tab-grid">
+            <div class="tab-text">
+              <h3>Getting started</h3>
+              <ol class="guide-steps">
+                <li>
+                  <strong>Choose a domain</strong>
+                  <p>Visit Map of Physics or Map of Food Science. Each is a self-contained galaxy of research.</p>
+                </li>
+                <li>
+                  <strong>Navigate the galaxy</strong>
+                  <p>Click and drag to rotate, scroll to zoom. Papers appear as nodes — clusters represent schools of thought.</p>
+                </li>
+                <li>
+                  <strong>Click a node</strong>
+                  <p>Select any paper to see its title, AI-generated summary, citation count, and connected papers.</p>
+                </li>
+                <li>
+                  <strong>Filter by topic</strong>
+                  <p>Use the sidebar to highlight specific subfields or zoom into a cluster of interest.</p>
+                </li>
+                <li>
+                  <strong>Follow the connections</strong>
+                  <p>Edges represent citations. Follow them to trace how an idea evolved over time.</p>
+                </li>
+              </ol>
+            </div>
+            <div class="guide-sites">
+              <a href="https://mapo.infinityfreeapp.com/?i=1" class="site-card" target="_blank" rel="noopener">
+                <div class="site-card-icon">⚛️</div>
+                <div>
+                  <h4>Map of Physics</h4>
+                  <p>Particle physics, condensed matter, optics and more</p>
+                </div>
+                <span class="arrow-link">→</span>
+              </a>
+              <a href="https://mapo-food.infinityfreeapp.com/?i=1" class="site-card" target="_blank" rel="noopener">
+                <div class="site-card-icon">🍎</div>
+                <div>
+                  <h4>Map of Food Science</h4>
+                  <p>Nutrition, food technology, and agricultural research</p>
+                </div>
+                <span class="arrow-link">→</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- UNDER THE HOOD -->
+        <div class="tab-panel" id="tab-tech">
+          <div class="tab-text-full">
+            <h3>The data pipeline</h3>
+            <p>
+              Mapo is built on a Python ETL pipeline that ingests from the OpenAlex and arXiv APIs,
+              enriches papers with AI-generated summaries via a local LLM (Ollama / Mistral),
+              stores everything in SQLite, clusters the citation graph, and exports JSON for a
+              React + Three.js frontend rendered in the browser.
+            </p>
+          </div>
+          <div class="pipeline-img">
+            <img src="assets/mapo-pipeline.png" alt="Mapo Information Flow — ETL pipeline diagram showing data sources, ingestion, AI processing, local storage and frontend export">
+          </div>
+          <div class="tech-stack">
+            <span class="tech-tag">Python</span>
+            <span class="tech-tag">OpenAlex API</span>
+            <span class="tech-tag">arXiv API</span>
+            <span class="tech-tag">SQLite</span>
+            <span class="tech-tag">Ollama / Mistral</span>
+            <span class="tech-tag">React</span>
+            <span class="tech-tag">Three.js</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA VIZ CONSULTING -->
+  <section id="dataviz" class="section">
+    <div class="container">
+
+      <div class="section-header">
+        <span class="tag" style="background:var(--orange-light);color:var(--orange);">Consulting</span>
+        <h2>Data Visualisation</h2>
+        <p class="section-desc">
+          Bad data viz costs decisions. Good data viz makes them.
+          I help scale-ups cut through dashboard noise to find the signals that matter.
+        </p>
+      </div>
+
+      <!-- HOOK -->
+      <div class="dataviz-hook">
+        <div class="hook-card">
+          <p class="hook-quote">Remove to improve</p>
+          <p class="hook-sub">the data-ink ratio</p>
+          <p>Every element in a chart that isn't data is noise. Most dashboards are 80% noise.</p>
+        </div>
+      </div>
+
+      <!-- BEFORE / AFTER -->
+      <div class="comparison">
+        <h3>A case study: the user retention funnel</h3>
+        <p class="comparison-intro">
+          This is a funnel visualisation Google uses in their mobile app consultancy.
+          It's produced by one of the world's best engineering organisations. Spot the problem.
+        </p>
+
+        <div class="comparison-grid">
+
+          <div class="comparison-card">
+            <div class="comparison-label bad-label">
+              <span class="dot red"></span> The problem
+            </div>
+            <div class="img-frame">
+              <img src="assets/funnel-google.png" alt="Google's dual-sided funnel comparison chart" class="comparison-img"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+              <div class="img-placeholder" style="display:none">
+                <p>Google's dual-sided funnel chart</p>
+                <p class="placeholder-note">Add <code>funnel-google.png</code> to <code>docs/assets/</code></p>
+              </div>
+            </div>
+            <div class="comparison-annotation">
+              <strong>The flaw:</strong> Two mirrored funnels look visually balanced —
+              but your eye cannot compare 20% on the left to 34% on the right when they point
+              in opposite directions. The order-of-magnitude difference is hidden by the design.
+            </div>
+          </div>
+
+          <div class="comparison-card">
+            <div class="comparison-label good-label">
+              <span class="dot gn"></span> The fix
+            </div>
+            <div class="img-frame">
+              <img src="assets/funnel-good.png" alt="Improved annotated waterfall funnel chart" class="comparison-img"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+              <div class="img-placeholder" style="display:none">
+                <p>Annotated waterfall funnel</p>
+                <p class="placeholder-note">Add <code>funnel-good.png</code> to <code>docs/assets/</code></p>
+              </div>
+            </div>
+            <div class="comparison-annotation">
+              <strong>Why it works:</strong> Single shared axis. Drop-off percentages annotated
+              directly on each bar. The insight — "50% of reactivated users never attempt a level" —
+              is impossible to miss.
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SPECIALISMS -->
+      <div class="specialisms">
+        <h3>Where I focus</h3>
+        <div class="specialism-grid">
+          <div class="specialism-card">
+            <div class="hex-icon orange"></div>
+            <h4>User retention funnels</h4>
+            <p>Reactivation, engagement, and monetisation for mobile and SaaS scale-ups</p>
+          </div>
+          <div class="specialism-card">
+            <div class="hex-icon green"></div>
+            <h4>Executive dashboards</h4>
+            <p>Cutting 20-chart decks down to 5 charts that actually change decisions</p>
+          </div>
+          <div class="specialism-card">
+            <div class="hex-icon orange"></div>
+            <h4>Team coaching</h4>
+            <p>Teaching product and analytics teams to think in data-ink ratios — not slide count</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div id="contact" class="cta-block">
+        <h3>Interested in working together?</h3>
+        <p>Book a free 30-minute call to discuss your data challenges.</p>
+        <a href="#" class="btn btn-primary btn-lg">Book a consultation call</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <span>Tom Hirsch &copy; 2026</span>
+        <div class="footer-links">
+          <a href="https://www.linkedin.com/in/tom-hirsch-a2a71b37/" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="https://github.com/TomHirsch3000" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
+      });
+    });
+
+    // Smooth scroll for nav links
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href');
+        if (id === '#') return;
+        const target = document.querySelector(id);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
