@@ -1,0 +1,236 @@
+[
+  {
+    "id": "fields/22",
+    "display_name": "Engineering",
+    "description": "practice of using natural science, mathematics, and the engineering design process to solve technical problems",
+    "works_count": 62964605,
+    "cited_by_count": 301971692,
+    "domain_id": "domains/3",
+    "domain_name": "Physical Sciences"
+  },
+  {
+    "id": "fields/33",
+    "display_name": "Social Sciences",
+    "description": "academic disciplines concerned with society and the relationships between individuals in society",
+    "works_count": 52994180,
+    "cited_by_count": 190414460,
+    "domain_id": "domains/2",
+    "domain_name": "Social Sciences"
+  },
+  {
+    "id": "fields/27",
+    "display_name": "Medicine",
+    "description": "field of study for diagnosing, treating and preventing disease",
+    "works_count": 52748777,
+    "cited_by_count": 586431016,
+    "domain_id": "domains/4",
+    "domain_name": "Health Sciences"
+  },
+  {
+    "id": "fields/12",
+    "display_name": "Arts and Humanities",
+    "description": "examination of human culture, including art, literature, philosophy, history, and artifacts",
+    "works_count": 27666704,
+    "cited_by_count": 50241995,
+    "domain_id": "domains/2",
+    "domain_name": "Social Sciences"
+  },
+  {
+    "id": "fields/31",
+    "display_name": "Physics and Astronomy",
+    "description": "study of matter and its motion, along with related concepts such as energy and force",
+    "works_count": 24950917,
+    "cited_by_count": 130695868,
+    "domain_id": "domains/3",
+    "domain_name": "Physical Sciences"
+  },
+  {
+    "id": "fields/17",
+    "display_name": "Computer Science",
+    "description": "study of computation",
+    "works_count": 23313776,
+    "cited_by_count": 156571928,
+    "domain_id": "domains/3",
+    "domain_name": "Physical Sciences"
+  },
+  {
+    "id": "fields/11",
+    "display_name": "Agricultural and Biological Sciences",
+    "description": "study of plant and animal biology for food, fuel, fiber, and reclamation, including environmental and economic impacts",
+    "works_count": 22161598,
+    "cited_by_count": 130488207,
+    "domain_id": "domains/1",
+    "domain_name": "Life Sciences"
+  },
+  {
+    "id": "fields/13",
+    "display_name": "Biochemistry, Genetics and Molecular Biology",
+    "description": "study of chemical processes in living organisms",
+    "works_count": 20852352,
+    "cited_by_count": 301336618,
+    "domain_id": "domains/1",
+    "domain_name": "Life Sciences"
+  },
+  {
+    "id": "fields/23",
+    "display_name": "Environmental Science",
+    "description": "interdisciplinary field that studies human interaction with the environment",
+    "works_count": 17802196,
+    "cited_by_count": 154825139,
+    "domain_id": "domains/3",
+    "domain_name": "Physical Sciences"
+  },
+  {
+    "id": "fields/20",
+    "display_name": "Economics, Econometrics and Finance",
+    "description": "social science that studies the production, distribution, and consumption of goods and services",
+    "works_count": 13097270,
+    "cited_by_count": 56449892,
+    "domain_id": "domains/2",
+    "domain_name": "Social Sciences"
+  },
+  {
+    "id": "fields/25",
+    "display_name": "Materials Science",
+    "description": "research, discovery and design of physical materials (especially solids)",
+    "works_count": 9725899,
+    "cited_by_count": 130073572,
+    "domain_id": "domains/3",
+    "domain_name": "Physical Sciences"
+  },
+  {
+    "id": "fields/14",
+    "display_name": "Business, Management and Accounting",
+    "description": "administration of a commercial enterprise",
+    "works_count": 9324970,
+    "cited_by_count": 62578549,
+    "domain_id": "domains/2",
+    "domain_name": "Social Sciences"
+  },
+  {
+    "id": "fields/32",
+    "display_name": "Psychology",
+    "description": "study of mental functions and behaviours",
+    "works_count": 9012366,
+    "cited_by_count": 99081881,
+    "domain_id": "domains/2",
+    "domain_name": "Social Sciences"
+  },
+  {
+    "id": "fields/36",
+    "display_name": "Health Professions",
+    "description": "field encompassing a wide range of disciplines focused on health care, treatment, and advice, including public health and occupational therapy",
+    "works_count": 7914813,
+    "cited_by_count": 40295736,
+    "domain_id": "domains/4",
+    "domain_name": "Health Sciences"
+  },
+  {
+    "id": "fields/19",
+    "display_name": "Earth and Planetary Sciences",
+    "description": "all fields of natural science related to the planet Earth and other planets",
+    "works_count": 7841902,
+    "cited_by_count": 68630748,
+    "domain_id": "domains/3",
+    "domain_name": "Physical Sciences"
+  },
+  {
+    "id": "fields/16",
+    "display_name": "Chemistry",
+    "description": "branch of physical science concerned with the composition, structure and properties of matter",
+    "works_count": 7073904,
+    "cited_by_count": 85908665,
+    "domain_id": "domains/3",
+    "domain_name": "Physical Sciences"
+  },
+  {
+    "id": "fields/26",
+    "display_name": "Mathematics",
+    "description": "area of knowledge that includes the topics of numbers, formulas and related structures, shapes and the spaces in which they are contained, and quantities and their changes",
+    "works_count": 4632629,
+    "cited_by_count": 44590398,
+    "domain_id": "domains/3",
+    "domain_name": "Physical Sciences"
+  },
+  {
+    "id": "fields/28",
+    "display_name": "Neuroscience",
+    "description": "scientific study of the nervous system",
+    "works_count": 4428384,
+    "cited_by_count": 94334951,
+    "domain_id": "domains/1",
+    "domain_name": "Life Sciences"
+  },
+  {
+    "id": "fields/18",
+    "display_name": "Decision Sciences",
+    "description": "branch of applied probability theory",
+    "works_count": 3580973,
+    "cited_by_count": 31267228,
+    "domain_id": "domains/2",
+    "domain_name": "Social Sciences"
+  },
+  {
+    "id": "fields/24",
+    "display_name": "Immunology and Microbiology",
+    "description": "study of the immune system and microorganisms, including their roles in health and disease",
+    "works_count": 2858921,
+    "cited_by_count": 50266442,
+    "domain_id": "domains/1",
+    "domain_name": "Life Sciences"
+  },
+  {
+    "id": "fields/21",
+    "display_name": "Energy",
+    "description": "study of energy in physical systems, its sources, technology, management, and impact on sustainability",
+    "works_count": 1889848,
+    "cited_by_count": 26120115,
+    "domain_id": "domains/3",
+    "domain_name": "Physical Sciences"
+  },
+  {
+    "id": "fields/29",
+    "display_name": "Nursing",
+    "description": "caring for people who are sick or injured",
+    "works_count": 1363389,
+    "cited_by_count": 16719087,
+    "domain_id": "domains/4",
+    "domain_name": "Health Sciences"
+  },
+  {
+    "id": "fields/30",
+    "display_name": "Pharmacology, Toxicology and Pharmaceutics",
+    "description": "branch of biology concerning drugs",
+    "works_count": 1173575,
+    "cited_by_count": 12427972,
+    "domain_id": "domains/1",
+    "domain_name": "Life Sciences"
+  },
+  {
+    "id": "fields/35",
+    "display_name": "Dentistry",
+    "description": "branch of medicine dealing with oral health and teeth",
+    "works_count": 1010239,
+    "cited_by_count": 11469859,
+    "domain_id": "domains/4",
+    "domain_name": "Health Sciences"
+  },
+  {
+    "id": "fields/15",
+    "display_name": "Chemical Engineering",
+    "description": "branch of science that applies physical sciences and life sciences together with applied mathematics and economics to produce, transform, transport, and properly use chemicals, materials and energy",
+    "works_count": 913819,
+    "cited_by_count": 12921314,
+    "domain_id": "domains/3",
+    "domain_name": "Physical Sciences"
+  },
+  {
+    "id": "fields/34",
+    "display_name": "Veterinary",
+    "description": "branch of medicine that deals with the prevention, management, diagnosis, and treatment of disease, disorder, and injury in non-human animals",
+    "works_count": 517076,
+    "cited_by_count": 4599930,
+    "domain_id": "domains/4",
+    "domain_name": "Health Sciences"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "domains/3",
+    "display_name": "Physical Sciences",
+    "description": "branch of natural science that studies non-living systems",
+    "works_count": 161109495,
+    "cited_by_count": 1112309439
+  },
+  {
+    "id": "domains/2",
+    "display_name": "Social Sciences",
+    "description": "branch of science focused on societies and the relationships among individuals within those societies",
+    "works_count": 115676463,
+    "cited_by_count": 490034005
+  },
+  {
+    "id": "domains/4",
+    "display_name": "Health Sciences",
+    "description": "branch of science focused on human health and disease prevention, diagnosis, treatment, and management",
+    "works_count": 63554294,
+    "cited_by_count": 659515628
+  },
+  {
+    "id": "domains/1",
+    "display_name": "Life Sciences",
+    "description": "branch of science that involve the scientific study of life – such as microorganisms, plants, and animals including human beings",
+    "works_count": 51474830,
+    "cited_by_count": 588854190
+  }
+]

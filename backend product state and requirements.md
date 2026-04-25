@@ -14,7 +14,8 @@ cd C:\Users\TomHi\Documents\GitHub\mapo-2.0\arxiv-3d
 start venv
 .\venv\Scripts\activate 
 
-
+open jupyter 
+jupyter lab
 
 -------------------------------------------------
 # run python scripts

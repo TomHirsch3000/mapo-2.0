@@ -1,0 +1,27 @@
+id,display_name,description,works_count,cited_by_count,domain_id,domain_name
+fields/22,Engineering,"practice of using natural science, mathematics, and the engineering design process to solve technical problems",62964605,301971692,domains/3,Physical Sciences
+fields/33,Social Sciences,academic disciplines concerned with society and the relationships between individuals in society,52994180,190414460,domains/2,Social Sciences
+fields/27,Medicine,"field of study for diagnosing, treating and preventing disease",52748777,586431016,domains/4,Health Sciences
+fields/12,Arts and Humanities,"examination of human culture, including art, literature, philosophy, history, and artifacts",27666704,50241995,domains/2,Social Sciences
+fields/31,Physics and Astronomy,"study of matter and its motion, along with related concepts such as energy and force",24950917,130695868,domains/3,Physical Sciences
+fields/17,Computer Science,study of computation,23313776,156571928,domains/3,Physical Sciences
+fields/11,Agricultural and Biological Sciences,"study of plant and animal biology for food, fuel, fiber, and reclamation, including environmental and economic impacts",22161598,130488207,domains/1,Life Sciences
+fields/13,"Biochemistry, Genetics and Molecular Biology",study of chemical processes in living organisms,20852352,301336618,domains/1,Life Sciences
+fields/23,Environmental Science,interdisciplinary field that studies human interaction with the environment,17802196,154825139,domains/3,Physical Sciences
+fields/20,"Economics, Econometrics and Finance","social science that studies the production, distribution, and consumption of goods and services",13097270,56449892,domains/2,Social Sciences
+fields/25,Materials Science,"research, discovery and design of physical materials (especially solids)",9725899,130073572,domains/3,Physical Sciences
+fields/14,"Business, Management and Accounting",administration of a commercial enterprise,9324970,62578549,domains/2,Social Sciences
+fields/32,Psychology,study of mental functions and behaviours,9012366,99081881,domains/2,Social Sciences
+fields/36,Health Professions,"field encompassing a wide range of disciplines focused on health care, treatment, and advice, including public health and occupational therapy",7914813,40295736,domains/4,Health Sciences
+fields/19,Earth and Planetary Sciences,all fields of natural science related to the planet Earth and other planets,7841902,68630748,domains/3,Physical Sciences
+fields/16,Chemistry,"branch of physical science concerned with the composition, structure and properties of matter",7073904,85908665,domains/3,Physical Sciences
+fields/26,Mathematics,"area of knowledge that includes the topics of numbers, formulas and related structures, shapes and the spaces in which they are contained, and quantities and their changes",4632629,44590398,domains/3,Physical Sciences
+fields/28,Neuroscience,scientific study of the nervous system,4428384,94334951,domains/1,Life Sciences
+fields/18,Decision Sciences,branch of applied probability theory,3580973,31267228,domains/2,Social Sciences
+fields/24,Immunology and Microbiology,"study of the immune system and microorganisms, including their roles in health and disease",2858921,50266442,domains/1,Life Sciences
+fields/21,Energy,"study of energy in physical systems, its sources, technology, management, and impact on sustainability",1889848,26120115,domains/3,Physical Sciences
+fields/29,Nursing,caring for people who are sick or injured,1363389,16719087,domains/4,Health Sciences
+fields/30,"Pharmacology, Toxicology and Pharmaceutics",branch of biology concerning drugs,1173575,12427972,domains/1,Life Sciences
+fields/35,Dentistry,branch of medicine dealing with oral health and teeth,1010239,11469859,domains/4,Health Sciences
+fields/15,Chemical Engineering,"branch of science that applies physical sciences and life sciences together with applied mathematics and economics to produce, transform, transport, and properly use chemicals, materials and energy",913819,12921314,domains/3,Physical Sciences
+fields/34,Veterinary,"branch of medicine that deals with the prevention, management, diagnosis, and treatment of disease, disorder, and injury in non-human animals",517076,4599930,domains/4,Health Sciences
